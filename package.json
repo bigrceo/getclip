@@ -1,0 +1,40 @@
+{
+  "name": "clipfun",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 4082",
+    "build": "next build",
+    "start": "next start -p 4082",
+    "grind": "tsx scripts/grind.ts",
+    "indexer": "tsx scripts/indexer.ts",
+    "db:push": "drizzle-kit push"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.0",
+    "@pump-fun/pump-sdk": "^3.2.0",
+    "@pump-fun/pump-swap-sdk": "^2.2.0",
+    "@solana/spl-token": "^0.4.15",
+    "@solana/web3.js": "^1.99.0",
+    "@vercel/blob": "^2.8.2",
+    "bn.js": "^5.2.5",
+    "bs58": "^6.0.0",
+    "buffer": "^6.0.3",
+    "drizzle-orm": "^0.44.0",
+    "ffmpeg-static": "^5.2.0",
+    "next": "16.4.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "server-only": "^0.0.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/bn.js": "^5.2.0",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19.3.0",
+    "drizzle-kit": "^0.31.0",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.20.0",
+    "typescript": "^5"
+  }
+}

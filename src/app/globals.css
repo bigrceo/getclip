@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+@theme {
+  --color-night: #120c0a;
+  --color-deck: #1d1512;
+  --color-deck-hi: #2a1f1a;
+  --color-line: #3d2c24;
+  --color-ink: #fff4ec;
+  --color-haze: #c9ac9c;
+  --color-coral: #ff4d2e;
+  --color-sun: #ffc531;
+  --color-up: #3ee08f;
+  --color-down: #ff4d6d;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sign: var(--font-archivo), var(--font-inter), ui-sans-serif, sans-serif;
+  --ease-snap: cubic-bezier(.2, .9, .25, 1.15);
+}
+
+html, body { background: var(--color-night); color: var(--color-ink); }
+body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+::selection { background: var(--color-coral); color: var(--color-night); }
+
+/* Bare uppercase Inter label: no pills, no mono. */
+.label { font-family: var(--font-sans); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--color-haze); }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; height: 2.5rem; padding: 0 1.1rem; border-radius: .75rem;
+  font-weight: 800; transition: transform .15s var(--ease-snap), background .15s; }
+.btn:active { transform: scale(.97); }
+.btn-hot { background: var(--color-coral); color: var(--color-night); box-shadow: 0 3px 0 #a3281a; }
+.btn-hot:hover { background: #ff6a4f; }
+.btn-ghost { background: var(--color-deck-hi); color: var(--color-ink); border: 1px solid var(--color-line); }
+.btn-ghost:hover { background: var(--color-line); }
+.field { width: 100%; height: 2.75rem; padding: 0 .9rem; border-radius: .75rem; background: var(--color-night); border: 1px solid var(--color-line); color: var(--color-ink); outline: none; }
+.field:focus { border-color: var(--color-coral); }
+
+@keyframes marquee { from { transform: translateX(0) } to { transform: translateX(-50%) } }
+.marquee { animation: marquee 60s linear infinite; }
+.marquee:hover { animation-play-state: paused; }
+@keyframes rise { from { opacity: 0; transform: translateY(-6px) } to { opacity: 1; transform: none } }
+.rise { animation: rise .35s var(--ease-snap); }
+
+/* Film-strip edge used on the logo and hero */
+.sprockets { background-image: radial-gradient(circle at 50% 50%, var(--color-night) 3px, transparent 3.5px); background-size: 12px 10px; background-repeat: repeat-x; }
