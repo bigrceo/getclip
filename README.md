@@ -23,12 +23,27 @@ npm run dev                  # http://localhost:4082
 7. `LAUNCH_DRY_RUN=0` to actually send launches (default is dry run: tx built + simulated, never sent).
 8. Indexer on Railway: `npm run indexer` (same env).
 
+## Devnet
+
+pump.fun is deployed on devnet with the same program ids, so the whole flow runs there unchanged:
+
+```
+npm run db:local                       # PGlite Postgres on :5439 (data in .data/pg)
+DATABASE_URL=postgres://postgres@127.0.0.1:5439/postgres npm run db:push
+# .env.local: SOLANA_RPC_URL=https://api.devnet.solana.com, PLATFORM_SECRET_KEY=<devnet key>, LAUNCH_DRY_RUN=0, MINT_POOL_KEY=...
+npm run grind -- --count 20
+npm run dev
+npx tsx scripts/devnet-e2e.mts local:drafts/<id>/still.jpg local:drafts/<id>/loop.mp4
+```
+
+Grinder speed: ~16k keys/s per core (native ed25519); "clip" case-insensitive needs ~2.8M tries, so ~35-60 s/mint on 5 threads, roughly 5-8 h for 500.
+
 ## Layout
 
 - `src/lib/launch.ts`: one tx = `create_v2` (platform pays, creator = fee recipient, optional holders mode) + optional first buy signed by the user's wallet. The server checks the signed message is byte-identical before sending.
 - `src/lib/trade.ts`: buy/sell from the user's wallet, bonding curve then PumpSwap.
 - `src/lib/clip.ts`: link resolver (fxtwitter for X, TikTok oEmbed + tikwm, YouTube oEmbed, cobalt fallback).
 - `src/lib/media.ts`: ffmpeg-static square crop → still.jpg + silent loop.mp4.
-- `scripts/grind.ts`, `scripts/indexer.ts`.
+- `scripts/grind.mts`, `scripts/indexer.mts`.
 
 Routes: `/`, `/launch`, `/how`, `/coin/[mint]`, `/creator/[address]`, `/<any clip url>` → launch prefilled.

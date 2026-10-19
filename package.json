@@ -5,11 +5,14 @@
     "dev": "next dev -p 4082",
     "build": "next build",
     "start": "next start -p 4082",
-    "grind": "tsx scripts/grind.ts",
-    "indexer": "tsx scripts/indexer.ts",
-    "db:push": "drizzle-kit push"
+    "grind": "tsx scripts/grind.mts",
+    "indexer": "tsx scripts/indexer.mts",
+    "db:push": "drizzle-kit push",
+    "db:local": "tsx scripts/localdb.mts"
   },
   "dependencies": {
+    "@electric-sql/pglite": "^0.5.10",
+    "@electric-sql/pglite-socket": "^0.2.13",
     "@neondatabase/serverless": "^1.0.0",
     "@pump-fun/pump-sdk": "^3.2.0",
     "@pump-fun/pump-swap-sdk": "^2.2.0",
@@ -22,6 +25,7 @@
     "drizzle-orm": "^0.44.0",
     "ffmpeg-static": "^5.2.0",
     "next": "16.4.0",
+    "postgres": "^3.4.9",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "server-only": "^0.0.1"

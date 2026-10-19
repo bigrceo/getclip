@@ -1,4 +1,7 @@
 import "server-only";
+import { randomUUID } from "node:crypto";
+import { putFile } from "./storage";
+import { isDevnet } from "./sol";
 
 export type Meta = { name: string; symbol: string; description: string; image: Buffer; twitter?: string; website?: string };
 
@@ -22,8 +25,20 @@ export async function uploadMetadata(m: Meta): Promise<string> {
   fd.append("name", m.name); fd.append("symbol", m.symbol); fd.append("description", m.description); fd.append("showName", "true");
   if (m.twitter) fd.append("twitter", m.twitter);
   if (m.website) fd.append("website", m.website);
-  const r = await fetch("https://pump.fun/api/ipfs", { method: "POST", body: fd });
-  const j = await r.json().catch(() => null);
-  if (!r.ok || !j?.metadataUri) throw new Error("IPFS upload failed");
-  return j.metadataUri as string;
+  const r = await fetch("https://pump.fun/api/ipfs", { method: "POST", body: fd }).catch(() => null);
+  const j = await r?.json().catch(() => null);
+  if (r?.ok && j?.metadataUri) return j.metadataUri as string;
+  // Devnet only: pump.fun's endpoint is unreliable (500s), so host the metadata ourselves. Mainnet must use IPFS (set PINATA_JWT).
+  if (isDevnet()) return selfHost(m);
+  throw new Error("IPFS upload failed");
+}
+
+/** Stores image + metadata JSON in our storage and serves them from /api/meta/<id>. Devnet/testing only. */
+async function selfHost(m: Meta): Promise<string> {
+  const id = randomUUID(), site = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:4082";
+  const img = await putFile(`meta/${id}/image.jpg`, m.image, "image/jpeg");
+  const json = { name: m.name, symbol: m.symbol, description: m.description, image: img.startsWith("local:") ? `${site}/api/meta/${id}/image` : img, showName: true, createdOn: site,
+    ...(m.twitter ? { twitter: m.twitter } : {}), ...(m.website ? { website: m.website } : {}) };
+  const ref = await putFile(`meta/${id}/meta.json`, Buffer.from(JSON.stringify(json)), "application/json");
+  return ref.startsWith("local:") ? `${site}/api/meta/${id}` : ref;
 }

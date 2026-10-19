@@ -6,13 +6,13 @@
  * Optional websocket (SOLANA_WS_URL) on pump.fun program logs to refresh a coin as soon as it trades.
  */
 import { Connection, PublicKey } from "@solana/web3.js";
-import { neon } from "@neondatabase/serverless";
-import { OnlinePumpSdk, PUMP_PROGRAM_ID, bondingCurvePda, canonicalPumpPoolPda } from "@pump-fun/pump-sdk";
+import { OnlinePumpSdk, PUMP_PROGRAM_ID, bondingCurvePda, canonicalPumpPoolPda, creatorVaultPda } from "@pump-fun/pump-sdk";
+import { sqlClient } from "../src/lib/db/index";
 
-const sql = neon(process.env.DATABASE_URL!);
+const sql = sqlClient(process.env.DATABASE_URL!);
 const conn = new Connection(process.env.SOLANA_RPC_URL!, { commitment: "confirmed", wsEndpoint: process.env.SOLANA_WS_URL });
 const sdk = new OnlinePumpSdk(conn);
-const CREATOR_FEE = Number(process.env.CREATOR_FEE_PCT ?? 0.3) / 100; // estimate shown on creator pages
+const CREATOR_FEE = Number(process.env.CREATOR_FEE_PCT ?? 0.3) / 100; // fallback estimate when the vault delta is not readable (PumpSwap)
 let solUsd = 150;
 
 async function refreshSolUsd() {
@@ -27,23 +27,30 @@ async function syncCoin(mint: string, migrated: boolean) {
   const venue = migrated ? canonicalPumpPoolPda(m) : bondingCurvePda(m);
   const [last] = await sql`select sig from trades where mint = ${mint} order by at desc limit 1`;
   const sigs = await conn.getSignaturesForAddress(venue, { limit: 100, until: last?.sig });
+  // Creator fees are read from chain: the SOL credited to the pump.fun creator vault of this coin's creator in each trade.
+  const curve0 = migrated ? null : await sdk.fetchBondingCurve(m).catch(() => null);
+  const vault = curve0 ? creatorVaultPda(curve0.creator).toBase58() : null;
   for (const s of sigs.reverse()) {
     if (s.err) continue;
     const tx = await conn.getParsedTransaction(s.signature, { maxSupportedTransactionVersion: 0 }).catch(() => null);
     if (!tx?.meta) continue;
-    const signer = tx.transaction.message.accountKeys.find((k) => k.signer)?.pubkey.toBase58();
+    const keys = tx.transaction.message.accountKeys.map((k) => k.pubkey.toBase58());
+    const tok = (b: any[] | null | undefined, owner: string) => Number(b?.find((x) => x.mint === mint && x.owner === owner)?.uiTokenAmount.uiAmount ?? 0);
+    // The trader is the signer whose token balance moved (in a launch tx the platform pays, the buyer signs too).
+    const signer = tx.transaction.message.accountKeys.filter((k) => k.signer).map((k) => k.pubkey.toBase58())
+      .find((w) => tok(tx.meta!.postTokenBalances, w) !== tok(tx.meta!.preTokenBalances, w));
     if (!signer) continue;
-    const idx = tx.transaction.message.accountKeys.findIndex((k) => k.pubkey.toBase58() === signer);
-    const solDelta = (tx.meta.postBalances[idx] - tx.meta.preBalances[idx]) / 1e9;
-    const tok = (b: any[] | null | undefined) => Number(b?.find((x) => x.mint === mint && x.owner === signer)?.uiTokenAmount.uiAmount ?? 0);
-    const tokDelta = tok(tx.meta.postTokenBalances) - tok(tx.meta.preTokenBalances);
-    if (!tokDelta) continue;
+    const tokDelta = tok(tx.meta.postTokenBalances, signer) - tok(tx.meta.preTokenBalances, signer);
+    const delta = (i: number) => i >= 0 ? (tx.meta!.postBalances[i] - tx.meta!.preBalances[i]) / 1e9 : 0;
+    // SOL size = what entered/left the bonding curve (excludes fees, rent and priority fee); wallet delta on PumpSwap.
+    const curveIdx = migrated ? -1 : keys.indexOf(venue.toBase58());
     const side = tokDelta > 0 ? "buy" : "sell";
-    const sol = Math.abs(solDelta), tokens = Math.abs(tokDelta), price = sol / tokens;
-    await sql`insert into trades (sig, mint, wallet, side, sol, tokens, price_sol, mcap_usd, at)
+    const sol = Math.abs(curveIdx >= 0 ? delta(curveIdx) : delta(keys.indexOf(signer))), tokens = Math.abs(tokDelta), price = sol / tokens;
+    const fee = vault && keys.includes(vault) ? Math.max(0, delta(keys.indexOf(vault))) : sol * CREATOR_FEE;
+    const ins = await sql`insert into trades (sig, mint, wallet, side, sol, tokens, price_sol, mcap_usd, at)
       values (${s.signature}, ${mint}, ${signer}, ${side}, ${sol}, ${tokens}, ${price}, ${price * 1e9 * solUsd}, to_timestamp(${s.blockTime ?? Date.now() / 1000}))
-      on conflict do nothing`;
-    await sql`update coins set volume_sol = volume_sol + ${sol}, fees_sol = fees_sol + ${sol * CREATOR_FEE}, last_trade_at = to_timestamp(${s.blockTime ?? Date.now() / 1000}) where mint = ${mint}`;
+      on conflict do nothing returning sig`;
+    if (ins.length) await sql`update coins set volume_sol = volume_sol + ${sol}, fees_sol = fees_sol + ${fee}, last_trade_at = to_timestamp(${s.blockTime ?? Date.now() / 1000}) where mint = ${mint}`;
   }
   // Market
   const curve = await sdk.fetchBondingCurve(m).catch(() => null);

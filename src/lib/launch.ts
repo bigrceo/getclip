@@ -11,6 +11,7 @@ import { db, schema } from "./db";
 import { connection, dryRun, isSolAddress, platformKeypair } from "./sol";
 import { getFile } from "./storage";
 import { uploadMetadata } from "./ipfs";
+import { openMintSecret } from "./mintcrypt";
 
 export type LaunchInput = {
   name: string; ticker: string; description?: string; sourceUrl?: string;
@@ -52,7 +53,7 @@ async function reserveMint(): Promise<Keypair> {
       order by pubkey limit 1 for update skip locked) returning pubkey, secret`);
   const r = (rows as any).rows?.[0] ?? (rows as any)[0];
   if (!r) throw new Error("Out of vanity mints. Run the grinder.");
-  const kp = Keypair.fromSecretKey(bs58.decode(r.secret));
+  const kp = Keypair.fromSecretKey(bs58.decode(openMintSecret(r.secret)));
   if (!kp.publicKey.toBase58().toLowerCase().endsWith(BRAND.vanitySuffix)) throw new Error("Bad mint in pool");
   return kp;
 }
@@ -148,7 +149,13 @@ async function send(tx: Transaction): Promise<string> {
     return "dry-run";
   }
   const conn = connection();
-  const sig = await conn.sendRawTransaction(tx.serialize(), { skipPreflight: false, maxRetries: 5 });
+  const sig = await conn.sendRawTransaction(tx.serialize(), { skipPreflight: false, maxRetries: 5 }).catch((e: Error) => {
+    if (/no record of a prior credit|insufficient (funds|lamports)/i.test(e.message)) {
+      console.error("[launch] platform or buyer wallet is out of SOL:", e.message);
+      throw new Error("Not enough SOL to send this launch. Try again in a moment.");
+    }
+    throw e;
+  });
   const res = await conn.confirmTransaction({ signature: sig, blockhash: tx.recentBlockhash!, lastValidBlockHeight: tx.lastValidBlockHeight! }, "confirmed");
   if (res.value.err) throw new Error("The launch failed on chain.");
   return sig;

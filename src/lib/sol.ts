@@ -17,3 +17,5 @@ export function isSolAddress(s: string | null | undefined): s is string {
   try { new PublicKey(s); return true; } catch { return false; }
 }
 export const dryRun = () => process.env.LAUNCH_DRY_RUN !== "0";
+/** True when the server RPC points at devnet (test-only code paths key off this; mainnet behavior never changes). */
+export const isDevnet = () => /devnet/i.test(process.env.SOLANA_RPC_URL ?? "");

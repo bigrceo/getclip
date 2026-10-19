@@ -35,7 +35,7 @@ export default async function CoinPage({ params }: { params: Promise<{ mint: str
             <p className="mt-3 break-all text-sm text-haze">{c.mint}</p>
             <div className="mt-3 flex flex-wrap gap-4 text-sm">
               <a className="underline" href={`https://pump.fun/coin/${c.mint}`} target="_blank" rel="noreferrer">pump.fun</a>
-              <a className="underline" href={`https://solscan.io/token/${c.mint}`} target="_blank" rel="noreferrer">Solscan</a>
+              <a className="underline" href={`https://solscan.io/token/${c.mint}${/devnet/i.test(process.env.SOLANA_RPC_URL ?? "") ? "?cluster=devnet" : ""}`} target="_blank" rel="noreferrer">Solscan</a>
               <a className="underline" href={`https://dexscreener.com/solana/${c.mint}`} target="_blank" rel="noreferrer">DEX Screener</a>
               {c.sourceUrl && <a className="underline" href={c.sourceUrl} target="_blank" rel="noreferrer">Original clip</a>}
             </div>
