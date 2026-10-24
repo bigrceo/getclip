@@ -22,7 +22,7 @@ export function HeroLaunch() {
     <form onSubmit={(e) => { e.preventDefault(); router.push(url.trim() ? `/launch?url=${encodeURIComponent(url.trim())}` : "/launch"); }}
       onDragOver={(e) => { e.preventDefault(); setDrag(true); }} onDragLeave={() => setDrag(false)}
       onDrop={(e) => { e.preventDefault(); setDrag(false); const f = e.dataTransfer.files[0]; if (f) upload(f); }}
-      className={`mx-auto mt-8 flex w-full max-w-2xl flex-col gap-2 rounded-2xl border-2 border-dashed p-2 transition sm:flex-row ${drag ? "border-coral bg-deck-hi" : "border-line bg-deck"}`}>
+      className={`mx-auto mt-8 flex w-full max-w-2xl flex-col gap-2 border-2 border-dashed p-2 transition sm:flex-row ${drag ? "border-coral bg-deck-hi" : "border-line bg-deck"}`}>
       <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Paste a TikTok, Reels, Shorts or X video link"
         className="h-12 min-w-0 flex-1 bg-transparent px-3 text-base outline-none placeholder:text-haze/70" aria-label="Clip link" />
       <div className="flex gap-2">

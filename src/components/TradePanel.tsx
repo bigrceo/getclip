@@ -31,7 +31,7 @@ export function TradePanel({ mint, ticker, migrated }: { mint: string; ticker: s
     } catch (e) { setMsg(e instanceof Error ? e.message : String(e)); } finally { setBusy(false); }
   }
   return (
-    <div className="rounded-2xl border border-line bg-deck p-4">
+    <div className=" border-2 border-line bg-deck p-4">
       <div className="mb-3 flex gap-5">
         {(["buy", "sell"] as const).map((s) => <button key={s} onClick={() => setSide(s)} className={`label text-[13px] ${side === s ? (s === "buy" ? "!text-up" : "!text-down") : "hover:!text-ink"}`}>{s === "buy" ? "Buy" : "Sell"}</button>)}
         <span className="label ml-auto">{migrated ? "PumpSwap" : "Bonding curve"}</span>

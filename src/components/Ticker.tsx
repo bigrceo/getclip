@@ -9,7 +9,7 @@ export function Ticker({ coins }: { coins: Coin[] }) {
       <div className="marquee flex w-max gap-6 py-2">
         {row.map((c, i) => (
           <Link key={i} href={`/coin/${c.mint}`} className="flex items-center gap-2 whitespace-nowrap text-sm">
-            <img src={c.still} alt="" className="h-6 w-6 rounded-md object-cover" loading="lazy" />
+            <img src={c.still} alt="" className="h-6 w-6 object-cover" loading="lazy" />
             <span className="font-bold">${c.ticker}</span>
             <span className={c.change24h >= 0 ? "text-up" : "text-down"}>{pct(c.change24h)}</span>
             <span className="text-haze">{usd(c.mcapUsd)}</span>

@@ -12,3 +12,4 @@ mints.json
 .secrets
 .vercel
 .env*
+.screens/

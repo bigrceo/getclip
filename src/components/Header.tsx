@@ -8,12 +8,12 @@ import { short, useWallet } from "./wallet";
 export function Header() {
   const w = useWallet();
   return (
-    <header className="sticky top-0 z-30 border-b border-line bg-night/85 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4">
+    <header className="sticky top-0 z-30 border-b-2 border-line bg-night/85 backdrop-blur">
+      <div className="mx-auto flex h-16 max-w-[1680px] items-center gap-3 px-4">
         <Link href="/" aria-label={BRAND.name}><Logo /></Link>
-        <span className="text-line">/</span>
-        <a href={BRAND.x} target="_blank" rel="noreferrer" className="p-2 text-haze hover:text-ink" aria-label="X"><XIcon /></a>
-        <a href={BRAND.discord} target="_blank" rel="noreferrer" className="p-2 text-haze hover:text-ink" aria-label="Discord"><DiscordIcon /></a>
+        <span className="hidden text-line sm:inline">/</span>
+        <a href={BRAND.x} target="_blank" rel="noreferrer" className="hidden p-2 text-haze hover:text-ink sm:block" aria-label="X"><XIcon /></a>
+        <a href={BRAND.discord} target="_blank" rel="noreferrer" className="hidden p-2 text-haze hover:text-ink sm:block" aria-label="Discord"><DiscordIcon /></a>
         <div className="ml-auto flex items-center gap-2">
           <Link href="/launch" className="btn btn-hot">Launch<span className="hidden sm:inline"> a clip</span></Link>
           {w.address ? (

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Archivo_Black } from "next/font/google";
+import { Inter, Bungee } from "next/font/google";
 import "./globals.css";
 import { BRAND, SITE_URL } from "@/lib/brand";
 import { WalletProvider } from "@/components/wallet";
@@ -7,7 +7,9 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const archivo = Archivo_Black({ subsets: ["latin"], weight: "400", variable: "--font-archivo" });
+const bungee = Bungee({ subsets: ["latin"], weight: "400", variable: "--font-bungee" });
+
+export const viewport = { themeColor: "#14123a" };
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -20,7 +22,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${archivo.variable}`}>
+    <html lang="en" className={`${inter.variable} ${bungee.variable}`}>
       <body className="min-h-dvh flex flex-col">
         <a href="#content" className="sr-only focus:not-sr-only">Skip to the content</a>
         <WalletProvider>

@@ -22,35 +22,44 @@ export default async function CoinPage({ params }: { params: Promise<{ mint: str
   const dev = holders.find((h) => h.dev)?.pct ?? 0;
   const stats: [string, string][] = [["Market cap", usd(c.mcapUsd)], ["24h", pct(c.change24h)], ["Volume", `${c.volumeSol.toFixed(1)} SOL`], ["Holders", String(c.holders)],
     ["Top 10", `${top10.toFixed(1)}%`], ["Dev holds", `${dev.toFixed(1)}%`], ["Bonding", c.migrated ? "Graduated" : `${c.bondingPct.toFixed(0)}%`], ["Age", ago(c.createdAt)]];
+  const top = stats.slice(0, 3), rest = stats.slice(3);
   return (
-    <div className="mx-auto grid max-w-7xl gap-6 px-4 py-8 lg:grid-cols-[1fr_360px]">
-      <div className="min-w-0 space-y-6">
-        <div className="flex flex-col gap-5 sm:flex-row">
-          {c.loop ? <video src={c.loop} poster={c.still} autoPlay loop muted playsInline className="aspect-square w-full rounded-2xl border border-line object-cover sm:w-56" />
-            : <img src={c.still} alt="" className="aspect-square w-full rounded-2xl border border-line object-cover sm:w-56" />}
-          <div className="min-w-0">
-            <h1 className="font-sign text-3xl">${c.ticker}</h1>
-            <p className="text-lg">{c.name}</p>
-            {c.description && <p className="mt-1 text-haze">{c.description}</p>}
-            <p className="mt-3 break-all text-sm text-haze">{c.mint}</p>
-            <div className="mt-3 flex flex-wrap gap-4 text-sm">
+    <div className="mx-auto w-full max-w-[1680px] px-4 py-5 sm:px-6">
+      <header className="flex flex-col gap-4 border-2 border-line bg-deck p-3 sm:p-4 lg:flex-row lg:items-center">
+        <div className="flex min-w-0 flex-1 items-center gap-4">
+          {c.loop ? <video src={c.loop} poster={c.still} autoPlay loop muted playsInline className="size-20 shrink-0 border-2 border-line object-cover sm:size-24" />
+            : <img src={c.still} alt="" className="size-20 shrink-0 border-2 border-line object-cover sm:size-24" />}
+          <div className="flex min-w-0 flex-col gap-1.5">
+            <h1 className="truncate font-sign text-2xl sm:text-3xl">${c.ticker} <span className="text-lg text-haze sm:text-xl">{c.name}</span></h1>
+            {c.description && <p className="text-sm text-haze">{c.description}</p>}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+              <span className="break-all text-haze">{short(c.mint, 6)}</span>
               <a className="underline" href={`https://pump.fun/coin/${c.mint}`} target="_blank" rel="noreferrer">pump.fun</a>
               <a className="underline" href={`https://solscan.io/token/${c.mint}${/devnet/i.test(process.env.SOLANA_RPC_URL ?? "") ? "?cluster=devnet" : ""}`} target="_blank" rel="noreferrer">Solscan</a>
               <a className="underline" href={`https://dexscreener.com/solana/${c.mint}`} target="_blank" rel="noreferrer">DEX Screener</a>
               {c.sourceUrl && <a className="underline" href={c.sourceUrl} target="_blank" rel="noreferrer">Original clip</a>}
+              <span className="text-haze">Creator fees: {c.feeMode === "holders" ? "to holders" : <Link className="underline" href={`/creator/${c.creator}`}>{short(c.creator)}</Link>}</span>
             </div>
-            <p className="mt-3 text-sm text-haze">Creator fees: {c.feeMode === "holders" ? "to holders" : <Link className="underline" href={`/creator/${c.creator}`}>{short(c.creator)}</Link>}</p>
           </div>
         </div>
-        <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-4">
-          {stats.map(([k, v]) => <div key={k} className="bg-deck p-3"><dt className="label">{k}</dt><dd className="mt-1 font-bold">{v}</dd></div>)}
+        <div className="lg:w-[440px]">
+          <dl className="grid grid-cols-3 gap-px bg-line">
+            {top.map(([k, v]) => <div key={k} className="bg-night px-3 py-2"><dt className="label">{k}</dt><dd className="mt-0.5 font-sign text-lg">{v}</dd></div>)}
+          </dl>
+          {!c.migrated && <div className="mt-2.5 h-8 border-2 border-line bg-night p-1"><div className="h-full bg-pink" style={{ width: `${Math.max(2, c.bondingPct)}%` }} /></div>}
+        </div>
+      </header>
+      <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="min-w-0 space-y-4">
+        <dl className="grid grid-cols-2 gap-px border-2 border-line bg-line sm:grid-cols-5">
+          {rest.map(([k, v]) => <div key={k} className="bg-deck p-3"><dt className="label">{k}</dt><dd className="mt-1 font-bold">{v}</dd></div>)}
         </dl>
-        <div className="rounded-2xl border border-line bg-deck p-3"><Chart trades={trades} /></div>
+        <div className=" border-2 border-line bg-deck p-3"><Chart trades={trades} /></div>
         <section>
           <h2 className="label mb-2">Trades</h2>
-          <div className="overflow-hidden rounded-2xl border border-line">
+          <div className="overflow-hidden border-2 border-line">
             {trades.slice(0, 30).map((t) => (
-              <div key={t.sig} className="grid grid-cols-[1fr_auto_auto] gap-3 border-b border-line px-3 py-2 text-sm last:border-0 sm:grid-cols-[8rem_1fr_auto_auto]">
+              <div key={t.sig} className="grid grid-cols-[1fr_auto_auto] gap-3 border-b-2 border-line px-3 py-2 text-sm last:border-0 sm:grid-cols-[8rem_1fr_auto_auto]">
                 <span className="hidden text-haze sm:block">{short(t.wallet)}</span>
                 <span className={t.side === "buy" ? "text-up" : "text-down"}>{t.side === "buy" ? "Bought" : "Sold"} {t.sol.toFixed(3)} SOL</span>
                 <span className="text-haze">{usd(t.mcapUsd)}</span><span className="text-haze">{ago(t.at)}</span>
@@ -59,13 +68,13 @@ export default async function CoinPage({ params }: { params: Promise<{ mint: str
           </div>
         </section>
       </div>
-      <aside className="space-y-6">
+      <aside className="flex flex-col gap-4">
         <TradePanel mint={c.mint} ticker={c.ticker} migrated={c.migrated} />
         <section>
           <h2 className="label mb-2">Holders</h2>
-          <div className="rounded-2xl border border-line">
+          <div className=" border-2 border-line">
             {holders.slice(0, 15).map((h, i) => (
-              <div key={h.wallet + i} className="flex justify-between border-b border-line px-3 py-2 text-sm last:border-0">
+              <div key={h.wallet + i} className="flex justify-between border-b-2 border-line px-3 py-2 text-sm last:border-0">
                 <span>{i + 1}. {h.curve ? "Bonding curve" : short(h.wallet)}{h.dev && <span className="label ml-2 !text-sun">Dev</span>}</span>
                 <span className="text-haze">{h.pct.toFixed(2)}%</span>
               </div>
@@ -74,6 +83,7 @@ export default async function CoinPage({ params }: { params: Promise<{ mint: str
         </section>
         <Report mint={c.mint} />
       </aside>
+      </div>
     </div>
   );
 }

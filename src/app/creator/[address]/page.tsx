@@ -12,7 +12,7 @@ export default async function Creator({ params }: { params: Promise<{ address: s
   const unclaimed = await creatorVaultSol(address);
   const fees = coins.reduce((s, c) => s + c.feesSol, 0), mcap = coins.reduce((s, c) => s + c.mcapUsd, 0);
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10">
+    <div className="mx-auto max-w-[1680px] px-4 py-10">
       <p className="label">Creator</p>
       <h1 className="mt-1 break-all font-sign text-2xl">{address}</h1>
       <dl className="mt-6 flex flex-wrap gap-10">

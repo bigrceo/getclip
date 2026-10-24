@@ -17,7 +17,7 @@ export function CoinGrid({ initial }: { initial: Coin[] }) {
   }, [sort]);
   const pick = (v: "tiles" | "list") => { setView(v); try { localStorage.setItem("view", v); } catch {} };
   return (
-    <section className="mx-auto max-w-7xl px-4">
+    <section className="mx-auto max-w-[1680px] px-4">
       <div className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-2">
         <nav className="flex flex-wrap gap-x-5 gap-y-1" role="tablist">
           {TABS.map(([k, l]) => (
@@ -36,7 +36,7 @@ export function CoinGrid({ initial }: { initial: Coin[] }) {
           {coins.map((c) => <CoinTile key={c.mint} c={c} />)}
         </div>
       ) : (
-        <div className="rounded-2xl border border-line">{coins.map((c, i) => <CoinRow key={c.mint} c={c} i={i} />)}</div>
+        <div className=" border-2 border-line">{coins.map((c, i) => <CoinRow key={c.mint} c={c} i={i} />)}</div>
       )}
     </section>
   );

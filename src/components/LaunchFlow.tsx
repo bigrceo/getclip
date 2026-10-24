@@ -82,7 +82,7 @@ export function LaunchFlow({ initialUrl, initialRef }: { initialUrl?: string; in
           <li key={s} className={`label ${step === s ? "!text-coral" : ""}`}>{i + 1} {s === "source" ? "Clip" : s === "crop" ? "Square" : s === "details" ? "Coin" : "Live"}</li>
         ))}
       </ol>
-      <div className="mt-4 rounded-2xl border border-line bg-deck p-4 sm:p-6">
+      <div className="mt-4 border-2 border-line bg-deck p-4 sm:p-6">
         {step === "source" && (
           <div className="space-y-4">
             <form onSubmit={(e) => { e.preventDefault(); if (url.trim()) resolve(url.trim()); }} className="flex flex-col gap-2 sm:flex-row">
@@ -90,7 +90,7 @@ export function LaunchFlow({ initialUrl, initialRef }: { initialUrl?: string; in
               <button className="btn btn-hot h-11">Fetch</button>
             </form>
             <div onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) upload(f); }}
-              onClick={() => file.current?.click()} className="cursor-pointer rounded-xl border-2 border-dashed border-line p-8 text-center text-haze hover:border-coral">
+              onClick={() => file.current?.click()} className="cursor-pointer border-2 border-dashed border-line p-8 text-center text-haze hover:border-coral">
               Or drop a video here (mp4, mov, webm, 60 MB max)
             </div>
             <input ref={file} type="file" accept="video/*" hidden onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
@@ -101,7 +101,7 @@ export function LaunchFlow({ initialUrl, initialRef }: { initialUrl?: string; in
         {step === "crop" && draft && <CropPicker src={fileUrl(draft.ref)} crop={crop} onChange={setCrop} onDone={doRender} />}
         {step === "details" && render && (
           <div className="grid gap-5 sm:grid-cols-[180px_1fr]">
-            <video src={fileUrl(render.loopRef)} autoPlay loop muted playsInline className="aspect-square w-full rounded-xl bg-night object-cover" />
+            <video src={fileUrl(render.loopRef)} autoPlay loop muted playsInline className="aspect-square w-full bg-night object-cover" />
             <div className="space-y-3">
               <L t="Name"><input className="field" maxLength={32} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></L>
               <L t="Ticker"><input className="field uppercase" maxLength={10} value={form.ticker} onChange={(e) => setForm({ ...form, ticker: e.target.value.replace(/[^a-z0-9]/gi, "").toUpperCase() })} /></L>
@@ -152,10 +152,10 @@ function CropPicker({ src, crop, onChange, onDone }: { src: string; crop: { x: n
   useEffect(() => { if (v.current && dim.d) v.current.currentTime = crop.start; }, [crop.start, dim.d]);
   return (
     <div className="space-y-4">
-      <div ref={box} className="relative mx-auto w-fit max-w-full touch-none select-none overflow-hidden rounded-xl bg-night">
+      <div ref={box} className="relative mx-auto w-fit max-w-full touch-none select-none overflow-hidden bg-night">
         <video ref={v} src={src} muted playsInline loop autoPlay className="block max-h-[60vh] max-w-full"
           onLoadedMetadata={(e) => { const t = e.currentTarget; setDim({ w: t.videoWidth, h: t.videoHeight, d: t.duration }); onChange({ ...crop, x: (1 - Math.min(t.videoWidth, t.videoHeight) / t.videoWidth) / 2, y: (1 - Math.min(t.videoWidth, t.videoHeight) / t.videoHeight) / 2 }); }} />
-        <div className="absolute cursor-move border-2 border-coral shadow-[0_0_0_9999px_rgba(18,12,10,.6)]"
+        <div className="absolute cursor-move border-2 border-coral shadow-[0_0_0_9999px_rgba(20,18,58,.6)]"
           style={{ left: `${crop.x * 100}%`, top: `${crop.y * 100}%`, width: `${fw * 100}%`, height: `${fh * 100}%` }}
           onPointerDown={(e) => { (e.target as HTMLElement).setPointerCapture(e.pointerId); drag.current = { x: e.clientX, y: e.clientY, cx: crop.x, cy: crop.y }; }}
           onPointerMove={(e) => { if (!drag.current || !box.current) return; const r = box.current.getBoundingClientRect();
