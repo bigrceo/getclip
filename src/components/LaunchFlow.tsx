@@ -61,18 +61,24 @@ export function LaunchFlow({ initialUrl, initialRef }: { initialUrl?: string; in
     if (buy > 0) { buyer = w.address ?? (await w.connect()) ?? undefined; if (!buyer) return setErr("Connect a wallet for the first buy."); }
     setBusy("Creating your coin on pump.fun…");
     try {
+      // The create alone (sponsored) fits in one tx; create+buy is over Solana's 1232-byte limit, so the first buy follows as its own tx.
       const body = { name: form.name, ticker: form.ticker, description: form.description, recipient: form.recipient, feeMode: form.feeMode,
-        firstBuySol: buy, buyer, stillRef: render.stillRef, loopRef: render.loopRef, sourceUrl: url || undefined };
+        stillRef: render.stillRef, loopRef: render.loopRef, sourceUrl: url || undefined };
       const r = await fetch("/api/launch/prepare", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }).then((r) => r.json());
       if (r.error) throw new Error(r.error);
-      if (r.tx) {
-        setBusy("Approve in your wallet…");
-        const signed = await w.sign(r.tx);
-        setBusy("Sending…");
-        const s = await fetch("/api/launch/submit", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: r.id, tx: signed }) }).then((r) => r.json());
-        if (s.error) throw new Error(s.error);
-        setDone(s);
-      } else setDone(r);
+      setDone(r);
+      if (buy > 0 && buyer) {
+        try {
+          setBusy("Coin is live. Approve your first buy…");
+          const q = await fetch("/api/trade/quote", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ mint: r.mint, wallet: buyer, side: "buy", amount: buy }) }).then((r) => r.json());
+          if (q.error) throw new Error(q.error);
+          const signed = await w.sign(q.tx);
+          const { Connection, Transaction } = await import("@solana/web3.js");
+          const { Buffer } = await import("buffer");
+          const conn = new Connection(process.env.NEXT_PUBLIC_SOLANA_RPC_URL ?? "https://api.mainnet-beta.solana.com", "confirmed");
+          await conn.sendRawTransaction(Transaction.from(Buffer.from(signed, "base64")).serialize());
+        } catch (e) { setErr("Your coin is live, but the first buy didn't go through: " + (e instanceof Error ? e.message : String(e)) + ". Buy it from the coin page."); }
+      }
       setStep("done");
     } catch (e) { setErr(e instanceof Error ? e.message : String(e)); } finally { setBusy(""); }
   }
