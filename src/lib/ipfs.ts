@@ -1,7 +1,6 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { putFile } from "./storage";
-import { isDevnet } from "./sol";
 
 export type Meta = { name: string; symbol: string; description: string; image: Buffer; twitter?: string; website?: string };
 
@@ -28,12 +27,11 @@ export async function uploadMetadata(m: Meta): Promise<string> {
   const r = await fetch("https://pump.fun/api/ipfs", { method: "POST", body: fd }).catch(() => null);
   const j = await r?.json().catch(() => null);
   if (r?.ok && j?.metadataUri) return j.metadataUri as string;
-  // Devnet only: pump.fun's endpoint is unreliable (500s), so host the metadata ourselves. Mainnet must use IPFS (set PINATA_JWT).
-  if (isDevnet()) return selfHost(m);
-  throw new Error("IPFS upload failed");
+  // pump.fun's endpoint is unreliable (500s / bot wall). Fall back to permanent public Blob URLs, which pump.fun reads like any https metadata URI.
+  return selfHost(m);
 }
 
-/** Stores image + metadata JSON in our storage and serves them from /api/meta/<id>. Devnet/testing only. */
+/** Stores image + metadata JSON in our storage (public Vercel Blob in prod), or serves them from /api/meta/<id> locally. */
 async function selfHost(m: Meta): Promise<string> {
   const id = randomUUID(), site = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:4082";
   const img = await putFile(`meta/${id}/image.jpg`, m.image, "image/jpeg");

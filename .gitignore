@@ -8,3 +8,7 @@ next-env.d.ts
 .DS_Store
 mints.json
 .secrets
+.env.mainnet
+.secrets
+.vercel
+.env*
