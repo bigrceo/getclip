@@ -2,7 +2,7 @@ import Link from "next/link";
 import { BRAND } from "@/lib/brand";
 import { MOCK_COINS } from "@/lib/mock";
 import { Logo } from "./Logo";
-import { DiscordIcon, InstagramIcon, TikTokIcon, XIcon } from "./icons";
+import { InstagramIcon, TikTokIcon, XIcon } from "./icons";
 
 export function Footer() {
   const official = process.env.NEXT_PUBLIC_OFFICIAL_MINT || MOCK_COINS[0].mint;
@@ -16,7 +16,6 @@ export function Footer() {
           <a href={BRAND.x} className="p-2 text-haze hover:text-ink" aria-label="X"><XIcon /></a>
           <a href={BRAND.instagram} className="p-2 text-haze hover:text-ink" aria-label="Instagram"><InstagramIcon /></a>
           <a href={BRAND.tiktok} className="p-2 text-haze hover:text-ink" aria-label="TikTok"><TikTokIcon /></a>
-          <a href={BRAND.discord} className="p-2 text-haze hover:text-ink" aria-label="Discord"><DiscordIcon /></a>
         </div>
       </div>
     </footer>

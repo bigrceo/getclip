@@ -7,7 +7,6 @@ export const BRAND = {
   x: "https://x.com/getclipfun",
   instagram: "https://instagram.com/getclipfun",
   tiktok: "https://tiktok.com/@getclipfun",
-  discord: "https://discord.gg/placeholder",
   vanitySuffix: "clip",
   launchCostSol: 0.006,
 };
