@@ -159,12 +159,22 @@ async function send(tx: Transaction): Promise<string> {
     }
     throw e;
   });
-  const res = await conn.confirmTransaction({ signature: sig, blockhash: tx.recentBlockhash!, lastValidBlockHeight: tx.lastValidBlockHeight! }, "confirmed");
-  if (res.value.err) throw new Error("The launch failed on chain.");
-  return sig;
+  // Poll the signature instead of confirmTransaction: public RPCs drop the websocket and report "expired" for txs that landed.
+  const raw = tx.serialize();
+  for (let i = 0; i < 45; i++) {
+    await new Promise((r) => setTimeout(r, 2000));
+    const st = (await conn.getSignatureStatus(sig, { searchTransactionHistory: true }).catch(() => null))?.value;
+    if (st?.err) throw new Error("The launch failed on chain.");
+    if (st && st.confirmationStatus !== "processed") return sig;
+    const height = await conn.getBlockHeight().catch(() => 0);
+    if (height > tx.lastValidBlockHeight! + 30) break;
+    conn.sendRawTransaction(raw, { skipPreflight: true, maxRetries: 0 }).catch(() => {});
+  }
+  throw new Error("The launch was not confirmed. Try again.");
+
 }
 
-async function recordCoin(r: any, sig: string) {
+export async function recordCoin(r: any, sig: string) {
   const d = db();
   if (!d || sig === "dry-run") return;
   await d.insert(schema.coins).values({

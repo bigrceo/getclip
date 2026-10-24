@@ -1,461 +1,524 @@
 [
- {
-  "source": "https://www.tiktok.com/@roodabeguh/video/7699592378243353886",
-  "ticker": "OMAKASE",
-  "still": "batch/media/OMAKASE/still.jpg",
-  "loop": "batch/media/OMAKASE/loop.mp4",
-  "video": {
-   "w": 720,
-   "h": 1280,
-   "duration": 129.73
+  {
+    "source": "https://www.tiktok.com/@ronniesbiologicalmom/video/7694022855893306654",
+    "ticker": "HENRY",
+    "still": "batch/media/HENRY/still.jpg",
+    "loop": "batch/media/HENRY/loop.mp4",
+    "video": {
+      "w": 720,
+      "h": 1280,
+      "duration": 35.74
+    },
+    "name": "Henry vs Pumpkins",
+    "description": "Henry the horse finds pumpkins in his barn and trusts none of them. Clip coin.",
+    "why": "TikTok @ronniesbiologicalmom, TAG24 Viral Video of the Day (15 Oct): \"wtf is wrong with my horse\"",
+    "crop": {
+      "x": 0,
+      "y": 0.21875,
+      "size": 1,
+      "start": 10.7,
+      "length": 4
+    },
+    "mint": "241N8v2ZxHri4ML9BBDy4WUSK1oYJdwJJDgWRfQkcLiP",
+    "sig": "61GtnmMnwk4CiPgjfs3cHdmrZ4XBYk5BXDgiw6m3R2FiWKPdwCPhkx8YJFxYJpNzJcykQYpVDc1aDQf26nDoaoKs",
+    "launchedAt": "2026-10-24T15:19:00.146Z"
   },
-  "name": "Omakase Pug",
-  "description": "Birthday pug sits through a 17-course sushi omakase like a regular. Clip coin.",
-  "why": "TikTok @roodabeguh, TAG24 Viral Video of the Day (23 Oct): pug gets a 17-course omakase for his birthday",
-  "crop": {
-   "x": 0,
-   "y": 0.21875,
-   "size": 1,
-   "start": 16.5,
-   "length": 4
-  }
- },
- {
-  "source": "https://www.tiktok.com/@tuvok_nutters/video/7698792136862436621",
-  "ticker": "BESTIES",
-  "still": "batch/media/BESTIES/still.jpg",
-  "loop": "batch/media/BESTIES/loop.mp4",
-  "video": {
-   "w": 720,
-   "h": 1280,
-   "duration": 64.39
+  {
+    "source": "https://x.com/ic333_T/status/2110269201063841821",
+    "ticker": "WOLVERINE",
+    "still": "batch/media/WOLVERINE/still.jpg",
+    "loop": "batch/media/WOLVERINE/loop.mp4",
+    "author": "@ic333_T",
+    "video": {
+      "w": 576,
+      "h": 530,
+      "duration": 7.52
+    },
+    "name": "Wolverine Gets It",
+    "description": "That one friend who catches all your meme references. Clip coin.",
+    "why": "X @ic333_T, 109K likes (16 Oct): Hugh Jackman reaction clip",
+    "crop": {
+      "x": 0.03993055555555558,
+      "y": 0,
+      "size": 1,
+      "start": 2.5,
+      "length": 4
+    },
+    "mint": "2EdcBXvUsf81BgYz2B7RM6Gh7JN8pVhx7sA1t2ksCLip",
+    "sig": "Gn7YDWCQ3untMm3jtbW336Ffz7xGcmzYwSN78TzmmzRhBKJbKgU5Wj9CfEQEJNW9KhK4w393aUF4YqLMKmYs4J6",
+    "launchedAt": "2026-10-24T15:19:35.824Z"
   },
-  "name": "Cat Squirrel Besties",
-  "description": "A house cat and a squirrel who refuse to be enemies. Clip coin.",
-  "why": "TikTok @tuvok_nutters, TAG24 Viral Video of the Day (22 Oct): cat and squirrel become besties",
-  "crop": {
-   "x": 0,
-   "y": 0.21875,
-   "size": 1,
-   "start": 0.5,
-   "length": 4
-  }
- },
- {
-  "source": "https://www.tiktok.com/@ronniesbiologicalmom/video/7694022855893306654",
-  "ticker": "HENRY",
-  "still": "batch/media/HENRY/still.jpg",
-  "loop": "batch/media/HENRY/loop.mp4",
-  "video": {
-   "w": 720,
-   "h": 1280,
-   "duration": 35.74
+  {
+    "source": "https://x.com/cutiespuppies/status/2110561045366415426",
+    "ticker": "PUPS",
+    "still": "batch/media/PUPS/still.jpg",
+    "loop": "batch/media/PUPS/loop.mp4",
+    "author": "@cutiespuppies",
+    "video": {
+      "w": 852,
+      "h": 480,
+      "duration": 24.31
+    },
+    "name": "Golden and Husky",
+    "description": "A golden retriever puppy and a husky puppy, best friends. Clip coin.",
+    "why": "X @cutiespuppies, 21K likes, 372K views (15 Oct)",
+    "crop": {
+      "x": 0.21830985915492956,
+      "y": 0,
+      "size": 1,
+      "start": 7.3,
+      "length": 4
+    },
+    "mint": "2d1Ub6ARxYrue9LzoZUxbtNdTzsZ2wP7W6m722dbCLip",
+    "sig": "5FcKzRX9rmdSGpMXxdufsENZhvBe2eENG8AyGUvhanJ36XeXGCWRMaEk7LgMcxfPkZW4ZELdpM2eLNaCmFuXgKoW",
+    "launchedAt": "2026-10-24T15:19:42.406Z"
   },
-  "name": "Henry vs Pumpkins",
-  "description": "Henry the horse finds pumpkins in his barn and trusts none of them. Clip coin.",
-  "why": "TikTok @ronniesbiologicalmom, TAG24 Viral Video of the Day (15 Oct): \"wtf is wrong with my horse\"",
-  "crop": {
-   "x": 0,
-   "y": 0.21875,
-   "size": 1,
-   "start": 10.7,
-   "length": 4
-  }
- },
- {
-  "source": "https://x.com/fuuuukatsu/status/2112719998838022619",
-  "ticker": "GOATS",
-  "still": "batch/media/GOATS/still.jpg",
-  "loop": "batch/media/GOATS/loop.mp4",
-  "author": "@fuuuukatsu",
-  "video": {
-   "w": 1170,
-   "h": 648,
-   "duration": 75.77
+  {
+    "source": "https://x.com/lynethiona/status/2110591730651418718",
+    "ticker": "OTTER",
+    "still": "batch/media/OTTER/still.jpg",
+    "loop": "batch/media/OTTER/loop.mp4",
+    "author": "@lynethiona",
+    "video": {
+      "w": 720,
+      "h": 1280,
+      "duration": 3.95
+    },
+    "name": "Baby Otter",
+    "description": "A baby otter nibbling a finger. That's it. That's the coin.",
+    "why": "X @lynethiona, 17K likes (15 Oct)",
+    "crop": {
+      "x": 0,
+      "y": 0.21875,
+      "size": 1,
+      "start": 0,
+      "length": 4
+    },
+    "mint": "37hQfTgrV2AivVSnnnfHPGD12KiqJKy4R6DoLMiGcLip",
+    "sig": "2cMWXm7ecgKBawU4jxb9ypEpAYjXMb4BBGigNkgBoB5NvW3mv1mKHPCc9uFDn7u3KUKHsVhPvJmPbVESXrWw588S",
+    "launchedAt": "2026-10-24T15:19:47.347Z"
   },
-  "name": "Station Goats",
-  "description": "Two goats hired to mow the grass at Tokyo's Yotsuya station. Clip coin.",
-  "why": "X @fuuuukatsu, 4.4M views (21 Oct); \"JR's official mascots\" meme in English",
-  "crop": {
-   "x": 0.22307692307692306,
-   "y": 0,
-   "size": 1,
-   "start": 22.7,
-   "length": 4
-  }
- },
- {
-  "source": "https://x.com/Marmor_Informa/status/2114005047680139281",
-  "ticker": "HUG",
-  "still": "batch/media/HUG/still.jpg",
-  "loop": "batch/media/HUG/loop.mp4",
-  "author": "@Marmor_Informa",
-  "video": {
-   "w": 478,
-   "h": 270,
-   "duration": 30.46
+  {
+    "source": "https://x.com/catgoesviral/status/2111408882207830433",
+    "ticker": "CATS",
+    "still": "batch/media/CATS/still.jpg",
+    "loop": "batch/media/CATS/loop.mp4",
+    "author": "@catgoesviral",
+    "video": {
+      "w": 720,
+      "h": 1280,
+      "duration": 14.23
+    },
+    "name": "Cat Gang",
+    "description": "Cats doing cat things, 3.8 million views and counting. Clip coin.",
+    "why": "X @catgoesviral, 140K likes, 3.8M views (17 Oct)",
+    "crop": {
+      "x": 0,
+      "y": 0.21875,
+      "size": 1,
+      "start": 4.3,
+      "length": 4
+    },
+    "mint": "3u4WJc2Qi2P3cjs77JsM2QdUB6FRoXNLz8UiL4pHCLiP",
+    "sig": "5pnj691Wqm3A5KpTCuTPWxFMSXQoPMYHTBtPNvBPTmfccdrizHJxZhhyzhf4DCuyWGo7urxwPPJzoaWYA6S7dVCt",
+    "launchedAt": "2026-10-24T15:19:52.475Z"
   },
-  "name": "Monkey Hug",
-  "description": "A langur walks into a phone shop in India and hugs the owner. Clip coin.",
-  "why": "Shop CCTV, picked up by news accounts on 24 Oct (source post is a news repost, low engagement: weakest pick)",
-  "crop": {
-   "x": 0.2175732217573222,
-   "y": 0,
-   "size": 1,
-   "start": 9.1,
-   "length": 4
-  }
- },
- {
-  "source": "https://x.com/catgoesviral/status/2111408882207830433",
-  "ticker": "CATS",
-  "still": "batch/media/CATS/still.jpg",
-  "loop": "batch/media/CATS/loop.mp4",
-  "author": "@catgoesviral",
-  "video": {
-   "w": 720,
-   "h": 1280,
-   "duration": 14.23
+  {
+    "source": "https://x.com/FCBarcelona/status/2111521719835877646",
+    "ticker": "CALLME",
+    "still": "batch/media/CALLME/still.jpg",
+    "loop": "batch/media/CALLME/loop.mp4",
+    "author": "@FCBarcelona",
+    "video": {
+      "w": 1920,
+      "h": 1080,
+      "duration": 9.86
+    },
+    "name": "Lamine Calls",
+    "description": "Lamine Yamal and Gabriel's phone-call goal celebration. Clip coin.",
+    "why": "X @FCBarcelona, 59K likes, 1M views (17 Oct)",
+    "crop": {
+      "x": 0.21875,
+      "y": 0,
+      "size": 1,
+      "start": 3,
+      "length": 4
+    },
+    "mint": "3wDyaUCgk7bZEVh9o9corSFVQFrtRs9drdRak4YWcLiP",
+    "sig": "5BkZWazCNAXPJoMiiNTQ6vEnziYPu1bX4N4ysZ3Su2sc3AfiiWp4YQ4a9sENW4iK6qLjL8qncQ1iiLnEgfbN7X1",
+    "launchedAt": "2026-10-24T15:19:57.172Z"
   },
-  "name": "Cat Gang",
-  "description": "Cats doing cat things, 3.8 million views and counting. Clip coin.",
-  "why": "X @catgoesviral, 140K likes, 3.8M views (17 Oct)",
-  "crop": {
-   "x": 0,
-   "y": 0.21875,
-   "size": 1,
-   "start": 4.3,
-   "length": 4
-  }
- },
- {
-  "source": "https://x.com/RaminNasibov/status/2112957620772274232",
-  "ticker": "UNICORN",
-  "still": "batch/media/UNICORN/still.jpg",
-  "loop": "batch/media/UNICORN/loop.mp4",
-  "author": "@RaminNasibov",
-  "video": {
-   "w": 720,
-   "h": 960,
-   "duration": 10
+  {
+    "source": "https://x.com/vidsthatgohard/status/2111598352395895065",
+    "ticker": "PICCOLO",
+    "still": "batch/media/PICCOLO/still.jpg",
+    "loop": "batch/media/PICCOLO/loop.mp4",
+    "author": "@vidsthatgohard",
+    "video": {
+      "w": 654,
+      "h": 1280,
+      "duration": 9.06
+    },
+    "name": "Piccolo in Paris",
+    "description": "Piccolo pulled up to the Paris crowd. Clip coin.",
+    "why": "X @vidsthatgohard, 169K likes (17 Oct): Piccolo cosplayer towering over a Paris crowd",
+    "crop": {
+      "x": 0,
+      "y": 0.24453124999999998,
+      "size": 1,
+      "start": 3,
+      "length": 4
+    },
+    "mint": "42paAuKKTqHi2uNAYCXVrizJqwyvzahWLgyNE6NdcLip",
+    "sig": "48h1Dnva7nuuaacHX8wWut3Mw6avYdehzkkJx6PximnQBbmgMf9qagLpxbvUvRXbFHDge926e5BYdv8mMBwA9g7T",
+    "launchedAt": "2026-10-24T15:20:02.420Z"
   },
-  "name": "Unicorns Exist",
-  "description": "A white horse with a horn, standing there like it's normal. Clip coin.",
-  "why": "X @RaminNasibov \"unicorns exist\", 84K likes, 1.9M views (21 Oct)",
-  "crop": {
-   "x": 0,
-   "y": 0.125,
-   "size": 1,
-   "start": 3.5,
-   "length": 4
-  }
- },
- {
-  "source": "https://x.com/PunchingCat/status/2112987369209217131",
-  "ticker": "GLASS",
-  "still": "batch/media/GLASS/still.jpg",
-  "loop": "batch/media/GLASS/loop.mp4",
-  "author": "@PunchingCat",
-  "video": {
-   "w": 720,
-   "h": 696,
-   "duration": 19.27
+  {
+    "source": "https://x.com/carterjlowe/status/2111702183897182439",
+    "ticker": "WHALE",
+    "still": "batch/media/WHALE/still.jpg",
+    "loop": "batch/media/WHALE/loop.mp4",
+    "author": "@carterjlowe",
+    "video": {
+      "w": 1272,
+      "h": 716,
+      "duration": 6.25
+    },
+    "name": "Rogue Whale",
+    "description": "An Oregon cheerleader dodges a whale bursting out of the stadium turf. Clip coin.",
+    "why": "X @carterjlowe, 77K likes, 2.3M views (18 Oct): Autzen Stadium AR whale vs cheerleader",
+    "crop": {
+      "x": 0.21855345911949686,
+      "y": 0,
+      "size": 1,
+      "start": 2.5,
+      "length": 4
+    },
+    "mint": "46XGKWafanrwayqyyQprPcEGSFqCarFiCTS3JHjrcLiP",
+    "sig": "5FXER7XthYeDqAoqNnmYLDTpqg1DUvWG9xb4sETSRMN4PxaWiUqWhzxEf2NR2jmYBTcCGmtS2uD5f2k4AvFXj5Gg",
+    "launchedAt": "2026-10-24T15:20:07.908Z"
   },
-  "name": "Glass Table Cat",
-  "description": "A cat filmed from under a glass table. Pure belly. Clip coin.",
-  "why": "X @PunchingCat, 33K likes (21 Oct)",
-  "crop": {
-   "x": 0.016666666666666663,
-   "y": 0,
-   "size": 1,
-   "start": 0.3,
-   "length": 4
-  }
- },
- {
-  "source": "https://x.com/sillymeow4u/status/2112203766527385845",
-  "ticker": "HYDRATE",
-  "still": "batch/media/HYDRATE/still.jpg",
-  "loop": "batch/media/HYDRATE/loop.mp4",
-  "author": "@sillymeow4u",
-  "video": {
-   "w": 460,
-   "h": 460,
-   "duration": 2.79
+  {
+    "source": "https://x.com/capyfamily_usa/status/2112077446258565135",
+    "ticker": "ALBINO",
+    "still": "batch/media/ALBINO/still.jpg",
+    "loop": "batch/media/ALBINO/loop.mp4",
+    "author": "@capyfamily_usa",
+    "video": {
+      "w": 960,
+      "h": 720,
+      "duration": 35.06
+    },
+    "name": "Albino Capybara",
+    "description": "A rare albino capybara found in Uruguay, extremely relaxed. Clip coin.",
+    "why": "X @capyfamily_usa, 43K likes (18 Oct): albino capybara spotted in Uruguay",
+    "crop": {
+      "x": 0,
+      "y": 0,
+      "size": 1,
+      "start": 0,
+      "length": 4
+    },
+    "mint": "4BxdVAUgDoUjGkZRU4YR9bTAmDCBVXzZvLiroCyTCLip",
+    "sig": "3qaZANUuooemXXZ5wmH7MLstV46pKcmBeuahPPS4nCgmG1hCKynHaqgYNwfjBfWH36cmRJvUQHefw3ML7frGk2co",
+    "launchedAt": "2026-10-24T15:20:12.738Z"
   },
-  "name": "Hydrate",
-  "description": "Cat licking water on loop. Reminder to hydrate. Clip coin.",
-  "why": "X @sillymeow4u \"reminder to hydrate\", 20K likes (19 Oct)",
-  "crop": {
-   "x": 0,
-   "y": 0,
-   "size": 1,
-   "start": 0.8,
-   "length": 4
-  }
- },
- {
-  "source": "https://x.com/carterjlowe/status/2111702183897182439",
-  "ticker": "WHALE",
-  "still": "batch/media/WHALE/still.jpg",
-  "loop": "batch/media/WHALE/loop.mp4",
-  "author": "@carterjlowe",
-  "video": {
-   "w": 1272,
-   "h": 716,
-   "duration": 6.25
+  {
+    "source": "https://x.com/sillymeow4u/status/2112203766527385845",
+    "ticker": "HYDRATE",
+    "still": "batch/media/HYDRATE/still.jpg",
+    "loop": "batch/media/HYDRATE/loop.mp4",
+    "author": "@sillymeow4u",
+    "video": {
+      "w": 460,
+      "h": 460,
+      "duration": 2.79
+    },
+    "name": "Hydrate",
+    "description": "Cat licking water on loop. Reminder to hydrate. Clip coin.",
+    "why": "X @sillymeow4u \"reminder to hydrate\", 20K likes (19 Oct)",
+    "crop": {
+      "x": 0,
+      "y": 0,
+      "size": 1,
+      "start": 0.8,
+      "length": 4
+    },
+    "mint": "4RrAaZRRTR2gHDa1H4BxapCNxGZSUqDPjygX8pVwcLip",
+    "sig": "295AFMmFD7Pm94xPdpxkmfeGKAf3AjeyTo2FfkRsmpRja4DEZXtirnEMURHcwphC7hrCxsHWJQ2eNFfJQHTXPUKV",
+    "launchedAt": "2026-10-24T15:20:19.049Z"
   },
-  "name": "Rogue Whale",
-  "description": "An Oregon cheerleader dodges a whale bursting out of the stadium turf. Clip coin.",
-  "why": "X @carterjlowe, 77K likes, 2.3M views (18 Oct): Autzen Stadium AR whale vs cheerleader",
-  "crop": {
-   "x": 0.21855345911949686,
-   "y": 0,
-   "size": 1,
-   "start": 2.5,
-   "length": 4
-  }
- },
- {
-  "source": "https://x.com/Messias30_/status/2113262368486781429",
-  "ticker": "MESSI",
-  "still": "batch/media/MESSI/still.jpg",
-  "loop": "batch/media/MESSI/loop.mp4",
-  "author": "@Messias30_",
-  "video": {
-   "w": 576,
-   "h": 1024,
-   "duration": 57.1
+  {
+    "source": "https://www.tiktok.com/@tuvok_nutters/video/7698792136862436621",
+    "ticker": "BESTIES",
+    "still": "batch/media/BESTIES/still.jpg",
+    "loop": "batch/media/BESTIES/loop.mp4",
+    "video": {
+      "w": 720,
+      "h": 1280,
+      "duration": 64.39
+    },
+    "name": "Cat Squirrel Besties",
+    "description": "A house cat and a squirrel who refuse to be enemies. Clip coin.",
+    "why": "TikTok @tuvok_nutters, TAG24 Viral Video of the Day (22 Oct): cat and squirrel become besties",
+    "crop": {
+      "x": 0,
+      "y": 0.21875,
+      "size": 1,
+      "start": 0.5,
+      "length": 4
+    },
+    "mint": "6DMgEtFSeV2NhnASc8ovxRYvqmNhXKcPprDvssoCLip",
+    "sig": "2hUSdH87BdLC77msmRQWM2kFHJFcxyo8VrH1TUCf26HWrYx44rN12ZsYVezi9ddNw1sLYpMvQdRiaXv4j5XfftbU",
+    "launchedAt": "2026-10-24T15:20:24.580Z"
   },
-  "name": "Messi Breaks Protocol",
-  "description": "Messi ignores security to sign autographs for the crowd. Clip coin.",
-  "why": "X @Messias30_, 33K likes (22 Oct)",
-  "crop": {
-   "x": 0,
-   "y": 0.21875,
-   "size": 1,
-   "start": 2,
-   "length": 4
-  }
- },
- {
-  "source": "https://x.com/FCBarcelona/status/2111521719835877646",
-  "ticker": "CALLME",
-  "still": "batch/media/CALLME/still.jpg",
-  "loop": "batch/media/CALLME/loop.mp4",
-  "author": "@FCBarcelona",
-  "video": {
-   "w": 1920,
-   "h": 1080,
-   "duration": 9.86
+  {
+    "source": "https://x.com/fuuuukatsu/status/2112719998838022619",
+    "ticker": "GOATS",
+    "still": "batch/media/GOATS/still.jpg",
+    "loop": "batch/media/GOATS/loop.mp4",
+    "author": "@fuuuukatsu",
+    "video": {
+      "w": 1170,
+      "h": 648,
+      "duration": 75.77
+    },
+    "name": "Station Goats",
+    "description": "Two goats hired to mow the grass at Tokyo's Yotsuya station. Clip coin.",
+    "why": "X @fuuuukatsu, 4.4M views (21 Oct); \"JR's official mascots\" meme in English",
+    "crop": {
+      "x": 0.22307692307692306,
+      "y": 0,
+      "size": 1,
+      "start": 22.7,
+      "length": 4
+    },
+    "mint": "6E5mXyrjGLNsPzPoiaHs4tkGDsqMfKP2aJp2VGNTCLip",
+    "sig": "9T9qVLgW9z34oXkrB8qLhjc6cYibJi9wai43cNt5YXknFfm5zztQoTqN1n8F5TXgTEvzqQAB1rmjcK4GNKrpRKe",
+    "launchedAt": "2026-10-24T15:20:29.372Z"
   },
-  "name": "Lamine Calls",
-  "description": "Lamine Yamal and Gabriel's phone-call goal celebration. Clip coin.",
-  "why": "X @FCBarcelona, 59K likes, 1M views (17 Oct)",
-  "crop": {
-   "x": 0.21875,
-   "y": 0,
-   "size": 1,
-   "start": 3,
-   "length": 4
-  }
- },
- {
-  "source": "https://x.com/cutiespuppies/status/2110561045366415426",
-  "ticker": "PUPS",
-  "still": "batch/media/PUPS/still.jpg",
-  "loop": "batch/media/PUPS/loop.mp4",
-  "author": "@cutiespuppies",
-  "video": {
-   "w": 852,
-   "h": 480,
-   "duration": 24.31
+  {
+    "source": "https://x.com/RaminNasibov/status/2112957620772274232",
+    "ticker": "UNICORN",
+    "still": "batch/media/UNICORN/still.jpg",
+    "loop": "batch/media/UNICORN/loop.mp4",
+    "author": "@RaminNasibov",
+    "video": {
+      "w": 720,
+      "h": 960,
+      "duration": 10
+    },
+    "name": "Unicorns Exist",
+    "description": "A white horse with a horn, standing there like it's normal. Clip coin.",
+    "why": "X @RaminNasibov \"unicorns exist\", 84K likes, 1.9M views (21 Oct)",
+    "crop": {
+      "x": 0,
+      "y": 0.125,
+      "size": 1,
+      "start": 3.5,
+      "length": 4
+    },
+    "mint": "6bnoThHcRxYiuEiyfZJ7ggDDHNeQGWu4MDUjA7JXcLip",
+    "sig": "4WSmRUg8CpxM1pX4g93FPjSKi5oaEcawajMpdfr2LcYv4TrWdW54khJ6p344vxYBpGHdNk6Zwxx8BNuBh9RgLZAL",
+    "launchedAt": "2026-10-24T15:20:34.660Z"
   },
-  "name": "Golden and Husky",
-  "description": "A golden retriever puppy and a husky puppy, best friends. Clip coin.",
-  "why": "X @cutiespuppies, 21K likes, 372K views (15 Oct)",
-  "crop": {
-   "x": 0.21830985915492956,
-   "y": 0,
-   "size": 1,
-   "start": 7.3,
-   "length": 4
-  }
- },
- {
-  "source": "https://x.com/obitofemme/status/2112969590774861981",
-  "ticker": "QUIET",
-  "still": "batch/media/QUIET/still.jpg",
-  "loop": "batch/media/QUIET/loop.mp4",
-  "author": "@obitofemme",
-  "video": {
-   "w": 720,
-   "h": 898,
-   "duration": 7.89
+  {
+    "source": "https://x.com/obitofemme/status/2112969590774861981",
+    "ticker": "QUIET",
+    "still": "batch/media/QUIET/still.jpg",
+    "loop": "batch/media/QUIET/loop.mp4",
+    "author": "@obitofemme",
+    "video": {
+      "w": 720,
+      "h": 898,
+      "duration": 7.89
+    },
+    "name": "Quiet Puppy",
+    "description": "When you go quiet and everyone keeps trying to make you laugh. Clip coin.",
+    "why": "X @obitofemme, 46K likes (21 Oct)",
+    "crop": {
+      "x": 0,
+      "y": 0.09910913140311806,
+      "size": 1,
+      "start": 2.4,
+      "length": 4
+    },
+    "mint": "6rVkphwR58vzoGZWQGwKemDg1oW9ncGhJGbgWTneCLip",
+    "sig": "4PpkcD8y5tGtXUR1C3kRKRF4sX3pELbXWBe9bdQY5vE5WLhKpn2YjVbicgupR8Ftv59FGj3Joy42fLDB23sJ2gTv",
+    "launchedAt": "2026-10-24T15:20:40.358Z"
   },
-  "name": "Quiet Puppy",
-  "description": "When you go quiet and everyone keeps trying to make you laugh. Clip coin.",
-  "why": "X @obitofemme, 46K likes (21 Oct)",
-  "crop": {
-   "x": 0,
-   "y": 0.09910913140311806,
-   "size": 1,
-   "start": 2.4,
-   "length": 4
-  }
- },
- {
-  "source": "https://x.com/UTDTrey/status/2113976396024606979",
-  "ticker": "COLD",
-  "still": "batch/media/COLD/still.jpg",
-  "loop": "batch/media/COLD/loop.mp4",
-  "author": "@UTDTrey",
-  "video": {
-   "w": 1080,
-   "h": 1350,
-   "duration": 3.05
+  {
+    "source": "https://x.com/PunchingCat/status/2112987369209217131",
+    "ticker": "GLASS",
+    "still": "batch/media/GLASS/still.jpg",
+    "loop": "batch/media/GLASS/loop.mp4",
+    "author": "@PunchingCat",
+    "video": {
+      "w": 720,
+      "h": 696,
+      "duration": 19.27
+    },
+    "name": "Glass Table Cat",
+    "description": "A cat filmed from under a glass table. Pure belly. Clip coin.",
+    "why": "X @PunchingCat, 33K likes (21 Oct)",
+    "crop": {
+      "x": 0.016666666666666663,
+      "y": 0,
+      "size": 1,
+      "start": 0.3,
+      "length": 4
+    },
+    "mint": "6u7fX3QMawh3aMzvufoArw9WbATxMQAQpmLXdCDKCLiP",
+    "sig": "2uouYAsDTbAJzPFyCgTUPJfS8qkN3RKPTdAM1XU3yvXsHNDSxTbp6vn9s9UF7gpFuBGmxskd1xW9gAvivYWQsrRK",
+    "launchedAt": "2026-10-24T15:20:46.197Z"
   },
-  "name": "Cold Celebration",
-  "description": "The coldest thumbs-down celebration of the weekend. Clip coin.",
-  "why": "X @UTDTrey \"Cold celebration dawg\", 27K likes (24 Oct)",
-  "crop": {
-   "x": 0,
-   "y": 0.09999999999999998,
-   "size": 1,
-   "start": 0,
-   "length": 3
-  }
- },
- {
-  "source": "https://x.com/vidsthatgohard/status/2111598352395895065",
-  "ticker": "PICCOLO",
-  "still": "batch/media/PICCOLO/still.jpg",
-  "loop": "batch/media/PICCOLO/loop.mp4",
-  "author": "@vidsthatgohard",
-  "video": {
-   "w": 654,
-   "h": 1280,
-   "duration": 9.06
+  {
+    "source": "https://x.com/Messias30_/status/2113262368486781429",
+    "ticker": "MESSI",
+    "still": "batch/media/MESSI/still.jpg",
+    "loop": "batch/media/MESSI/loop.mp4",
+    "author": "@Messias30_",
+    "video": {
+      "w": 576,
+      "h": 1024,
+      "duration": 57.1
+    },
+    "name": "Messi Breaks Protocol",
+    "description": "Messi ignores security to sign autographs for the crowd. Clip coin.",
+    "why": "X @Messias30_, 33K likes (22 Oct)",
+    "crop": {
+      "x": 0,
+      "y": 0.21875,
+      "size": 1,
+      "start": 2,
+      "length": 4
+    },
+    "mint": "6yJfu1ZeWW6D36uW17dEjEpTEZsWytgJ47Mr3nmbcLiP",
+    "sig": "GVRDzpAUs3JfMw1fEShcP6ABhU8mm1qX85tqTYndkihDD4VUXNiQ9f3iPQxFoSnHpptxnZdknJefHW4ERDtaLPD",
+    "launchedAt": "2026-10-24T15:20:51.100Z"
   },
-  "name": "Piccolo in Paris",
-  "description": "Piccolo pulled up to the Paris crowd. Clip coin.",
-  "why": "X @vidsthatgohard, 169K likes (17 Oct): Piccolo cosplayer towering over a Paris crowd",
-  "crop": {
-   "x": 0,
-   "y": 0.24453124999999998,
-   "size": 1,
-   "start": 3,
-   "length": 4
-  }
- },
- {
-  "source": "https://x.com/senshi_real/status/2113457273271959640",
-  "ticker": "CANCEL",
-  "still": "batch/media/CANCEL/still.jpg",
-  "loop": "batch/media/CANCEL/loop.mp4",
-  "author": "@senshi_real",
-  "video": {
-   "w": 660,
-   "h": 544,
-   "duration": 6.5
+  {
+    "source": "https://www.tiktok.com/@roodabeguh/video/7699592378243353886",
+    "ticker": "OMAKASE",
+    "still": "batch/media/OMAKASE/still.jpg",
+    "loop": "batch/media/OMAKASE/loop.mp4",
+    "video": {
+      "w": 720,
+      "h": 1280,
+      "duration": 129.73
+    },
+    "name": "Omakase Pug",
+    "description": "Birthday pug sits through a 17-course sushi omakase like a regular. Clip coin.",
+    "why": "TikTok @roodabeguh, TAG24 Viral Video of the Day (23 Oct): pug gets a 17-course omakase for his birthday",
+    "crop": {
+      "x": 0,
+      "y": 0.21875,
+      "size": 1,
+      "start": 16.5,
+      "length": 4
+    },
+    "mint": "7GdM4gTS3DYRRgRZjwZLctJ74jGb6Ed3tnnh4PQeCLip",
+    "sig": "CnqJQwSxRRL4sQxTstwqDF2pEcLqCZynH3Th2H8PUtHC7k84giAGCyo7V8Nimk47WmjvrRrNkaKGLkrx4DT9APa",
+    "launchedAt": "2026-10-24T15:20:56.756Z"
   },
-  "name": "Do You Mind If We Cancel",
-  "description": "Me when they ask if it's okay to cancel. Clip coin.",
-  "why": "X @senshi_real, 138K likes (22 Oct): relief-in-bed reaction meme",
-  "crop": {
-   "x": 0.08787878787878789,
-   "y": 0,
-   "size": 1,
-   "start": 0,
-   "length": 4
-  }
- },
- {
-  "source": "https://x.com/ic333_T/status/2110269201063841821",
-  "ticker": "WOLVERINE",
-  "still": "batch/media/WOLVERINE/still.jpg",
-  "loop": "batch/media/WOLVERINE/loop.mp4",
-  "author": "@ic333_T",
-  "video": {
-   "w": 576,
-   "h": 530,
-   "duration": 7.52
+  {
+    "source": "https://x.com/senshi_real/status/2113457273271959640",
+    "ticker": "CANCEL",
+    "still": "batch/media/CANCEL/still.jpg",
+    "loop": "batch/media/CANCEL/loop.mp4",
+    "author": "@senshi_real",
+    "video": {
+      "w": 660,
+      "h": 544,
+      "duration": 6.5
+    },
+    "name": "Do You Mind If We Cancel",
+    "description": "Me when they ask if it's okay to cancel. Clip coin.",
+    "why": "X @senshi_real, 138K likes (22 Oct): relief-in-bed reaction meme",
+    "crop": {
+      "x": 0.08787878787878789,
+      "y": 0,
+      "size": 1,
+      "start": 0,
+      "length": 4
+    },
+    "mint": "7P3hzm1Cnao7dijwKMqiQZ5NiVEEq8yfBA43X4oXcLiP",
+    "sig": "wHPgczY2wAZ7ayPr4E4UDLqTS5WfPm17yEmtVyzTspeNBPrNabU2GkFXAaeBu21eNQVSfWuJG7NLhyP59RVskFy",
+    "launchedAt": "2026-10-24T15:21:01.360Z"
   },
-  "name": "Wolverine Gets It",
-  "description": "That one friend who catches all your meme references. Clip coin.",
-  "why": "X @ic333_T, 109K likes (16 Oct): Hugh Jackman reaction clip",
-  "crop": {
-   "x": 0.03993055555555558,
-   "y": 0,
-   "size": 1,
-   "start": 2.5,
-   "length": 4
-  }
- },
- {
-  "source": "https://x.com/Novit_aa/status/2113631934484275244",
-  "ticker": "ALONE",
-  "still": "batch/media/ALONE/still.jpg",
-  "loop": "batch/media/ALONE/loop.mp4",
-  "author": "@Novit_aa",
-  "video": {
-   "w": 1036,
-   "h": 688,
-   "duration": 11.75
+  {
+    "source": "https://x.com/Novit_aa/status/2113631934484275244",
+    "ticker": "ALONE",
+    "still": "batch/media/ALONE/still.jpg",
+    "loop": "batch/media/ALONE/loop.mp4",
+    "author": "@Novit_aa",
+    "video": {
+      "w": 1036,
+      "h": 688,
+      "duration": 11.75
+    },
+    "name": "Cats Home Alone",
+    "description": "Why are cats happier when their owner isn't home. Clip coin.",
+    "why": "X @Novit_aa, 37K likes (23 Oct): pet-cam of cats partying alone",
+    "crop": {
+      "x": 0.16795366795366795,
+      "y": 0,
+      "size": 1,
+      "start": 4,
+      "length": 4
+    },
+    "mint": "8BC9T3i7JjQyzD7MkC3wCyuQku9yx966TNxZKYyjCLiP",
+    "sig": "3tsvdLw6xK1WXt16HJU3DrWrXQ5WUY8pZ3SHTWAM6KeAnJPsNdubZL65DEga71ESERj8oMBtHaCdj2ZNwn9r2GGL",
+    "launchedAt": "2026-10-24T15:21:06.144Z"
   },
-  "name": "Cats Home Alone",
-  "description": "Why are cats happier when their owner isn't home. Clip coin.",
-  "why": "X @Novit_aa, 37K likes (23 Oct): pet-cam of cats partying alone",
-  "crop": {
-   "x": 0.16795366795366795,
-   "y": 0,
-   "size": 1,
-   "start": 4,
-   "length": 4
-  }
- },
- {
-  "source": "https://x.com/capyfamily_usa/status/2112077446258565135",
-  "ticker": "ALBINO",
-  "still": "batch/media/ALBINO/still.jpg",
-  "loop": "batch/media/ALBINO/loop.mp4",
-  "author": "@capyfamily_usa",
-  "video": {
-   "w": 960,
-   "h": 720,
-   "duration": 35.06
+  {
+    "source": "https://x.com/UTDTrey/status/2113976396024606979",
+    "ticker": "COLD",
+    "still": "batch/media/COLD/still.jpg",
+    "loop": "batch/media/COLD/loop.mp4",
+    "author": "@UTDTrey",
+    "video": {
+      "w": 1080,
+      "h": 1350,
+      "duration": 3.05
+    },
+    "name": "Cold Celebration",
+    "description": "The coldest thumbs-down celebration of the weekend. Clip coin.",
+    "why": "X @UTDTrey \"Cold celebration dawg\", 27K likes (24 Oct)",
+    "crop": {
+      "x": 0,
+      "y": 0.09999999999999998,
+      "size": 1,
+      "start": 0,
+      "length": 3
+    },
+    "mint": "8FYBq8JMWNPvFPin9XjMGjAfeWzEeQo3d5zNLv33cLip",
+    "sig": "4yGDsG4Cg18XDAkzj9sSv4rsuMnyok99AkdcqW7J1KeW1YuzDxUwT5ePf7F626nxWtJaKT8GoX45dSstELVj7ns9",
+    "launchedAt": "2026-10-24T15:21:11.283Z"
   },
-  "name": "Albino Capybara",
-  "description": "A rare albino capybara found in Uruguay, extremely relaxed. Clip coin.",
-  "why": "X @capyfamily_usa, 43K likes (18 Oct): albino capybara spotted in Uruguay",
-  "crop": {
-   "x": 0,
-   "y": 0,
-   "size": 1,
-   "start": 0,
-   "length": 4
+  {
+    "source": "https://x.com/Marmor_Informa/status/2114005047680139281",
+    "ticker": "HUG",
+    "still": "batch/media/HUG/still.jpg",
+    "loop": "batch/media/HUG/loop.mp4",
+    "author": "@Marmor_Informa",
+    "video": {
+      "w": 478,
+      "h": 270,
+      "duration": 30.46
+    },
+    "name": "Monkey Hug",
+    "description": "A langur walks into a phone shop in India and hugs the owner. Clip coin.",
+    "why": "Shop CCTV, picked up by news accounts on 24 Oct (source post is a news repost, low engagement: weakest pick)",
+    "crop": {
+      "x": 0.2175732217573222,
+      "y": 0,
+      "size": 1,
+      "start": 9.1,
+      "length": 4
+    },
+    "mint": "8dFbKnH8hQVZw3ord484MXN6jSemkj4GPUaaqn7GCLiP",
+    "sig": "5u5vaPGRf6nvC9jvUxtux43jvGdQESrXHXmB7yeEQygYnW3dwsJSFNkBxiVM9qEVpvYEAaiSEKHSk4UZi9cGFfmu",
+    "launchedAt": "2026-10-24T15:21:16.488Z"
   }
- },
- {
-  "source": "https://x.com/lynethiona/status/2110591730651418718",
-  "ticker": "OTTER",
-  "still": "batch/media/OTTER/still.jpg",
-  "loop": "batch/media/OTTER/loop.mp4",
-  "author": "@lynethiona",
-  "video": {
-   "w": 720,
-   "h": 1280,
-   "duration": 3.95
-  },
-  "name": "Baby Otter",
-  "description": "A baby otter nibbling a finger. That's it. That's the coin.",
-  "why": "X @lynethiona, 17K likes (15 Oct)",
-  "crop": {
-   "x": 0,
-   "y": 0.21875,
-   "size": 1,
-   "start": 0,
-   "length": 4
-  }
- }
 ]
