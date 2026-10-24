@@ -39,11 +39,14 @@ export function LaunchFlow({ initialUrl, initialRef }: { initialUrl?: string; in
   }
   async function upload(f: File) {
     setBusy("Uploading…"); setErr("");
-    const fd = new FormData(); fd.append("file", f);
-    const r = await fetch("/api/drafts", { method: "POST", body: fd }).then((r) => r.json()).catch(() => ({ error: "Upload failed" }));
-    setBusy("");
-    if (r.error) return setErr(r.error);
-    setDraft({ ref: r.draft.ref }); setStep("crop");
+    try {
+      if (f.size > 60_000_000) throw new Error("That video is too big (60 MB max).");
+      if (!/^video\//.test(f.type) && !/\.(mp4|mov|webm|m4v)$/i.test(f.name)) throw new Error("That isn't a video.");
+      const { upload: put } = await import("@vercel/blob/client");
+      const id = crypto.randomUUID();
+      const b = await put(`drafts/${id}/video`, f, { access: "public", handleUploadUrl: "/api/drafts/token", contentType: f.type || "video/mp4" });
+      setDraft({ ref: b.url }); setStep("crop");
+    } catch (e) { setErr(e instanceof Error ? e.message : "Upload failed"); } finally { setBusy(""); }
   }
   async function doRender() {
     if (!draft) return;
