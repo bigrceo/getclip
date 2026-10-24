@@ -25,6 +25,8 @@ export type LaunchInput = {
 
 const PER_DAY = Number(process.env.LAUNCHES_PER_IP_PER_DAY ?? 5);
 const MAX_BUY = Number(process.env.MAX_FIRST_BUY_SOL ?? 5);
+/** Priority fee for sponsored creates, in micro-lamports per CU (1000 × 140k CU = 140 lamports). */
+const CU_PRICE = Number(process.env.LAUNCH_CU_PRICE ?? 1000);
 
 export function validate(i: LaunchInput) {
   const name = i.name?.trim();
@@ -88,8 +90,9 @@ export async function prepareLaunch(raw: LaunchInput, ip?: string) {
   const creator = new PublicKey(i.recipient);
   const holderReward = i.feeMode === "holders";
   const ixs = [
-    ComputeBudgetProgram.setComputeUnitLimit({ units: i.firstBuySol ? 450_000 : 250_000 }),
-    ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 200_000 }),
+    // create_v2 alone uses ~100-110k CU (measured on mainnet, scripts/measure-create.mts). A tight limit keeps the priority fee tiny.
+    ComputeBudgetProgram.setComputeUnitLimit({ units: i.firstBuySol ? 450_000 : 140_000 }),
+    ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i.firstBuySol ? 200_000 : CU_PRICE }),
     await PUMP_SDK.createV2Instruction({ mint: mint.publicKey, name: i.name, symbol: i.ticker, uri, creator, user: platform.publicKey, mayhemMode: false, holderReward }),
   ];
   if (i.firstBuySol && i.buyer) {

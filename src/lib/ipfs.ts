@@ -1,5 +1,5 @@
 import "server-only";
-import { randomUUID } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import { putFile } from "./storage";
 
 export type Meta = { name: string; symbol: string; description: string; image: Buffer; twitter?: string; website?: string };
@@ -33,10 +33,11 @@ export async function uploadMetadata(m: Meta): Promise<string> {
 
 /** Stores image + metadata JSON in our storage (public Vercel Blob in prod), or serves them from /api/meta/<id> locally. */
 async function selfHost(m: Meta): Promise<string> {
-  const id = randomUUID(), site = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:4082";
-  const img = await putFile(`meta/${id}/image.jpg`, m.image, "image/jpeg");
+  // Short keys on purpose: the URI is stored in the Token-2022 mint, every byte costs ~6960 lamports of rent.
+  const id = randomBytes(4).toString("hex"), site = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:4082";
+  const img = await putFile(`m/${id}.jpg`, m.image, "image/jpeg");
   const json = { name: m.name, symbol: m.symbol, description: m.description, image: img.startsWith("local:") ? `${site}/api/meta/${id}/image` : img, showName: true, createdOn: site,
     ...(m.twitter ? { twitter: m.twitter } : {}), ...(m.website ? { website: m.website } : {}) };
-  const ref = await putFile(`meta/${id}/meta.json`, Buffer.from(JSON.stringify(json)), "application/json");
+  const ref = await putFile(`m/${id}.json`, Buffer.from(JSON.stringify(json)), "application/json");
   return ref.startsWith("local:") ? `${site}/api/meta/${id}` : ref;
 }
