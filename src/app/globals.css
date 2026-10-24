@@ -31,7 +31,11 @@ body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
 
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; height: 2.5rem; padding: 0 clamp(.7rem, 2.5vw, 1.1rem); border: 2px solid var(--color-night);
   font-family: var(--font-sign); font-size: 14px; letter-spacing: .02em; text-transform: uppercase; transition: transform .1s steps(2), box-shadow .1s steps(2), background .1s; }
+.btn:hover { transform: translate(-1px, -1px); }
 .btn:active { transform: translate(3px, 3px); box-shadow: none !important; }
+.btn:disabled { cursor: not-allowed; transform: none; }
+:focus-visible { outline: 2px solid var(--color-sky); outline-offset: 2px; }
+.field:focus-visible { outline: none; }
 .btn-hot { background: var(--color-pink); color: var(--color-ink); box-shadow: 3px 3px 0 var(--color-sun); }
 .btn-hot:hover { background: #ff52aa; }
 .btn-ghost { background: var(--color-deck-hi); color: var(--color-ink); border-color: var(--color-line); box-shadow: 3px 3px 0 var(--color-night); }
@@ -50,3 +54,62 @@ body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
 
 /* Film-strip edge used on the logo and hero */
 .sprockets { background-image: radial-gradient(circle at 50% 50%, var(--color-night) 3px, transparent 3.5px); background-size: 12px 10px; background-repeat: repeat-x; }
+
+/* ---- motion polish ---- */
+/* Tile: lift + hard offset shadow that grows; image fades in over the dither */
+.tile { transition: transform .15s var(--ease-snap), box-shadow .15s var(--ease-snap), border-color .15s; box-shadow: 0 0 0 var(--color-pink); }
+@media (hover: hover) { .tile:hover { transform: translate(-3px, -3px); box-shadow: 5px 5px 0 var(--color-pink); } }
+.tile:active { transform: translate(1px, 1px); box-shadow: 0 0 0 var(--color-pink); }
+.fade-img { opacity: 0; transition: opacity .3s ease; }
+.fade-img.loaded { opacity: 1; }
+.tag-shadow { text-shadow: 0 1px 0 var(--color-night), 1px 0 0 var(--color-night), -1px 0 0 var(--color-night), 0 -1px 0 var(--color-night), 2px 2px 0 var(--color-night); color: var(--color-ink) !important; }
+
+/* Skeleton: dither with a sweep */
+@keyframes sweep { from { background-position: -200% 0, 0 0 } to { background-position: 200% 0, 0 0 } }
+.skeleton { background-image: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / .06) 50%, transparent 70%), radial-gradient(var(--color-line) 1px, transparent 1px); background-size: 200% 100%, 4px 4px; background-color: var(--color-deck); animation: sweep 1.4s linear infinite; }
+
+/* Live trade flash */
+@keyframes flash-up { from { background: var(--color-up); color: var(--color-night) } to { background: var(--color-deck) } }
+@keyframes flash-down { from { background: var(--color-down); color: var(--color-night) } to { background: var(--color-deck) } }
+@keyframes slide-in { from { transform: translateX(-24px); opacity: 0 } to { transform: none; opacity: 1 } }
+.flash-buy { animation: slide-in .35s var(--ease-snap), flash-up .9s ease-out; }
+.flash-sell { animation: slide-in .35s var(--ease-snap), flash-down .9s ease-out; }
+
+/* Ticker edges fade */
+.edge-fade { mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent); }
+
+/* Bonding fill grows from zero */
+@keyframes fill { from { transform: scaleX(0) } }
+.fill { transform-origin: left; animation: fill .9s var(--ease-snap) both; }
+
+/* Page / step enter */
+@keyframes enter { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
+.enter { animation: enter .3s var(--ease-snap) both; }
+
+/* Hero: slow drifting party glow */
+@keyframes drift { 0%,100% { transform: translate(-6%, -4%) } 50% { transform: translate(6%, 4%) } }
+.hero-glow { position: absolute; inset: -20%; pointer-events: none; background: radial-gradient(40% 35% at 30% 30%, rgb(255 51 153 / .18), transparent 70%), radial-gradient(35% 30% at 72% 60%, rgb(0 204 255 / .12), transparent 70%), radial-gradient(30% 25% at 50% 90%, rgb(255 204 0 / .08), transparent 70%); animation: drift 18s ease-in-out infinite; will-change: transform; }
+@keyframes nudge { 0%,100% { transform: none } 50% { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--color-sun) } }
+.nudge { animation: nudge .8s var(--ease-snap) 2; }
+
+/* Confetti burst (pure CSS squares) */
+@keyframes burst { 0% { transform: translate(0, 0) rotate(0); opacity: 1 } 100% { transform: translate(var(--x), var(--y)) rotate(var(--r)); opacity: 0 } }
+.confetti { position: absolute; left: 50%; top: 40%; width: 8px; height: 8px; animation: burst 1.1s cubic-bezier(.15,.7,.3,1) forwards; pointer-events: none; }
+@keyframes pop { 0% { transform: scale(.6); opacity: 0 } 60% { transform: scale(1.08) } 100% { transform: none; opacity: 1 } }
+.pop { animation: pop .45s var(--ease-snap) both; }
+
+/* Toast */
+@keyframes toast-in { from { transform: translate(-50%, 16px); opacity: 0 } to { transform: translate(-50%, 0); opacity: 1 } }
+.toast { position: fixed; left: 50%; bottom: max(1rem, env(safe-area-inset-bottom)); z-index: 60; transform: translateX(-50%); animation: toast-in .25s var(--ease-snap); }
+
+/* Number tick */
+@keyframes tick-up { from { color: var(--color-up) } }
+@keyframes tick-down { from { color: var(--color-down) } }
+.tick-up { animation: tick-up 1.2s ease-out; }
+.tick-down { animation: tick-down 1.2s ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
+  .marquee, .hero-glow, .skeleton { animation: none !important; }
+  .confetti { display: none; }
+}

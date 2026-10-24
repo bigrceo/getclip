@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { BRAND } from "@/lib/brand";
 import { useWallet } from "./wallet";
+import { CopyButton } from "./toast";
 
 type Draft = { ref: string; title?: string; author?: string };
 type Step = "source" | "crop" | "details" | "done";
@@ -19,6 +20,9 @@ export function LaunchFlow({ initialUrl, initialRef }: { initialUrl?: string; in
   const [form, setForm] = useState({ name: "", ticker: "", description: "", recipient: "", feeMode: "creator", firstBuySol: "" });
   const [done, setDone] = useState<{ mint: string; sig: string; dryRun?: boolean } | null>(null);
   const file = useRef<HTMLInputElement>(null);
+  const [over, setOver] = useState(false);
+  const STEPS: Step[] = ["source", "crop", "details", "done"];
+  const at = STEPS.indexOf(step);
 
   useEffect(() => { if (initialUrl) resolve(initialUrl); /* eslint-disable-next-line */ }, []);
   useEffect(() => { if (w.address && !form.recipient) setForm((f) => ({ ...f, recipient: w.address! })); }, [w.address]); // eslint-disable-line
@@ -77,20 +81,24 @@ export function LaunchFlow({ initialUrl, initialRef }: { initialUrl?: string; in
     <div className="mx-auto max-w-2xl px-4 py-10">
       <h1 className="font-sign text-3xl sm:text-4xl">Launch a clip</h1>
       <p className="mt-2 text-haze">Free: {BRAND.name} pays the launch. Your coin goes live on pump.fun in one transaction.</p>
-      <ol className="mt-6 flex gap-5">
-        {(["source", "crop", "details", "done"] as Step[]).map((s, i) => (
-          <li key={s} className={`label ${step === s ? "!text-coral" : ""}`}>{i + 1} {s === "source" ? "Clip" : s === "crop" ? "Square" : s === "details" ? "Coin" : "Live"}</li>
+      <ol className="mt-6 grid grid-cols-4 gap-2" aria-label="Steps">
+        {STEPS.map((s, i) => (
+          <li key={s} aria-current={step === s ? "step" : undefined} className={`label transition-colors ${i === at ? "!text-coral" : i < at ? "!text-ink" : ""}`}>
+            <span className="mb-1.5 block h-1 overflow-hidden bg-line"><span className={`block h-full origin-left transition-transform duration-500 ease-[var(--ease-snap)] ${i === at ? "bg-coral" : "bg-sun"} ${i <= at ? "scale-x-100" : "scale-x-0"}`} /></span>
+            {i + 1} {s === "source" ? "Clip" : s === "crop" ? "Square" : s === "details" ? "Coin" : "Live"}
+          </li>
         ))}
       </ol>
-      <div className="mt-4 border-2 border-line bg-deck p-4 sm:p-6">
+      <div key={step} className="enter relative mt-4 overflow-hidden border-2 border-line bg-deck p-4 sm:p-6">
         {step === "source" && (
           <div className="space-y-4">
             <form onSubmit={(e) => { e.preventDefault(); if (url.trim()) resolve(url.trim()); }} className="flex flex-col gap-2 sm:flex-row">
               <input className="field" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="tiktok.com/@…/video/…, instagram.com/reel/…, youtube.com/shorts/…, x.com/…/status/…" />
               <button className="btn btn-hot h-11">Fetch</button>
             </form>
-            <div onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) upload(f); }}
-              onClick={() => file.current?.click()} className="cursor-pointer border-2 border-dashed border-line p-8 text-center text-haze hover:border-coral">
+            <div role="button" tabIndex={0} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && file.current?.click()}
+              onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)} onDrop={(e) => { e.preventDefault(); setOver(false); const f = e.dataTransfer.files[0]; if (f) upload(f); }}
+              onClick={() => file.current?.click()} className={`cursor-pointer border-2 border-dashed p-8 text-center transition-[border-color,background-color,color] duration-150 hover:border-coral ${over ? "border-sun bg-deck-hi text-sun" : "border-line text-haze"}`}>
               Or drop a video here (mp4, mov, webm, 60 MB max)
             </div>
             <input ref={file} type="file" accept="video/*" hidden onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
@@ -124,19 +132,34 @@ export function LaunchFlow({ initialUrl, initialRef }: { initialUrl?: string; in
           </div>
         )}
         {step === "done" && done && (
-          <div className="space-y-3 text-center">
-            <p className="font-sign text-2xl">{done.dryRun ? "Dry run complete" : "Your coin is live"}</p>
+          <div className="space-y-4 py-2 text-center">
+            {!done.dryRun && <Confetti />}
+            {render && <video src={fileUrl(render.loopRef)} autoPlay loop muted playsInline className="pop mx-auto size-32 border-2 border-ink object-cover shadow-[6px_6px_0_var(--color-pink)]" />}
+            <p className="pop font-sign text-3xl text-sun [animation-delay:.1s]">{done.dryRun ? "Dry run complete" : `$${form.ticker || "COIN"} is live`}</p>
             {done.dryRun && <p className="text-sun">LAUNCH_DRY_RUN is on: nothing was sent on chain.</p>}
-            <p className="break-all text-haze">{done.mint}</p>
-            {!done.dryRun && <div className="flex justify-center gap-2"><Link href={`/coin/${done.mint}`} className="btn btn-hot">Open coin</Link>
+            <div className="flex flex-wrap items-center justify-center gap-2"><span className="break-all text-sm text-haze">{done.mint}</span><CopyButton text={done.mint} /></div>
+            {!done.dryRun && <div className="flex flex-wrap justify-center gap-2">
+              <Link href={`/coin/${done.mint}`} className="btn btn-hot">Open coin</Link>
+              <a className="btn btn-ghost" target="_blank" rel="noreferrer"
+                href={`https://x.com/intent/post?text=${encodeURIComponent(`$${form.ticker} is live on ${BRAND.name}`)}&url=${encodeURIComponent(`${location.origin}/coin/${done.mint}`)}`}>Share on X</a>
               <a href={`https://pump.fun/coin/${done.mint}`} target="_blank" rel="noreferrer" className="btn btn-ghost">pump.fun</a></div>}
           </div>
         )}
-        {busy && <p className="mt-4 text-haze">{busy}</p>}
-        {err && <p className="mt-4 text-down">{err}</p>}
+        {busy && <div role="status" className="enter mt-4"><p className="text-ink">{busy}</p><div className="skeleton mt-2 h-2 border border-line" /></div>}
+        {err && <p role="alert" className="enter mt-4 border-l-4 border-down pl-3 text-down">{err}</p>}
       </div>
     </div>
   );
+}
+
+/** CSS-only confetti burst: square bits in the party colours. */
+function Confetti() {
+  const cols = ["#ff3399", "#ffcc00", "#00ccff", "#66ff99", "#ff9933", "#cc66ff"];
+  return <div aria-hidden className="pointer-events-none absolute inset-0">{Array.from({ length: 36 }, (_, i) => {
+    const a = (i / 36) * Math.PI * 2, d = 140 + ((i * 53) % 120);
+    return <span key={i} className="confetti" style={{ background: cols[i % cols.length], animationDelay: `${(i % 6) * 20}ms`,
+      ["--x" as string]: `${Math.cos(a) * d}px`, ["--y" as string]: `${Math.sin(a) * d * 0.8 + 60}px`, ["--r" as string]: `${(i % 2 ? 1 : -1) * (180 + i * 20)}deg` }} />;
+  })}</div>;
 }
 
 const L = ({ t, children }: { t: string; children: React.ReactNode }) => <label className="block space-y-1"><span className="label">{t}</span>{children}</label>;
@@ -146,21 +169,26 @@ function CropPicker({ src, crop, onChange, onDone }: { src: string; crop: { x: n
   const v = useRef<HTMLVideoElement>(null); const box = useRef<HTMLDivElement>(null);
   const [dim, setDim] = useState({ w: 1, h: 1, d: 0 });
   const drag = useRef<{ x: number; y: number; cx: number; cy: number } | null>(null);
+  const [grab, setGrab] = useState(false);
   const side = Math.min(dim.w, dim.h) * crop.size; // px in video space
   const fw = side / dim.w, fh = side / dim.h;     // fractions of frame
   const clamp = (n: number, max: number) => Math.max(0, Math.min(max, n));
   useEffect(() => { if (v.current && dim.d) v.current.currentTime = crop.start; }, [crop.start, dim.d]);
   return (
     <div className="space-y-4">
+      <p className="label text-center">Drag the square to frame your clip</p>
       <div ref={box} className="relative mx-auto w-fit max-w-full touch-none select-none overflow-hidden bg-night">
         <video ref={v} src={src} muted playsInline loop autoPlay className="block max-h-[60vh] max-w-full"
           onLoadedMetadata={(e) => { const t = e.currentTarget; setDim({ w: t.videoWidth, h: t.videoHeight, d: t.duration }); onChange({ ...crop, x: (1 - Math.min(t.videoWidth, t.videoHeight) / t.videoWidth) / 2, y: (1 - Math.min(t.videoWidth, t.videoHeight) / t.videoHeight) / 2 }); }} />
-        <div className="absolute cursor-move border-2 border-coral shadow-[0_0_0_9999px_rgba(20,18,58,.6)]"
+        <div className={`absolute border-2 shadow-[0_0_0_9999px_rgba(20,18,58,.6)] transition-colors ${grab ? "cursor-grabbing border-sun" : "cursor-grab border-coral"}`}
           style={{ left: `${crop.x * 100}%`, top: `${crop.y * 100}%`, width: `${fw * 100}%`, height: `${fh * 100}%` }}
-          onPointerDown={(e) => { (e.target as HTMLElement).setPointerCapture(e.pointerId); drag.current = { x: e.clientX, y: e.clientY, cx: crop.x, cy: crop.y }; }}
+          onPointerDown={(e) => { (e.target as HTMLElement).setPointerCapture(e.pointerId); drag.current = { x: e.clientX, y: e.clientY, cx: crop.x, cy: crop.y }; setGrab(true); }}
           onPointerMove={(e) => { if (!drag.current || !box.current) return; const r = box.current.getBoundingClientRect();
             onChange({ ...crop, x: clamp(drag.current.cx + (e.clientX - drag.current.x) / r.width, 1 - fw), y: clamp(drag.current.cy + (e.clientY - drag.current.y) / r.height, 1 - fh) }); }}
-          onPointerUp={() => { drag.current = null; }} />
+          onPointerUp={() => { drag.current = null; setGrab(false); }} onPointerCancel={() => { drag.current = null; setGrab(false); }}>
+          <span aria-hidden className={`pointer-events-none absolute inset-0 transition-opacity ${grab ? "opacity-100" : "opacity-0"} bg-[linear-gradient(to_right,transparent_33%,rgb(255_255_255/.35)_33%,rgb(255_255_255/.35)_calc(33%+1px),transparent_calc(33%+1px),transparent_66%,rgb(255_255_255/.35)_66%,rgb(255_255_255/.35)_calc(66%+1px),transparent_calc(66%+1px)),linear-gradient(to_bottom,transparent_33%,rgb(255_255_255/.35)_33%,rgb(255_255_255/.35)_calc(33%+1px),transparent_calc(33%+1px),transparent_66%,rgb(255_255_255/.35)_66%,rgb(255_255_255/.35)_calc(66%+1px),transparent_calc(66%+1px))]`} />
+          {["-left-1 -top-1", "-right-1 -top-1", "-left-1 -bottom-1", "-right-1 -bottom-1"].map((p) => <span key={p} aria-hidden className={`pointer-events-none absolute size-2.5 bg-sun ${p}`} />)}
+        </div>
       </div>
       <label className="block"><span className="label">Square size</span>
         <input type="range" min={0.3} max={1} step={0.01} value={crop.size} className="w-full accent-coral"
