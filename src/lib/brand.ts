@@ -1,4 +1,6 @@
 /** Placeholder brand: change it here only. */
+export const OFFICIAL_MINT = "6GV2EEMBWLNZ8ZVL9Rp628CKXAoRGre6ZUcjJpHGpump";
+
 export const BRAND = {
   name: "clip.fun",
   short: "CLIP",

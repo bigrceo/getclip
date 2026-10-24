@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { BRAND } from "@/lib/brand";
+import { BRAND, OFFICIAL_MINT } from "@/lib/brand";
 import { Logo } from "./Logo";
 import { XIcon } from "./icons";
 import { short, useWallet } from "./wallet";
@@ -13,6 +13,7 @@ export function Header() {
         <Link href="/" aria-label={BRAND.name}><Logo /></Link>
         <span className="hidden text-line sm:inline">/</span>
         <a href={BRAND.x} target="_blank" rel="noreferrer" className="hidden p-2 text-haze hover:text-ink sm:block" aria-label="X"><XIcon /></a>
+        <a href={`https://pump.fun/coin/${OFFICIAL_MINT}`} target="_blank" rel="noreferrer" className="btn btn-ghost hidden sm:inline-flex">${BRAND.short}</a>
         <div className="ml-auto flex items-center gap-2">
           <Link href="/launch" className="btn btn-hot">Launch<span className="hidden sm:inline"> a clip</span></Link>
           {w.address ? (
