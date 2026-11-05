@@ -11,6 +11,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import type { Coin } from "@/lib/types";
 import { pct } from "@/lib/format";
+import { CityNeon, Clouds, DistrictLabels, MODES, Ocean, Sky, Sun, type Mode } from "./map/Atmosphere";
 
 // ---- geometry of the two map images (from the original site) ----
 const PLANE_W = 16, PLANE_H = 36576 / 4096; // core plane: 16 wide, same aspect as the 4K image
@@ -52,7 +53,9 @@ const beamHeight = (e: Entity) => e.main ? 1.7 : Math.min(2.2, 0.35 + Math.log10
 const beamColor = (e: Entity) => e.main ? "#ff5fa8" : e.coin.change24h >= 0 ? "#2affc6" : "#ff4d6d";
 
 // ---- scene ----
-function Ground({ onReady }: { onReady: () => void }) {
+function Ground({ onReady, mode }: { onReady: () => void; mode: Mode }) {
+  const m1 = useRef<THREE.MeshBasicMaterial>(null), m2 = useRef<THREE.MeshBasicMaterial>(null);
+  useFrame(() => { const t = new THREE.Color(MODES[mode].tint); for (const r of [m1, m2]) r.current?.color.lerp(t, 0.05); });
   const small = typeof window !== "undefined" && window.innerWidth < 900;
   const [core, mask, ext] = useLoader(THREE.TextureLoader, [small ? "/map/leonida-2k.jpg" : "/map/leonida.jpg", "/map/leonida-core-mask.png", "/map/leonida-ext.jpg"]);
   const gl = useThree((s) => s.gl);
@@ -60,9 +63,9 @@ function Ground({ onReady }: { onReady: () => void }) {
   useEffect(() => { onReady(); }, [onReady]);
   return (
     <group>
-      <mesh rotation-x={-Math.PI / 2} position-y={-0.03}><planeGeometry args={[EXT_W * 6, EXT_H * 6]} /><meshBasicMaterial color={OCEAN} /></mesh>
-      <mesh rotation-x={-Math.PI / 2} position={[EXT_OFF[0], -0.015, EXT_OFF[1]]}><planeGeometry args={[EXT_W, EXT_H]} /><meshBasicMaterial map={ext} toneMapped={false} /></mesh>
-      <mesh rotation-x={-Math.PI / 2}><planeGeometry args={[PLANE_W, PLANE_H]} /><meshBasicMaterial map={core} alphaMap={mask} transparent depthWrite={false} toneMapped={false} /></mesh>
+      <Ocean mode={mode} />
+      <mesh rotation-x={-Math.PI / 2} position={[EXT_OFF[0], -0.015, EXT_OFF[1]]}><planeGeometry args={[EXT_W, EXT_H]} /><meshBasicMaterial ref={m1} map={ext} toneMapped={false} /></mesh>
+      <mesh rotation-x={-Math.PI / 2}><planeGeometry args={[PLANE_W, PLANE_H]} /><meshBasicMaterial ref={m2} map={core} alphaMap={mask} transparent depthWrite={false} toneMapped={false} /></mesh>
     </group>
   );
 }
@@ -95,12 +98,14 @@ function Beacon({ e, active, onHover, onSelect }: { e: Entity; active: boolean; 
 }
 
 /** Open plot: a small gold dot on the ground, click → launch. */
-function Lot({ p, onSelect }: { p: Plot; onSelect: () => void }) {
+function Lot({ p, onSelect, onHover }: { p: Plot; onSelect: () => void; onHover: (x: number | null, y?: number) => void }) {
   const [x, , z] = toWorld(p.u, p.v);
   return (
     <group position={[x, 0, z]}>
       <mesh rotation-x={-Math.PI / 2} position-y={0.012} onClick={(e) => { e.stopPropagation(); onSelect(); }}
-        onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = "pointer"; }} onPointerOut={() => { document.body.style.cursor = ""; }}>
+        onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = "pointer"; const r = (e.nativeEvent.target as HTMLElement).getBoundingClientRect(); onHover(e.nativeEvent.clientX - r.left, e.nativeEvent.clientY - r.top); }}
+        onPointerMove={(e) => { const r = (e.nativeEvent.target as HTMLElement).getBoundingClientRect(); onHover(e.nativeEvent.clientX - r.left, e.nativeEvent.clientY - r.top); }}
+        onPointerOut={() => { document.body.style.cursor = ""; onHover(null); }}>
         <circleGeometry args={[0.11, 32]} /><meshBasicMaterial color="#ffe17a" transparent opacity={0.9} depthWrite={false} toneMapped={false} />
       </mesh>
       <mesh rotation-x={-Math.PI / 2} position-y={0.011}><ringGeometry args={[0.16, 0.19, 40]} /><meshBasicMaterial color="#ffe17a" transparent opacity={0.35} depthWrite={false} /></mesh>
@@ -109,6 +114,11 @@ function Lot({ p, onSelect }: { p: Plot; onSelect: () => void }) {
 }
 
 type Api = { zoom: (k: number) => void };
+function FogCtl({ mode }: { mode: Mode }) {
+  const scene = useThree((s) => s.scene);
+  useFrame(() => { const f = scene.fog as THREE.Fog | null; if (f) f.color.lerp(new THREE.Color(MODES[mode].fog), 0.05); });
+  return null;
+}
 function Controls({ entities, selected, api }: { entities: Entity[]; selected: string | null; api: React.MutableRefObject<Api | null> }) {
   const camera = useThree((s) => s.camera);
   const dom = useThree((s) => s.gl.domElement);
@@ -122,6 +132,13 @@ function Controls({ entities, selected, api }: { entities: Entity[]; selected: s
     return c;
   }, [camera, dom]);
   const goal = useRef<THREE.Vector3 | null>(null);
+  // Intro flyover: start high and far, ease into the default framing.
+  const intro = useRef<{ from: THREE.Vector3; to: THREE.Vector3; t: number } | null>(null);
+  useEffect(() => {
+    const to = camera.position.clone();
+    const from = to.clone().add(new THREE.Vector3(-6, 16, 14));
+    camera.position.copy(from); intro.current = { from, to, t: 0 }; controls.enabled = false;
+  }, [camera, controls]);
   useEffect(() => () => controls.dispose(), [controls]);
   useEffect(() => {
     const zoom = (k: number) => {
@@ -147,7 +164,14 @@ function Controls({ entities, selected, api }: { entities: Entity[]; selected: s
     const e = entities.find((e) => e.coin.mint === selected); if (!e) return;
     const [x, , z] = toWorld(e.plot.u, e.plot.v); goal.current = new THREE.Vector3(x, 0, z);
   }, [selected, entities]);
-  useFrame(() => {
+  useFrame((_, dt) => {
+    if (intro.current) {
+      const i = intro.current; i.t = Math.min(1, i.t + dt / 2.6);
+      const e = 1 - Math.pow(1 - i.t, 3);
+      camera.position.lerpVectors(i.from, i.to, e);
+      if (i.t >= 1) { intro.current = null; controls.enabled = true; }
+      camera.lookAt(controls.target); return;
+    }
     if (goal.current) {
       const d = goal.current.clone().sub(controls.target).multiplyScalar(0.08);
       controls.target.add(d); camera.position.add(d);
@@ -242,16 +266,21 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
   const small = typeof window !== "undefined" && window.innerWidth < 700;
   const api = useRef<Api | null>(null);
   const [ready, setReady] = useState(false);
+  const [mode, setMode] = useState<Mode>("dusk");
+  const [lotTip, setLotTip] = useState<{ plot: Plot; x: number; y: number } | null>(null);
   const onReady = useMemo(() => () => setReady(true), []);
-  const select = (m: string) => { onActive(m); router.push(`/coin/${m}`); };
+  const select = (m: string) => onActive(m);
   return (
     <div className="map-canvas absolute inset-0">
       <Canvas dpr={[1, 2]} camera={{ position: small ? [0, 12, 4.8] : [0, 10.5, 7.6], fov: 42, near: 0.1, far: 200 }} gl={{ antialias: true }} onPointerMissed={() => onActive(null)}>
-        <color attach="background" args={[OCEAN]} />
-        <fog attach="fog" args={[OCEAN, 13, 26]} />
-        <Suspense fallback={null}><Ground onReady={onReady} /></Suspense>
+        <fog attach="fog" args={[MODES.dusk.fog, 14, 30]} />
+        <FogCtl mode={mode} />
+        <Sky mode={mode} />
+        <Sun mode={mode} />
+        <Suspense fallback={null}><Ground onReady={onReady} mode={mode} /></Suspense>
+        {ready && <><Clouds mode={mode} /><DistrictLabels toWorld={toWorld} /><CityNeon mode={mode} toWorld={toWorld} /></>}
         {ready && entities.map((e) => <Beacon key={e.coin.mint} e={e} active={active === e.coin.mint || hovered === e.coin.mint} onHover={setHovered} onSelect={() => select(e.coin.mint)} />)}
-        {ready && PLOTS.filter((p) => !takenPlots.has(p.id)).map((p) => <Lot key={p.id} p={p} onSelect={() => router.push("/launch")} />)}
+        {ready && PLOTS.filter((p) => !takenPlots.has(p.id)).map((p) => <Lot key={p.id} p={p} onSelect={() => router.push("/launch")} onHover={(x, y) => setLotTip(x == null ? null : { plot: p, x, y: y! })} />)}
         <Controls entities={entities} selected={active} api={api} />
         <PinLayout entities={entities} slots={slots} hovered={hovered} selected={active} />
       </Canvas>
@@ -259,6 +288,10 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
       <div className="map-vignette" aria-hidden="true" />
       <div aria-hidden={ready} className={`pointer-events-none absolute inset-0 z-10 grid place-items-center transition-opacity duration-700 ${ready ? "opacity-0" : "opacity-100"}`} style={{ background: "radial-gradient(circle, #23104a, #0a0618)" }}>
         <div className="text-center"><img src="/brand/pfp-512.png" alt="" width={96} height={96} className="mx-auto mb-4 rounded-[20px]" style={{ filter: "drop-shadow(0 0 24px rgba(255,61,139,.6))" }} /><p className="script">Flying into</p><p className="sec-title sunset-text">Leonida</p><p className="mt-3 text-[12px] font-semibold uppercase tracking-[.1em] text-haze">getclip.fun</p></div>
+      </div>
+      {lotTip && <div className="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-[calc(100%+14px)] rounded-[10px] bg-[#ffe17a] px-2.5 py-1.5 text-center text-[12px] font-bold text-[#1a0b26] shadow-lg" style={{ left: lotTip.x, top: lotTip.y }}>Open plot · {lotTip.plot.district}<br /><span className="font-semibold opacity-80">Launch a clip to claim it</span></div>}
+      <div className="absolute bottom-[18px] left-6 z-20 flex rounded-full border border-line bg-black/40 p-[3px] max-md:bottom-3 max-md:left-3">
+        {(Object.keys(MODES) as Mode[]).map((k) => <button key={k} type="button" onClick={() => setMode(k)} className={`rounded-full px-3 py-1.5 text-[12px] font-bold transition-colors ${mode === k ? "text-[#1a0b26]" : "text-ink/75 hover:text-ink"}`} style={mode === k ? { background: "var(--sunset)" } : undefined}>{MODES[k].label}</button>)}
       </div>
       <div className="absolute bottom-[18px] left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 max-md:bottom-3">
         <button type="button" onClick={() => api.current?.zoom(1.35)} className="grid size-9 place-items-center rounded-full border border-line bg-night/70 text-lg font-bold text-ink hover:bg-night/90" aria-label="Zoom out">−</button>

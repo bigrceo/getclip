@@ -9,6 +9,7 @@ import { plotFor } from "./StateMap";
 const StateMap = dynamic(() => import("./StateMap").then((m) => m.StateMap), { ssr: false, loading: () => <div className="absolute inset-0 grid place-items-center font-sign text-[28px] tracking-wide" style={{ background: "radial-gradient(circle, #23104a, #0a0618)" }}>Loading Leonida…</div> });
 import { HeroLaunch } from "./HeroLaunch";
 import { Countdown } from "./Countdown";
+import { CoinDrawer } from "./CoinDrawer";
 
 /** Leonida-style hero: the state map full-bleed, a glass card on the left, the "on the map" rail on the right. */
 export function MapHero({ coins, volumeSol }: { coins: Coin[]; volumeSol: number }) {
@@ -71,6 +72,7 @@ export function MapHero({ coins, volumeSol }: { coins: Coin[]; volumeSol: number
       <div className="md:absolute md:inset-0 max-md:relative max-md:h-[64svh] max-md:min-h-[420px]">
       <StateMap coins={coins} active={active} onActive={setActive}>
         <div className="hidden md:contents">{card}{rail}</div>
+        {active && coins.some((c) => c.mint === active) && <CoinDrawer coin={coins.find((c) => c.mint === active)!} district={plotFor(coins.find((c) => c.mint === active)!, coins.findIndex((c) => c.mint === active)).district} onClose={() => setActive(null)} />}
       </StateMap>
       </div>
       <div className="md:hidden">{card}{rail}</div>
