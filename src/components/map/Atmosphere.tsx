@@ -15,7 +15,7 @@ const oceanVert = /* glsl */`
   varying vec2 vUv; varying vec3 vPos;
   void main(){ vUv = uv; vec4 wp = modelMatrix * vec4(position,1.0); vPos = wp.xyz; gl_Position = projectionMatrix * viewMatrix * wp; }`;
 const oceanFrag = /* glsl */`
-  uniform float uTime; uniform vec3 uDeep; uniform vec3 uShallow; uniform vec3 uFog; uniform vec3 uCam; uniform float uNight;
+  uniform float uTime; uniform vec3 uDeep; uniform vec3 uShallow; uniform vec3 uFog; uniform vec3 uCam; uniform float uNight; uniform vec2 uHalf;
   varying vec2 vUv; varying vec3 vPos;
   float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453); }
   float noise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
@@ -27,14 +27,17 @@ const oceanFrag = /* glsl */`
     float sp = pow(noise(p * 9.0 + vec2(uTime*0.35, -uTime*0.25)), 14.0) * (1.0 - uNight*0.8);
     float d = distance(vPos.xz, uCam.xz);
     float f = 1.0 - smoothstep(16.0, 40.0, d);
-    // additive shimmer only: the base water colour comes from the fogged plane underneath, so there is no seam with the map
-    vec3 col = uShallow * (n * 0.06 + w * 0.03) + vec3(sp) * 0.18;
+    // sparkles only, outside the map rectangle (feathered like the map's own edge mask), so the map and the ocean stay identical
+    float inx = smoothstep(uHalf.x - 1.2, uHalf.x, abs(vPos.x));
+    float inz = smoothstep(uHalf.y - 1.6, uHalf.y, abs(vPos.z));
+    float outside = max(inx, inz);
+    vec3 col = (uShallow * w * 0.02 + vec3(sp) * 0.14) * outside;
     gl_FragColor = vec4(col * f, 1.0);
   }`;
 
-export function Ocean({ mode }: { mode: Mode }) {
+export function Ocean({ mode, half }: { mode: Mode; half: [number, number] }) {
   const mat = useRef<THREE.ShaderMaterial>(null);
-  const uniforms = useMemo(() => ({ uTime: { value: 0 }, uDeep: { value: new THREE.Color() }, uShallow: { value: new THREE.Color() }, uFog: { value: new THREE.Color() }, uCam: { value: new THREE.Vector3() }, uNight: { value: 0 } }), []);
+  const uniforms = useMemo(() => ({ uTime: { value: 0 }, uDeep: { value: new THREE.Color() }, uShallow: { value: new THREE.Color() }, uFog: { value: new THREE.Color() }, uCam: { value: new THREE.Vector3() }, uNight: { value: 0 }, uHalf: { value: new THREE.Vector2(half[0], half[1]) } }), [half]);
   useFrame(({ clock, camera }) => {
     const m = MODES[mode];
     uniforms.uTime.value = clock.elapsedTime;

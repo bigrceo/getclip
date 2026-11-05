@@ -74,7 +74,7 @@ function Ground({ onReady, mode }: { onReady: () => void; mode: Mode }) {
   useEffect(() => { onReady(); }, [onReady]);
   return (
     <group>
-      <Ocean mode={mode} />
+      <Ocean mode={mode} half={[PLANE_W / 2, PLANE_H / 2]} />
       <mesh rotation-x={-Math.PI / 2}><planeGeometry args={[PLANE_W, PLANE_H]} /><meshBasicMaterial ref={m1} map={map} alphaMap={mask} transparent depthWrite={false} toneMapped={false} /></mesh>
     </group>
   );
@@ -126,6 +126,7 @@ function Lot({ p, onSelect, onHover }: { p: Plot; onSelect: () => void; onHover:
 type Api = { zoom: (k: number) => void };
 function FogCtl({ mode }: { mode: Mode }) {
   const scene = useThree((s) => s.scene);
+  useEffect(() => { (window as unknown as { __scene?: THREE.Scene }).__scene = scene; }, [scene]);
   useFrame(() => { const f = scene.fog as THREE.Fog | null; if (f) f.color.lerp(new THREE.Color(MODES[mode].fog), 0.05); });
   return null;
 }
