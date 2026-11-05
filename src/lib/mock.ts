@@ -10,7 +10,7 @@ function fakeKey(r: () => number, suffix = "") {
   return s + suffix;
 }
 const NAMES: [string, string][] = [
-  ["Official WASTED", "WASTED"], ["Vice City Sunrise", "SUNRISE"], ["Gator In The Pool", "GATOR"], ["Lucia Mugshot", "LUCIA"],
+  ["Official CLIP", "CLIP"], ["Vice City Sunrise", "SUNRISE"], ["Gator In The Pool", "GATOR"], ["Lucia Mugshot", "LUCIA"],
   ["Jason Jumps The Bridge", "BRIDGE"], ["Five Stars In 10s", "5STARS"], ["Thrillbilly Mudfest", "MUDFEST"], ["Airboat Flip", "AIRBOAT"],
   ["Keys To Leonida", "KEYS"], ["Busted At The Club", "BUSTED"], ["Florida Man Arc", "FLMAN"], ["Dacity Crash", "DACITY"],
   ["Cop Chase Ragdoll", "RAGDOLL"], ["Hurricane Ride", "CANE"], ["Street Fight Cam", "FIGHTCAM"], ["First Wasted Screen", "DEATH"],
