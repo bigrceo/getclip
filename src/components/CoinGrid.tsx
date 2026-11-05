@@ -46,17 +46,17 @@ export function CoinGrid({ initial }: { initial: Coin[] }) {
         </div>
       </div>
       {failed ? (
-        <div className="dither border-2 border-line py-16 text-center"><p className="font-sign text-xl">Feed hiccup</p><button onClick={() => setNonce((n) => n + 1)} className="btn btn-ghost mt-4">Retry</button></div>
+        <div className="glass py-16 text-center"><p className="font-sign text-xl">Feed hiccup</p><button onClick={() => setNonce((n) => n + 1)} className="btn btn-ghost mt-4">Retry</button></div>
       ) : loading && coins.length === 0 ? (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">{Array.from({ length: 12 }, (_, i) => <div key={i} className="skeleton aspect-[4/5] border-2 border-line" />)}</div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">{Array.from({ length: 12 }, (_, i) => <div key={i} className="skeleton aspect-[4/5] rounded-2xl border border-line" />)}</div>
       ) : coins.length === 0 ? (
-        <div className="dither border-2 border-line py-16 text-center"><p className="font-sign text-xl">Nothing here yet</p><a href="/launch" className="btn btn-hot mt-4">Launch the first one</a></div>
+        <div className="glass py-16 text-center"><p className="font-sign text-xl">Nothing here yet</p><a href="/launch" className="btn btn-hot mt-4">Launch the first one</a></div>
       ) : view === "tiles" ? (
         <div key={sort + view} className={`enter grid transition-opacity ${loading ? "opacity-50" : ""} grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6`}>
           {coins.map((c) => <CoinTile key={c.mint} c={c} />)}
         </div>
       ) : (
-        <div key={sort + view} className={`enter border-2 border-line transition-opacity ${loading ? "opacity-50" : ""}`}>{coins.map((c, i) => <CoinRow key={c.mint} c={c} i={i} />)}</div>
+        <div key={sort + view} className={`enter overflow-hidden rounded-2xl border border-line transition-opacity ${loading ? "opacity-50" : ""}`}>{coins.map((c, i) => <CoinRow key={c.mint} c={c} i={i} />)}</div>
       )}
     </section>
   );

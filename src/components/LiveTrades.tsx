@@ -28,8 +28,8 @@ export function LiveTrades({ initial, mint }: { initial: Trade[]; mint?: string 
       <ul className="flex gap-3 overflow-x-auto py-1 [scrollbar-width:none]">
         {trades.slice(0, 24).map((t) => (
           <li key={t.sig} className="shrink-0">
-            <Link href={`/coin/${t.mint}`} className={`flex items-center gap-2 border-2 border-line bg-deck px-2.5 py-1.5 text-sm transition-colors hover:border-coral ${fresh.has(t.sig) ? (t.side === "buy" ? "flash-buy" : "flash-sell") : ""}`}>
-              <img src={`/api/coins/${t.mint}/still`} alt="" className="dither h-6 w-6 object-cover" loading="lazy" />
+            <Link href={`/coin/${t.mint}`} className={`flex items-center gap-2 rounded-xl border border-line bg-deck px-2.5 py-1.5 text-sm transition-colors hover:border-coral ${fresh.has(t.sig) ? (t.side === "buy" ? "flash-buy" : "flash-sell") : ""}`}>
+              <img src={`/api/coins/${t.mint}/still`} alt="" className="dither h-6 w-6 rounded-md object-cover" loading="lazy" />
               <span className="font-bold">${t.ticker}</span>
               <span className="text-haze">{t.side === "buy" ? "bought" : "sold"}</span>
               <span className={t.side === "buy" ? "text-up" : "text-down"}>{t.side === "buy" ? "+" : "−"}{t.sol.toFixed(2)} SOL</span>

@@ -21,7 +21,7 @@ export function CoinTile({ c }: { c: Coin }) {
     return () => io.disconnect();
   }, [c.loop]);
   return (
-    <Link ref={box} href={`/coin/${c.mint}`} className="tile group block overflow-hidden border-2 border-line bg-deck hover:border-coral"
+    <Link ref={box} href={`/coin/${c.mint}`} className="tile group block border border-line bg-deck"
       onMouseEnter={() => matchMedia("(hover: hover)").matches && play()} onMouseLeave={() => matchMedia("(hover: hover)").matches && stop()}>
       <div className={`relative aspect-square ${img ? "bg-night" : "skeleton"}`}>
         <img src={c.still} alt="" ref={(el) => { if (el?.complete && el.naturalWidth) setImg(true); }} onLoad={() => setImg(true)}
@@ -45,9 +45,9 @@ export function CoinTile({ c }: { c: Coin }) {
 
 export function CoinRow({ c, i }: { c: Coin; i: number }) {
   return (
-    <Link href={`/coin/${c.mint}`} className="grid grid-cols-[2rem_3rem_1fr_auto_auto] items-center gap-3 border-b-2 border-line px-2 py-2 transition-colors hover:bg-deck sm:grid-cols-[2rem_3rem_1fr_6rem_6rem_6rem_5rem]">
+    <Link href={`/coin/${c.mint}`} className="grid grid-cols-[2rem_3rem_1fr_auto_auto] items-center gap-3 border-b border-line px-2 py-2 transition-colors hover:bg-deck sm:grid-cols-[2rem_3rem_1fr_6rem_6rem_6rem_5rem]">
       <span className="text-haze">{i + 1}</span>
-      <img src={c.still} alt="" className="dither h-10 w-10 object-cover" loading="lazy" />
+      <img src={c.still} alt="" className="dither h-10 w-10 rounded-lg object-cover" loading="lazy" />
       <span className="min-w-0 truncate"><span className="font-bold">${c.ticker}</span> <span className="text-haze">{c.name}</span></span>
       <Num value={c.mcapUsd} text={usd(c.mcapUsd)} className="text-right" />
       <span className={`text-right ${c.change24h >= 0 ? "text-up" : "text-down"}`}>{pct(c.change24h)}</span>

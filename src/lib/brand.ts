@@ -5,6 +5,8 @@ export const BRAND = {
   name: "wasted.fun",
   short: "WASTED",
   tagline: "Every GTA 6 clip becomes a coin. Free, no wallet.",
+  state: "Leonida",
+  releaseAt: "2026-11-19T05:00:00Z",
   sub: "Paste a TikTok, X or YouTube link from Leonida, or drop your capture. Live on pump.fun in seconds, address ending in gta6.",
   x: "https://x.com/wastedfun",
   instagram: "https://instagram.com/wastedfun",

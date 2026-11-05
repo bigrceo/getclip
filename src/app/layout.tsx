@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Anton, Yellowtail } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import { BRAND, SITE_URL } from "@/lib/brand";
@@ -9,9 +9,11 @@ import { Footer } from "@/components/Footer";
 import { Toaster } from "@/components/toast";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const anton = Anton({ subsets: ["latin"], weight: "400", variable: "--font-anton" });
+const yellowtail = Yellowtail({ subsets: ["latin"], weight: "400", variable: "--font-yellowtail" });
 const pricedown = localFont({ src: "./fonts/Pricedown.otf", variable: "--font-pricedown", display: "swap" });
 
-export const viewport = { themeColor: "#0d0716" };
+export const viewport = { themeColor: "#0a0618" };
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -24,12 +26,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${pricedown.variable}`}>
+    <html lang="en" className={`${inter.variable} ${pricedown.variable} ${anton.variable} ${yellowtail.variable}`}>
       <body className="min-h-dvh flex flex-col">
         <a href="#content" className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-50 focus:bg-sun focus:px-3 focus:py-2 focus:text-night">Skip to the content</a>
         <WalletProvider>
           <Header />
-          <main id="content" className="flex-1">{children}</main>
+          <main id="content" className="flex-1 [&>*:first-child:not(section)]:pt-20">{children}</main>
           <Footer />
           <Toaster />
         </WalletProvider>
