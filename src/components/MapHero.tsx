@@ -71,9 +71,6 @@ export function MapHero({ coins, volumeSol }: { coins: Coin[]; volumeSol: number
       <div className="md:absolute md:inset-0 max-md:relative max-md:h-[64svh] max-md:min-h-[420px]">
       <StateMap coins={coins} active={active} onActive={setActive}>
         <div className="hidden md:contents">{card}{rail}</div>
-        <div className="pointer-events-none absolute bottom-[18px] left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-full border border-line bg-night/70 px-3 py-1.5 text-[12px] font-semibold uppercase tracking-[.06em] text-haze max-md:hidden">
-          Drag to pan · scroll to zoom · click a beacon
-        </div>
       </StateMap>
       </div>
       <div className="md:hidden">{card}{rail}</div>

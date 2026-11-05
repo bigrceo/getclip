@@ -52,11 +52,12 @@ const beamHeight = (e: Entity) => e.main ? 1.7 : Math.min(2.2, 0.35 + Math.log10
 const beamColor = (e: Entity) => e.main ? "#ff5fa8" : e.coin.change24h >= 0 ? "#2affc6" : "#ff4d6d";
 
 // ---- scene ----
-function Ground() {
+function Ground({ onReady }: { onReady: () => void }) {
   const small = typeof window !== "undefined" && window.innerWidth < 900;
   const [core, mask, ext] = useLoader(THREE.TextureLoader, [small ? "/map/leonida-2k.jpg" : "/map/leonida.jpg", "/map/leonida-core-mask.png", "/map/leonida-ext.jpg"]);
   const gl = useThree((s) => s.gl);
   useMemo(() => { for (const t of [core, ext]) { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = gl.capabilities.getMaxAnisotropy(); } }, [core, ext, gl]);
+  useEffect(() => { onReady(); }, [onReady]);
   return (
     <group>
       <mesh rotation-x={-Math.PI / 2} position-y={-0.03}><planeGeometry args={[EXT_W * 6, EXT_H * 6]} /><meshBasicMaterial color={OCEAN} /></mesh>
@@ -107,12 +108,14 @@ function Lot({ p, onSelect }: { p: Plot; onSelect: () => void }) {
   );
 }
 
-function Controls({ entities, selected }: { entities: Entity[]; selected: string | null }) {
+type Api = { zoom: (k: number) => void };
+function Controls({ entities, selected, api }: { entities: Entity[]; selected: string | null; api: React.MutableRefObject<Api | null> }) {
   const camera = useThree((s) => s.camera);
   const dom = useThree((s) => s.gl.domElement);
   const controls = useMemo(() => {
     const c = new OrbitControls(camera, dom);
     c.enableDamping = true; c.dampingFactor = 0.08; c.screenSpacePanning = false;
+    c.enableZoom = false; // the wheel scrolls the page; zoom = ctrl/cmd + wheel, pinch, or the buttons
     c.minDistance = 3; c.maxDistance = 13; c.minPolarAngle = 0.15; c.maxPolarAngle = 1.05; c.minAzimuthAngle = -0.6; c.maxAzimuthAngle = 0.6; c.zoomSpeed = 0.8;
     const off = new THREE.Vector3(window.innerWidth < 700 ? 1.4 : 0.6, 0, 0.2);
     c.target.copy(off); camera.position.add(off);
@@ -120,6 +123,20 @@ function Controls({ entities, selected }: { entities: Entity[]; selected: string
   }, [camera, dom]);
   const goal = useRef<THREE.Vector3 | null>(null);
   useEffect(() => () => controls.dispose(), [controls]);
+  useEffect(() => {
+    const zoom = (k: number) => {
+      const dir = camera.position.clone().sub(controls.target);
+      const d = THREE.MathUtils.clamp(dir.length() * k, controls.minDistance, controls.maxDistance);
+      camera.position.copy(controls.target).add(dir.setLength(d));
+    };
+    api.current = { zoom };
+    const onWheel = (e: WheelEvent) => {
+      if (!(e.ctrlKey || e.metaKey)) return; // plain wheel: let the page scroll
+      e.preventDefault(); zoom(Math.exp(e.deltaY * 0.01));
+    };
+    dom.addEventListener("wheel", onWheel, { passive: false });
+    return () => { dom.removeEventListener("wheel", onWheel); api.current = null; };
+  }, [camera, controls, dom, api]);
   useEffect(() => {
     const e = entities.find((e) => e.coin.mint === selected); if (!e) return;
     const [x, , z] = toWorld(e.plot.u, e.plot.v); goal.current = new THREE.Vector3(x, 0, z);
@@ -217,20 +234,31 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
   const entities = useMemo<Entity[]>(() => coins.map((c, i) => ({ coin: c, plot: plotFor(c, i), main: !!c.official })), [coins]);
   const takenPlots = useMemo(() => new Set(entities.map((e) => e.plot.id)), [entities]);
   const small = typeof window !== "undefined" && window.innerWidth < 700;
+  const api = useRef<Api | null>(null);
+  const [ready, setReady] = useState(false);
+  const onReady = useMemo(() => () => setReady(true), []);
   const select = (m: string) => { onActive(m); router.push(`/coin/${m}`); };
   return (
     <div className="map-canvas absolute inset-0">
       <Canvas dpr={[1, 2]} camera={{ position: small ? [0, 12, 4.8] : [0, 10.5, 7.6], fov: 42, near: 0.1, far: 200 }} gl={{ antialias: true }} onPointerMissed={() => onActive(null)}>
         <color attach="background" args={[OCEAN]} />
         <fog attach="fog" args={[OCEAN, 13, 26]} />
-        <Suspense fallback={null}><Ground /></Suspense>
-        {entities.map((e) => <Beacon key={e.coin.mint} e={e} active={active === e.coin.mint || hovered === e.coin.mint} onHover={setHovered} onSelect={() => select(e.coin.mint)} />)}
-        {PLOTS.filter((p) => !takenPlots.has(p.id)).map((p) => <Lot key={p.id} p={p} onSelect={() => router.push("/launch")} />)}
-        <Controls entities={entities} selected={active} />
+        <Suspense fallback={null}><Ground onReady={onReady} /></Suspense>
+        {ready && entities.map((e) => <Beacon key={e.coin.mint} e={e} active={active === e.coin.mint || hovered === e.coin.mint} onHover={setHovered} onSelect={() => select(e.coin.mint)} />)}
+        {ready && PLOTS.filter((p) => !takenPlots.has(p.id)).map((p) => <Lot key={p.id} p={p} onSelect={() => router.push("/launch")} />)}
+        <Controls entities={entities} selected={active} api={api} />
         <PinLayout entities={entities} slots={slots} hovered={hovered} selected={active} />
       </Canvas>
       <Pins entities={entities} slots={slots} hovered={hovered} selected={active} onHover={setHovered} onSelect={select} />
       <div className="map-vignette" aria-hidden="true" />
+      <div aria-hidden={ready} className={`pointer-events-none absolute inset-0 z-10 grid place-items-center transition-opacity duration-700 ${ready ? "opacity-0" : "opacity-100"}`} style={{ background: "radial-gradient(circle, #23104a, #0a0618)" }}>
+        <div className="text-center"><p className="script">Flying into</p><p className="sec-title sunset-text">Leonida</p></div>
+      </div>
+      <div className="absolute bottom-[18px] left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 max-md:bottom-3">
+        <button type="button" onClick={() => api.current?.zoom(1.35)} className="grid size-9 place-items-center rounded-full border border-line bg-night/70 text-lg font-bold text-ink hover:bg-night/90" aria-label="Zoom out">−</button>
+        <span className="whitespace-nowrap rounded-full border border-line bg-night/70 px-3 py-1.5 text-[12px] font-semibold uppercase tracking-[.06em] text-haze max-md:hidden">Drag to pan · ⌘ + scroll or pinch to zoom · click a beacon</span>
+        <button type="button" onClick={() => api.current?.zoom(0.74)} className="grid size-9 place-items-center rounded-full border border-line bg-night/70 text-lg font-bold text-ink hover:bg-night/90" aria-label="Zoom in">+</button>
+      </div>
       {children}
     </div>
   );
