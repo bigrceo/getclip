@@ -18,7 +18,7 @@ export function MapPicker({ value, onChange, onDone }: { value: MapPos | null; o
       <p className="text-haze">Where in Leonida does this clip happen? Drop the pin: your coin lives there on the map.</p>
       <div ref={box} onPointerDown={(e) => { setDrag(true); place(e); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); }}
         onPointerMove={(e) => drag && place(e)} onPointerUp={() => setDrag(false)} onPointerCancel={() => setDrag(false)}
-        className="relative mx-auto max-h-[60vh] cursor-crosshair touch-none select-none overflow-hidden rounded-2xl border border-line" style={{ aspectRatio: "6118 / 8192" }}>
+        className="relative mx-auto max-h-[60vh] cursor-crosshair touch-none select-none overflow-hidden rounded-2xl border border-line" style={{ aspectRatio: "6014 / 8192" }}>
         <img src="/map/yanis-4k.jpg" alt="Leonida" draggable={false} className="block h-full w-full object-cover" />
         {value && (
           <div className="pointer-events-none absolute -translate-x-1/2 -translate-y-full" style={{ left: `${value.u * 100}%`, top: `${value.v * 100}%` }}>

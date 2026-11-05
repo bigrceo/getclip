@@ -8,7 +8,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { MODES, type Mode } from "./Atmosphere";
 
-const COLS = 59, ROWS = 79;
+const COLS = 58, ROWS = 79;
 const loader = new THREE.TextureLoader();
 const cache = new Map<string, THREE.Texture>();
 const order: string[] = [];

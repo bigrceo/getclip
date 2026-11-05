@@ -139,7 +139,7 @@ function labelTexture(text: string, sub?: string) {
 }
 
 export function DistrictLabels({ toWorld }: { toWorld: (u: number, v: number) => [number, number, number] }) {
-  const texs = useMemo(() => DISTRICTS.filter((d) => d.name !== "Vice City Intl").map((d) => labelTexture(d.name.toUpperCase(), d.sub)), []);
+  const texs = useMemo(() => DISTRICTS.filter((d) => d.big).map((d) => labelTexture(d.name.toUpperCase(), d.sub)), []);
   const group = useRef<THREE.Group>(null);
   const camera = useThree((s) => s.camera);
   useFrame(() => {
@@ -150,7 +150,7 @@ export function DistrictLabels({ toWorld }: { toWorld: (u: number, v: number) =>
   });
   return (
     <group ref={group}>
-      {DISTRICTS.filter((d) => d.name !== "Vice City Intl").map((d, i) => { const [x, , z] = toWorld(d.u, d.v); return (
+      {DISTRICTS.filter((d) => d.big).map((d, i) => { const [x, , z] = toWorld(d.u, d.v); return (
         <sprite key={d.name} position={[x, 0.55, z]} scale={[3.2, 1, 1]}><spriteMaterial map={texs[i]} transparent opacity={0} depthWrite={false} depthTest={false} /></sprite>
       ); })}
     </group>
@@ -170,7 +170,7 @@ export function CityNeon({ mode, toWorld }: { mode: Mode; toWorld: (u: number, v
     const target = MODES[mode].neon;
     for (const [r, k] of [[a, 0.5], [b, 0.35]] as const) { const s = r.current; if (!s) continue; const m = s.material; m.opacity += (target * k * (0.9 + Math.sin(clock.elapsedTime * 2 + k) * 0.1) - m.opacity) * 0.08; }
   });
-  const [x, , z] = toWorld(0.65, 0.52);
+  const [x, , z] = toWorld(0.7, 0.54);
   return (
     <>
       <sprite ref={a} position={[x, 0.5, z]} scale={[5.5, 4.2, 1]}><spriteMaterial map={pink} transparent opacity={0} depthWrite={false} blending={THREE.AdditiveBlending} /></sprite>

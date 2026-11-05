@@ -13,10 +13,11 @@ import type { Coin } from "@/lib/types";
 import { pct } from "@/lib/format";
 import { CityNeon, Clouds, DistrictLabels, MODES, Ocean, Sky, Sun, type Mode } from "./map/Atmosphere";
 import { TileLayer } from "./map/TileLayer";
+import { Buildings, CityLight } from "./map/Buildings";
 import { districtOf } from "./map/districts";
 
 // ---- Yanis V16 GTA VI community map (gtadb.org, CC BY 4.0), island crop stitched from the z5 tiles: 6118×8192 ----
-const IMG_W = 6118, IMG_H = 8192;
+const IMG_W = 6014, IMG_H = 8192; // Yanis V17 island crop: tiles x 21..78, y 21..99
 const PLANE_W = 16, PLANE_H = PLANE_W * IMG_H / IMG_W;
 const OCEAN = "#2c68a6";
 const toWorld = (u: number, v: number): [number, number, number] => [(u - 0.5) * PLANE_W, 0, (v - 0.5) * PLANE_H];
@@ -37,20 +38,59 @@ function edgeMask() {
 
 export type Plot = { id: string; district: string; u: number; v: number };
 export const PLOTS: Plot[] = [
-  { id: "hq", district: "Vice City", u: 0.64, v: 0.52 },
-  { id: "vc-1", district: "Vice City", u: 0.67, v: 0.49 }, { id: "vc-2", district: "Vice City", u: 0.61, v: 0.55 }, { id: "vc-3", district: "Vice City", u: 0.66, v: 0.56 }, { id: "vc-4", district: "Vice City", u: 0.62, v: 0.48 },
-  { id: "vb-1", district: "Vice Beach", u: 0.84, v: 0.45 }, { id: "vb-2", district: "Vice Beach", u: 0.86, v: 0.5 }, { id: "vb-3", district: "Vice Beach", u: 0.8, v: 0.41 },
-  { id: "air", district: "Vice City Intl", u: 0.55, v: 0.59 },
-  { id: "pg-1", district: "Port Gellhorn", u: 0.26, v: 0.53 }, { id: "pg-2", district: "Port Gellhorn", u: 0.29, v: 0.57 },
-  { id: "am-1", district: "Ambrosia", u: 0.53, v: 0.35 }, { id: "am-2", district: "Ambrosia", u: 0.58, v: 0.38 },
-  { id: "gr-1", district: "Grassrivers", u: 0.22, v: 0.3 }, { id: "gr-2", district: "Grassrivers", u: 0.27, v: 0.34 },
-  { id: "mk-1", district: "Mount Kalaga", u: 0.47, v: 0.2 }, { id: "mk-2", district: "Mount Kalaga", u: 0.55, v: 0.16 }, { id: "mk-3", district: "Mount Kalaga", u: 0.4, v: 0.26 },
-  { id: "ev-1", district: "Everglades", u: 0.44, v: 0.66 }, { id: "ev-2", district: "Everglades", u: 0.38, v: 0.6 }, { id: "ev-3", district: "Everglades", u: 0.5, v: 0.7 },
-  { id: "so-1", district: "South Leonida", u: 0.6, v: 0.73 }, { id: "so-2", district: "South Leonida", u: 0.66, v: 0.66 },
-  { id: "lk-1", district: "Leonard Keys", u: 0.52, v: 0.86 }, { id: "lk-2", district: "Leonard Keys", u: 0.58, v: 0.82 }, { id: "lk-3", district: "Leonard Keys", u: 0.26, v: 0.85 }, { id: "lk-4", district: "Leonard Keys", u: 0.4, v: 0.9 },
-  { id: "ne-1", district: "Vice City", u: 0.72, v: 0.44 }, { id: "ne-2", district: "Vice Beach", u: 0.9, v: 0.56 },
+  { id: "hq", district: "Vice City", u: 0.676, v: 0.552 },
+  { id: "vic-0", district: "Vice City", u: 0.665, v: 0.538 },
+  { id: "vic-1", district: "Vice City", u: 0.685, v: 0.535 },
+  { id: "vic-2", district: "Vice City", u: 0.678, v: 0.547 },
+  { id: "vic-3", district: "Vice City", u: 0.649, v: 0.552 },
+  { id: "vic-0", district: "Vice Beach", u: 0.825, v: 0.484 },
+  { id: "vic-1", district: "Vice Beach", u: 0.827, v: 0.471 },
+  { id: "vic-2", district: "Vice Beach", u: 0.848, v: 0.5 },
+  { id: "vic-3", district: "Vice Beach", u: 0.83, v: 0.476 },
+  { id: "por-0", district: "Port Gellhorn", u: 0.305, v: 0.382 },
+  { id: "por-1", district: "Port Gellhorn", u: 0.302, v: 0.36 },
+  { id: "por-2", district: "Port Gellhorn", u: 0.326, v: 0.346 },
+  { id: "por-3", district: "Port Gellhorn", u: 0.319, v: 0.356 },
+  { id: "key-0", district: "Key Lento", u: 0.549, v: 0.823 },
+  { id: "key-1", district: "Key Lento", u: 0.559, v: 0.851 },
+  { id: "key-2", district: "Key Lento", u: 0.551, v: 0.841 },
+  { id: "key-3", district: "Key Lento", u: 0.578, v: 0.833 },
+  { id: "ham-0", district: "Hamlet", u: 0.562, v: 0.687 },
+  { id: "ham-1", district: "Hamlet", u: 0.533, v: 0.692 },
+  { id: "amb-0", district: "Ambrosia", u: 0.565, v: 0.346 },
+  { id: "amb-1", district: "Ambrosia", u: 0.543, v: 0.352 },
+  { id: "amb-2", district: "Ambrosia", u: 0.551, v: 0.341 },
+  { id: "amb-3", district: "Ambrosia", u: 0.572, v: 0.357 },
+  { id: "mar-0", district: "Mariana County", u: 0.416, v: 0.804 },
+  { id: "mar-1", district: "Mariana County", u: 0.433, v: 0.816 },
+  { id: "ria-0", district: "Rialto Islands", u: 0.79, v: 0.474 },
+  { id: "ria-1", district: "Rialto Islands", u: 0.805, v: 0.467 },
+  { id: "cap-0", district: "Capri", u: 0.293, v: 0.557 },
+  { id: "cap-1", district: "Capri", u: 0.277, v: 0.547 },
+  { id: "wat-0", district: "Watson Bay", u: 0.377, v: 0.717 },
+  { id: "wat-1", district: "Watson Bay", u: 0.421, v: 0.713 },
+  { id: "kel-0", district: "Kelly County", u: 0.414, v: 0.369 },
+  { id: "kel-1", district: "Kelly County", u: 0.403, v: 0.38 },
+  { id: "dal-0", district: "Dalton Island", u: 0.863, v: 0.609 },
+  { id: "dal-1", district: "Dalton Island", u: 0.878, v: 0.629 },
+  { id: "vc -0", district: "VC Intl Airport", u: 0.569, v: 0.582 },
+  { id: "vc -1", district: "VC Intl Airport", u: 0.545, v: 0.583 },
+  { id: "wan-0", district: "Waning Sands", u: 0.735, v: 0.359 },
+  { id: "wan-1", district: "Waning Sands", u: 0.745, v: 0.33 },
+  { id: "lum-0", district: "Lummox County", u: 0.472, v: 0.191 },
+  { id: "lum-1", district: "Lummox County", u: 0.45, v: 0.182 },
+  { id: "lum-2", district: "Lummox County", u: 0.459, v: 0.169 },
+  { id: "lum-3", district: "Lummox County", u: 0.453, v: 0.195 },
+  { id: "por-0", district: "Port Vice City", u: 0.77, v: 0.559 },
+  { id: "por-1", district: "Port Vice City", u: 0.785, v: 0.584 },
+  { id: "glo-0", district: "Gloriana Key", u: 0.761, v: 0.628 },
+  { id: "glo-1", district: "Gloriana Key", u: 0.789, v: 0.645 },
+  { id: "cat-0", district: "Catalan Key", u: 0.74, v: 0.665 },
+  { id: "cat-1", district: "Catalan Key", u: 0.708, v: 0.647 },
+  { id: "lea-0", district: "Leaf Links", u: 0.755, v: 0.44 },
+  { id: "lea-1", district: "Leaf Links", u: 0.79, v: 0.411 },
 ];
-const DISTRICT_COLOR: Record<string, string> = { "Vice City": "#ff5fa8", "Vice Beach": "#ffc38a", "Vice City Intl": "#ffffff", "Port Gellhorn": "#48d6ff", Ambrosia: "#ffe17a", Grassrivers: "#b6ff6a", "Mount Kalaga": "#d9b8ff", Everglades: "#7bff6a", "South Leonida": "#ffd1a1", "Leonard Keys": "#2affc6" };
+const DISTRICT_COLOR: Record<string, string> = { "Vice City": "#ff5fa8", "Vice Beach": "#ffc38a", "Port Gellhorn": "#48d6ff", "Key Lento": "#2affc6", Ambrosia: "#ffe17a", "Lummox County": "#d9b8ff" };
 
 /** Stable plot per coin: the official coin owns HQ, the rest hash their mint onto the other plots. */
 export function plotFor(c: Coin, i: number): Plot {
@@ -141,7 +181,7 @@ function Controls({ entities, selected, api }: { entities: Entity[]; selected: s
     c.enableDamping = true; c.dampingFactor = 0.08; c.screenSpacePanning = false;
     c.enableZoom = false; // the wheel scrolls the page; zoom = ctrl/cmd + wheel, pinch, or the buttons
     c.minDistance = 2.2; c.maxDistance = 26; c.minPolarAngle = 0.15; c.maxPolarAngle = 1.05; c.minAzimuthAngle = -0.6; c.maxAzimuthAngle = 0.6; c.zoomSpeed = 0.8;
-    const [hx, , hz] = toWorld(0.64, 0.5);
+    const [hx, , hz] = toWorld(0.7, 0.53);
     const off = new THREE.Vector3(hx + (window.innerWidth < 700 ? 0.8 : 1.2), 0, hz + 0.6);
     c.target.copy(off); camera.position.add(off);
     return c;
@@ -294,7 +334,7 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
         <Sky mode={mode} />
         <Sun mode={mode} />
         <Suspense fallback={null}><Ground onReady={onReady} mode={mode} /></Suspense>
-        {ready && <><Clouds mode={mode} /><DistrictLabels toWorld={toWorld} /><CityNeon mode={mode} toWorld={toWorld} />{!small && <TileLayer mode={mode} planeW={PLANE_W} planeH={PLANE_H} target={tileTarget} api={api} />}</>}
+        {ready && <><Clouds mode={mode} /><DistrictLabels toWorld={toWorld} /><CityNeon mode={mode} toWorld={toWorld} />{!small && <TileLayer mode={mode} planeW={PLANE_W} planeH={PLANE_H} target={tileTarget} api={api} />}<CityLight mode={mode} /><Buildings mode={mode} planeW={PLANE_W} planeH={PLANE_H} /></>}
         {ready && entities.map((e) => <Beacon key={e.coin.mint} e={e} active={active === e.coin.mint || hovered === e.coin.mint} onHover={setHovered} onSelect={() => select(e.coin.mint)} />)}
         {ready && PLOTS.filter((p) => !takenPlots.has(p.id)).map((p) => <Lot key={p.id} p={p} onSelect={() => router.push("/launch")} onHover={(x, y) => setLotTip(x == null ? null : { plot: p, x, y: y! })} />)}
         <Controls entities={entities} selected={active} api={api} />
