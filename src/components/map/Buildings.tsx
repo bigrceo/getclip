@@ -13,15 +13,24 @@ import { DISTRICTS } from "./districts";
 type Fp = [number, number, number, number, number, number];
 type Lm = { name: string; u: number; v: number; h: number; w: number; shape: string };
 const METER = 16 / 14848;        // plane width 16 wu = 58 tiles × 256 game units
-const HEIGHT_SCALE = 2.0;        // stylised: real metres × 2
+const HEIGHT_SCALE = 1.5;        // stylised: real metres × 1.5
 const CORES = DISTRICTS.filter((d) => ["Vice City", "Vice Beach"].includes(d.name));
 
 function windowsTexture() {
-  const c = document.createElement("canvas"); c.width = 64; c.height = 128; const g = c.getContext("2d")!;
-  g.fillStyle = "#000"; g.fillRect(0, 0, 64, 128);
-  for (let y = 4; y < 128; y += 8) for (let x = 4; x < 64; x += 8) { if (Math.random() < 0.55) { g.fillStyle = Math.random() < 0.8 ? "#ffd27a" : "#9fe8ff"; g.fillRect(x, y, 4, 5); } }
-  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; return t;
+  const c = document.createElement("canvas"); c.width = 128; c.height = 256; const g = c.getContext("2d")!;
+  g.fillStyle = "#000"; g.fillRect(0, 0, 128, 256);
+  for (let y = 3; y < 256; y += 6) for (let x = 3; x < 128; x += 6) { if (Math.random() < 0.5) { g.fillStyle = Math.random() < 0.8 ? "#ffd27a" : "#9fe8ff"; g.fillRect(x, y, 3, 3); } }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, 3); t.colorSpace = THREE.SRGBColorSpace; return t;
 }
+/** Facade: light base with floor lines so the boxes read as buildings, not blocks. */
+function facadeTexture() {
+  const c = document.createElement("canvas"); c.width = 128; c.height = 256; const g = c.getContext("2d")!;
+  g.fillStyle = "#f3eee6"; g.fillRect(0, 0, 128, 256);
+  for (let y = 0; y < 256; y += 6) { g.fillStyle = "rgba(60,40,70,.18)"; g.fillRect(0, y, 128, 1); }
+  for (let x = 0; x < 128; x += 6) { g.fillStyle = "rgba(60,40,70,.08)"; g.fillRect(x, 0, 1, 256); }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, 3); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+const PALETTE = ["#f4efe6", "#efe4d6", "#e9dfe8", "#dfe6ee", "#f1e3d2", "#e4e4e4", "#f6e9e1"];
 
 export function Buildings({ mode, planeW, planeH }: { mode: Mode; planeW: number; planeH: number }) {
   const [data, setData] = useState<{ fps: Fp[]; lms: Lm[] } | null>(null);
@@ -32,6 +41,7 @@ export function Buildings({ mode, planeW, planeH }: { mode: Mode; planeW: number
   const mesh = useRef<THREE.InstancedMesh>(null);
   const mat = useRef<THREE.MeshLambertMaterial>(null);
   const emissive = useMemo(() => windowsTexture(), []);
+  const facade = useMemo(() => facadeTexture(), []);
   const geo = useMemo(() => { const g = new THREE.BoxGeometry(1, 1, 1); g.translate(0, 0.5, 0); return g; }, []);
   const count = (data?.fps.length ?? 0) + (data?.lms.length ?? 0);
   useEffect(() => {
@@ -47,14 +57,16 @@ export function Buildings({ mode, planeW, planeH }: { mode: Mode; planeW: number
       if (!h) {
         const core = Math.min(...CORES.map((c) => Math.hypot((c.u - cu) * 1.05, c.v - cv)));
         const urban = THREE.MathUtils.clamp(1 - core / 0.09, 0, 1);
-        const hash = (Math.sin(cu * 9731 + cv * 5113) * 43758.5) % 1;
-        h = 7 + Math.sqrt(area) * 1.2 + urban * (25 + Math.abs(hash) * 70);
+        const hash = Math.abs((Math.sin(cu * 9731 + cv * 5113) * 43758.5) % 1);
+        h = 6 + Math.sqrt(area) * 0.7 + urban * (18 + hash * 55);
+        if (area > 1500) h = Math.min(h, 14); // big flat footprints: malls, hangars, terminals
       }
       o.position.set(toX(cu), 0, toZ(cv)); o.rotation.set(0, -rot, 0);
       o.scale.set(Math.max(w * planeW, 0.012), h * METER * HEIGHT_SCALE, Math.max(d * planeH, 0.012)); o.updateMatrix();
       m.setMatrixAt(i, o.matrix);
-      const t = THREE.MathUtils.clamp(h / 120, 0, 1);
-      col.setHSL(0.78 - t * 0.08, 0.12 + t * 0.25, 0.86 - t * 0.28); m.setColorAt(i, col); i++;
+      col.set(PALETTE[Math.floor(Math.abs(Math.sin(cu * 311 + cv * 173)) * PALETTE.length) % PALETTE.length]);
+      if (h > 90) col.lerp(new THREE.Color("#cfd8e6"), 0.5);
+      m.setColorAt(i, col); i++;
     }
     for (const l of data.lms) {
       const side = Math.max(l.w || 20, 18) * METER * 1.6;
@@ -73,7 +85,7 @@ export function Buildings({ mode, planeW, planeH }: { mode: Mode; planeW: number
   if (!data) return null;
   return (
     <instancedMesh ref={mesh} args={[geo, undefined, Math.max(count, 1)]} frustumCulled={false} renderOrder={2}>
-      <meshLambertMaterial ref={mat} color="#ffffff" emissive="#ffffff" emissiveMap={emissive} emissiveIntensity={0} />
+      <meshLambertMaterial ref={mat} color="#ffffff" map={facade} emissive="#ffffff" emissiveMap={emissive} emissiveIntensity={0} />
     </instancedMesh>
   );
 }

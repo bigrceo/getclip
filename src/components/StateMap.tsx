@@ -180,6 +180,10 @@ function Controls({ entities, selected, api }: { entities: Entity[]; selected: s
     const c = new OrbitControls(camera, dom);
     c.enableDamping = true; c.dampingFactor = 0.08; c.screenSpacePanning = false;
     c.enableZoom = false; // the wheel scrolls the page; zoom = ctrl/cmd + wheel, pinch, or the buttons
+    // Leonida-style: left drag pans the map, right drag tilts; one finger pans, two fingers pinch/tilt.
+    c.mouseButtons = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE };
+    c.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_ROTATE };
+    c.panSpeed = 1.2; c.enableZoom = true; c.zoomToCursor = false;
     c.minDistance = 2.2; c.maxDistance = 26; c.minPolarAngle = 0.15; c.maxPolarAngle = 1.05; c.minAzimuthAngle = -0.6; c.maxAzimuthAngle = 0.6; c.zoomSpeed = 0.8;
     const [hx, , hz] = toWorld(0.7, 0.53);
     const off = new THREE.Vector3(hx + (window.innerWidth < 700 ? 0.8 : 1.2), 0, hz + 0.6);
@@ -212,8 +216,10 @@ function Controls({ entities, selected, api }: { entities: Entity[]; selected: s
         e.preventDefault(); zoom(Math.exp(e.deltaY * 0.0045));
       }
     };
-    dom.addEventListener("wheel", onWheel, { passive: false });
-    return () => { dom.removeEventListener("wheel", onWheel); api.current = null; };
+    // Capture phase so OrbitControls' own wheel zoom never runs: the wheel is ours (zoom in / zoom out then scroll the page).
+    const guard = (e: WheelEvent) => { e.stopImmediatePropagation(); onWheel(e); };
+    dom.addEventListener("wheel", guard, { passive: false, capture: true });
+    return () => { dom.removeEventListener("wheel", guard, { capture: true } as EventListenerOptions); api.current = null; };
   }, [camera, controls, dom, api]);
   useEffect(() => {
     const e = entities.find((e) => e.coin.mint === selected); if (!e) return;
@@ -351,7 +357,7 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
       </div>
       <div className="absolute bottom-[18px] left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 max-md:bottom-3">
         <button type="button" onClick={() => api.current?.zoom(1.35)} className="grid size-9 place-items-center rounded-full border border-line bg-night/70 text-lg font-bold text-ink hover:bg-night/90" aria-label="Zoom out">−</button>
-        <span className="whitespace-nowrap rounded-full border border-line bg-night/70 px-3 py-1.5 text-[12px] font-semibold uppercase tracking-[.06em] text-haze max-md:hidden">Drag to pan · scroll to zoom · click a beacon</span>
+        <span className="whitespace-nowrap rounded-full border border-line bg-night/70 px-3 py-1.5 text-[12px] font-semibold uppercase tracking-[.06em] text-haze max-md:hidden">Drag to pan · right-drag to tilt · scroll to zoom · click a beacon</span>
         <button type="button" onClick={() => api.current?.zoom(0.74)} className="grid size-9 place-items-center rounded-full border border-line bg-night/70 text-lg font-bold text-ink hover:bg-night/90" aria-label="Zoom in">+</button>
       </div>
       {children}
