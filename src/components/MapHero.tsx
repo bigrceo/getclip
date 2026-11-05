@@ -13,7 +13,7 @@ export function MapHero({ coins, volumeSol }: { coins: Coin[]; volumeSol: number
   const [active, setActive] = useState<string | null>(null);
   const [lead, tail] = BRAND.tagline.split(". ");
   const card = (
-        <div className="glass z-20 w-[min(440px,100%-48px)] p-5 pb-4 md:absolute md:left-6 md:top-[92px] max-md:mx-4 max-md:mt-3 max-md:w-auto">
+        <div className="glass z-20 w-[min(440px,100%-48px)] p-5 pb-4 md:absolute md:left-6 md:top-6 max-md:mx-4 max-md:mt-3 max-md:w-auto">
           <p className="script">Welcome to the</p>
           <h1 className="font-sign text-[64px] uppercase leading-[.92] max-md:text-[50px]">
             <span className="sunset-text block" style={{ filter: "drop-shadow(0 4px 22px rgba(255,61,139,.45))" }}>{BRAND.state}</span>
@@ -38,7 +38,7 @@ export function MapHero({ coins, volumeSol }: { coins: Coin[]; volumeSol: number
         </div>
   );
   const rail = (
-        <aside className="glass z-20 flex w-[290px] flex-col px-2.5 pb-2 pt-3.5 md:absolute md:bottom-[70px] md:right-6 md:top-[92px] max-md:mx-4 max-md:mt-3 max-md:max-h-[360px] max-md:w-auto">
+        <aside className="glass z-20 flex w-[290px] flex-col px-2.5 pb-2 pt-3.5 md:absolute md:bottom-[70px] md:right-6 md:top-6 max-md:mx-4 max-md:mt-3 max-md:max-h-[360px] max-md:w-auto">
           <div className="flex items-baseline justify-between px-2 pb-2.5">
             <b className="font-sign text-[20px] font-normal uppercase tracking-wide">On the map</b>
             <i className="text-[12px] not-italic text-haze">{coins.length} {coins.length === 1 ? "clip" : "clips"}</i>
@@ -65,7 +65,7 @@ export function MapHero({ coins, volumeSol }: { coins: Coin[]; volumeSol: number
         </aside>
   );
   return (
-    <section className="relative md:h-[100svh] md:min-h-[620px] md:overflow-hidden max-md:flex max-md:flex-col max-md:pb-4">
+    <section className="relative md:h-[calc(100svh-4rem)] md:min-h-[620px] md:overflow-hidden max-md:flex max-md:flex-col max-md:pb-4">
       <div className="md:absolute md:inset-0 max-md:relative max-md:h-[64svh] max-md:min-h-[420px]">
       <StateMap coins={coins} active={active} onActive={setActive}>
         <div className="hidden md:contents">{card}{rail}</div>

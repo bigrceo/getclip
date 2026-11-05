@@ -4,8 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { Coin } from "@/lib/types";
 import { pct, usd } from "@/lib/format";
 
-/** Map image (public/map/leonida.jpg) size and the plots coins get pinned to, in u/v of that image. */
-const W = 4096, H = 2286;
+/** World = the extended map (ocean all around); the 4K core sits inside it at CX/CY, CW×CH (image-matched). Plots are u/v of the core. */
+const W = 2528, H = 1696;
+const CX = 336, CY = 336, CW = 1864, CH = 1040;
+const px = (u: number) => CX + u * CW, py = (v: number) => CY + v * CH;
 export const PLOTS: { id: string; district: string; u: number; v: number }[] = [
   { id: "hq", district: "Vice City", u: 0.627, v: 0.405 },
   { id: "east", district: "Vice City", u: 0.66, v: 0.44 }, { id: "west", district: "Vice City", u: 0.595, v: 0.435 },
@@ -47,18 +49,18 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
   const clamp = useCallback((v: View) => {
     const b = box.current; if (!b) return v;
     const bw = b.clientWidth, bh = b.clientHeight;
-    const minS = Math.max(bw / W, bh / H) * 0.9, maxS = 1.2;
+    const minS = Math.max(bw / W, bh / H), maxS = 2.2;
     v.s = Math.min(maxS, Math.max(minS, v.s));
-    const ww = W * v.s, wh = H * v.s, slack = 0.25;
-    v.x = Math.min(bw * slack, Math.max(bw - ww - bw * slack, v.x));
-    v.y = Math.min(bh * slack, Math.max(bh - wh - bh * slack, v.y));
+    const ww = W * v.s, wh = H * v.s;
+    v.x = Math.min(0, Math.max(bw - ww, v.x));
+    v.y = Math.min(0, Math.max(bh - wh, v.y));
     return v;
   }, []);
   /** Centre the view on a u/v point at scale s (animated). */
   const focus = useCallback((u: number, v: number, s?: number) => {
     const b = box.current, el = world.current; if (!b || !el) return;
     const S = s ?? view.current.s;
-    const target = clamp({ s: S, x: b.clientWidth / 2 - u * W * S, y: b.clientHeight / 2 - v * H * S });
+    const target = clamp({ s: S, x: b.clientWidth / 2 - px(u) * S, y: b.clientHeight / 2 - py(v) * S });
     el.style.transition = "transform .6s cubic-bezier(.2,.8,.2,1)";
     view.current = target; apply();
     setTimeout(() => { if (el) el.style.transition = ""; }, 650);
@@ -69,8 +71,8 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
     const init = () => {
       if (ready || !b.clientWidth || !b.clientHeight) return;
       ready = true;
-      const s = Math.max(b.clientWidth / W, b.clientHeight / H) * 1.25;
-      view.current = clamp({ s, x: b.clientWidth * 0.55 - 0.63 * W * s, y: b.clientHeight / 2 - 0.43 * H * s });
+      const s = Math.max(b.clientWidth / W, b.clientHeight / H) * 1.35;
+      view.current = clamp({ s, x: b.clientWidth * 0.5 - px(0.6) * s, y: b.clientHeight * 0.5 - py(0.45) * s });
       apply(); bump((n) => n + 1);
     };
     init();
@@ -81,7 +83,7 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
   useEffect(() => {
     if (!active) return;
     const i = coins.findIndex((c) => c.mint === active); if (i < 0) return;
-    const p = plotFor(coins[i], i); focus(p.u, p.v, Math.max(view.current.s, 0.45));
+    const p = plotFor(coins[i], i); focus(p.u, p.v, Math.max(view.current.s, 0.9));
   }, [active, coins, focus]);
   const onWheel = (e: React.WheelEvent) => {
     if ((e.target as HTMLElement).closest(".glass")) return; // let the page scroll from the card and the rail
@@ -89,7 +91,7 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
     const b = box.current!.getBoundingClientRect();
     const px = e.clientX - b.left, py = e.clientY - b.top;
     const v = view.current, k = Math.exp(-e.deltaY * 0.0015);
-    const ns = Math.min(1.2, Math.max(0.05, v.s * k)), r = ns / v.s;
+    const ns = Math.min(2.2, Math.max(0.05, v.s * k)), r = ns / v.s;
     view.current = clamp({ s: ns, x: px - (px - v.x) * r, y: py - (py - v.y) * r }); apply();
   };
   const onDown = (e: React.PointerEvent) => {
@@ -106,16 +108,17 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
   const onUp = () => { drag.current = null; };
   return (
     <div ref={box} onWheel={onWheel} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}
-      className="absolute inset-0 touch-none overflow-hidden" style={{ background: "radial-gradient(circle at 50% 40%, #1b6f8e, #0f3d55 60%, #0a0618 130%)", cursor: drag.current ? "grabbing" : "grab" }}>
+      className="absolute inset-0 touch-none overflow-hidden" style={{ background: "#0f4a63", cursor: drag.current ? "grabbing" : "grab" }}>
       <div ref={world} className="map-world" style={{ width: W, height: H }}>
-        <img src="/map/leonida.jpg" width={W} height={H} alt="" draggable={false} className="block" />
+        <img src="/map/leonida-ext.jpg" width={W} height={H} alt="" draggable={false} className="block" />
+        <img src="/map/leonida.jpg" width={CW} height={CH} alt="" draggable={false} className="absolute" style={{ left: CX, top: CY, maskImage: "radial-gradient(ellipse 50% 50% at 50% 50%, #000 70%, transparent 100%)", WebkitMaskImage: "radial-gradient(ellipse 50% 50% at 50% 50%, #000 70%, transparent 100%)" }} />
         {coins.map((c, i) => {
           const p = plotFor(c, i);
           const main = !!c.official;
           return (
             <button key={c.mint} type="button" onClick={() => { onActive(c.mint); router.push(`/coin/${c.mint}`); }} onMouseEnter={() => onActive(c.mint)}
               className={`pin ${main ? "pin-main" : ""} ${active === c.mint ? "on" : ""}`}
-              style={{ left: p.u * W, top: p.v * H, transform: "translate(-50%, calc(-100% - 18px)) scale(var(--inv))", transformOrigin: "50% calc(100% + 18px)" }}
+              style={{ left: px(p.u), top: py(p.v), transform: "translate(-50%, calc(-100% - 18px)) scale(var(--inv))", transformOrigin: "50% calc(100% + 18px)" }}
               aria-label={`$${c.ticker} on the map`}>
               {active === c.mint && <span className="pin-pulse" />}
               <img src={c.still} alt="" />
@@ -125,7 +128,7 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
         })}
         {PLOTS.filter((p) => !coins.some((c, i) => plotFor(c, i).id === p.id)).map((p) => (
           <a key={p.id} href="/launch" className="pin pin-lot" title={`${p.district}: open plot, launch a clip to claim it`}
-            style={{ left: p.u * W, top: p.v * H, transform: "translate(-50%, -50%) scale(var(--inv))" }} aria-label={`Open plot in ${p.district}`} />
+            style={{ left: px(p.u), top: py(p.v), transform: "translate(-50%, -50%) scale(var(--inv))" }} aria-label={`Open plot in ${p.district}`} />
         ))}
       </div>
       <div className="map-vignette" />

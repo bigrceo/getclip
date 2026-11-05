@@ -23,7 +23,7 @@
   --font-wordmark: var(--font-pricedown), var(--font-anton), sans-serif;
   --ease-snap: cubic-bezier(.2, .9, .25, 1.15);
 }
-:root { --sunset: linear-gradient(100deg, #ffd36e 0%, #ff8a3d 30%, #ff3d8b 62%, #b44dff 100%); --glass: rgba(18,9,38,.72); }
+:root { --sunset: linear-gradient(100deg, #ffd36e 0%, #ff8a3d 30%, #ff3d8b 62%, #b44dff 100%); --glass: rgba(14,7,30,.86); }
 
 html, body { background: var(--color-night); color: var(--color-ink); }
 body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
@@ -121,7 +121,7 @@ body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
 .sunset-text { background: var(--sunset); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .wordmark { font-family: var(--font-wordmark); }
 .sec-title { font-family: var(--font-sign); text-transform: uppercase; font-size: clamp(54px, 9vw, 96px); line-height: .9; }
-.map-vignette { pointer-events: none; position: absolute; inset: 0; z-index: 1; background: radial-gradient(120% 90% at 55% 50%, transparent 55%, rgba(10,6,24,.85) 100%), linear-gradient(rgba(255,61,139,.12), transparent 30%, transparent 75%, rgba(10,6,24,.9)); }
+.map-vignette { pointer-events: none; position: absolute; inset: 0; z-index: 1; background: radial-gradient(120% 90% at 55% 50%, transparent 60%, rgba(10,6,24,.7) 100%), linear-gradient(rgba(255,61,139,.1), transparent 25%, transparent 80%, rgba(10,6,24,.9)); }
 .map-world { position: absolute; left: 0; top: 0; z-index: 0; transform-origin: 0 0; will-change: transform; user-select: none; -webkit-user-drag: none; }
 .map-world img { pointer-events: none; -webkit-user-drag: none; }
 .pin { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 6px; padding: 3px 9px 3px 3px; border-radius: 999px; background: rgba(14,7,30,.82); border: 1.5px solid rgba(255,255,255,.55); box-shadow: 0 6px 18px rgba(0,0,0,.45); white-space: nowrap; cursor: pointer; transition: border-color .15s, background .15s; color: var(--color-ink); }
