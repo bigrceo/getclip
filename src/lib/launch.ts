@@ -43,7 +43,7 @@ export function validate(i: LaunchInput) {
   return { ...i, name, ticker, firstBuySol: buy };
 }
 
-/** Takes one pre-ground "…clip" mint from the pool (skip-locked so two launches never share one). */
+/** Takes one pre-ground mint ending in BRAND.vanitySuffix from the pool (skip-locked so two launches never share one). */
 async function reserveMint(): Promise<Keypair> {
   const d = db();
   if (!d) {
@@ -51,7 +51,7 @@ async function reserveMint(): Promise<Keypair> {
     throw new Error("No mint pool: set DATABASE_URL and run npm run grind.");
   }
   const rows = await d.execute(sql`update mint_pool set reserved_at = now() where pubkey = (
-      select pubkey from mint_pool where used_at is null and (reserved_at is null or reserved_at < now() - interval '15 minutes')
+      select pubkey from mint_pool where used_at is null and lower(pubkey) like ${'%' + BRAND.vanitySuffix} and (reserved_at is null or reserved_at < now() - interval '15 minutes')
       order by pubkey limit 1 for update skip locked) returning pubkey, secret`);
   const r = (rows as any).rows?.[0] ?? (rows as any)[0];
   if (!r) throw new Error("Out of vanity mints. Run the grinder.");
