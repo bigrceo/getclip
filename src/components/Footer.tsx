@@ -9,8 +9,8 @@ export function Footer() {
       <div className="mx-auto flex max-w-[1680px] flex-wrap items-center gap-6 px-4 py-8">
         <Logo size={22} />
         <Link href="/how" className="text-haze hover:text-ink">How it works</Link>
-        <a href={`https://pump.fun/coin/${OFFICIAL_MINT}`} target="_blank" rel="noreferrer" className="text-haze hover:text-ink">${BRAND.short}</a>
-        <span className="select-all break-all text-haze">CA: {OFFICIAL_MINT}</span>
+        {OFFICIAL_MINT ? <><a href={`https://pump.fun/coin/${OFFICIAL_MINT}`} target="_blank" rel="noreferrer" className="text-haze hover:text-ink">${BRAND.short}</a>
+        <span className="select-all break-all text-haze">CA: {OFFICIAL_MINT}</span></> : <span className="text-haze">${BRAND.short}: CA soon</span>}
         <div className="ml-auto flex gap-2">
           <a href={BRAND.x} className="p-2 text-haze hover:text-ink" aria-label="X"><XIcon /></a>
           <a href={BRAND.instagram} className="p-2 text-haze hover:text-ink" aria-label="Instagram"><InstagramIcon /></a>

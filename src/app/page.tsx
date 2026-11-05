@@ -13,9 +13,9 @@ export default async function Home() {
   return (
     <>
       <section className="relative overflow-hidden px-4 pb-10 pt-14 text-center sm:pt-20">
-        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(60%_100%_at_50%_0%,rgba(255,51,153,.2),transparent)]" />
+        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-80 vice-wash" />
         <div aria-hidden className="hero-glow" />
-        <h1 className="relative mx-auto max-w-3xl font-sign text-4xl leading-[1.05] sm:text-6xl">
+        <h1 className="relative mx-auto max-w-5xl font-sign text-5xl leading-[1] sm:text-6xl lg:text-7xl">
           {lead}.<br /><span className="text-coral">{tail}</span>
         </h1>
         <p className="relative mx-auto mt-4 max-w-xl text-base text-haze sm:text-lg">{BRAND.sub}</p>

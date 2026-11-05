@@ -163,7 +163,7 @@ export function LaunchFlow({ initialUrl, initialRef }: { initialUrl?: string; in
 
 /** CSS-only confetti burst: square bits in the party colours. */
 function Confetti() {
-  const cols = ["#ff3399", "#ffcc00", "#00ccff", "#66ff99", "#ff9933", "#cc66ff"];
+  const cols = ["#ff2d7a", "#ff9b3d", "#48d6ff", "#5cff9d", "#ffffff", "#c76bff"];
   return <div aria-hidden className="pointer-events-none absolute inset-0">{Array.from({ length: 36 }, (_, i) => {
     const a = (i / 36) * Math.PI * 2, d = 140 + ((i * 53) % 120);
     return <span key={i} className="confetti" style={{ background: cols[i % cols.length], animationDelay: `${(i % 6) * 20}ms`,

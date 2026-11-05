@@ -82,7 +82,7 @@ export async function prepareLaunch(raw: LaunchInput, ip?: string) {
   if (!still) throw new Error("Your clip's frame expired. Pick the square again.");
   const uri = dryRun() ? `${SITE_URL}/api/meta/dry-run` : await uploadMetadata({
     name: i.name, symbol: i.ticker, image: still, twitter: i.twitter, website: i.website || i.sourceUrl,
-    description: i.description?.trim() || `${i.name}, a clip coin launched on ${BRAND.name}.`,
+    description: i.description?.trim() || `${i.name}, a GTA 6 clip coin launched on ${BRAND.name}.`,
   });
 
   const online = new OnlinePumpSdk(connection());

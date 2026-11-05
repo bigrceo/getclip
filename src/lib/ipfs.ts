@@ -34,7 +34,7 @@ export async function uploadMetadata(m: Meta): Promise<string> {
 /** Stores image + metadata JSON in our storage (public Vercel Blob in prod), or serves them from /api/meta/<id> locally. */
 async function selfHost(m: Meta): Promise<string> {
   // Short keys on purpose: the URI is stored in the Token-2022 mint, every byte costs ~6960 lamports of rent.
-  const id = randomBytes(4).toString("hex"), site = process.env.NEXT_PUBLIC_SITE_URL ?? "https://getclip.fun";
+  const id = randomBytes(4).toString("hex"), site = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wasted.fun";
   const img = await putFile(`m/${id}.jpg`, m.image, "image/jpeg");
   const json = { name: m.name, symbol: m.symbol, description: m.description, image: img.startsWith("local:") ? `${site}/api/meta/${id}/image` : img, showName: true, createdOn: site,
     ...(m.twitter ? { twitter: m.twitter } : {}), ...(m.website ? { website: m.website } : {}) };

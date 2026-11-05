@@ -10,17 +10,17 @@ function fakeKey(r: () => number, suffix = "") {
   return s + suffix;
 }
 const NAMES: [string, string][] = [
-  ["Official CLIP", "CLIP"], ["Skate Fail Dog", "SKATEDOG"], ["Grandma Dance", "GRANNY"], ["Cat Jump Miss", "MISSCAT"],
-  ["Chef Kiss Guy", "KISS"], ["Rizz Uncle", "RIZZ"], ["Sideeye Baby", "SIDEEYE"], ["Duck Walk", "DUCK"],
-  ["Gym Bro Scream", "SCREAM"], ["Office Dropkick", "DROPKICK"], ["Tiny Horse Run", "PONY"], ["Bus Stop Opera", "OPERA"],
-  ["Sleepy Goalie", "GOALIE"], ["Frog Vibes", "FROGV"], ["Banana Phone", "BNNA"], ["Waiter Flip", "FLIP"],
+  ["Official WASTED", "WASTED"], ["Vice City Sunrise", "SUNRISE"], ["Gator In The Pool", "GATOR"], ["Lucia Mugshot", "LUCIA"],
+  ["Jason Jumps The Bridge", "BRIDGE"], ["Five Stars In 10s", "5STARS"], ["Thrillbilly Mudfest", "MUDFEST"], ["Airboat Flip", "AIRBOAT"],
+  ["Keys To Leonida", "KEYS"], ["Busted At The Club", "BUSTED"], ["Florida Man Arc", "FLMAN"], ["Dacity Crash", "DACITY"],
+  ["Cop Chase Ragdoll", "RAGDOLL"], ["Hurricane Ride", "CANE"], ["Street Fight Cam", "FIGHTCAM"], ["First Wasted Screen", "DEATH"],
 ];
 const r = rng(42);
 export const MOCK_COINS: Coin[] = NAMES.map(([name, ticker], i) => {
-  const mint = fakeKey(r, i % 2 ? "CLip" : "clip");
+  const mint = fakeKey(r, i % 2 ? "GTA6" : "gta6");
   const bonding = i === 0 ? 100 : Math.round(r() * 98);
   return {
-    mint, name, ticker, description: `${name}, launched on clip.fun (demo).`, sourceUrl: null,
+    mint, name, ticker, description: `${name}, launched on wasted.fun (demo).`, sourceUrl: null,
     still: `/api/coins/${mint}/still`, loop: `/api/coins/${mint}/loop.mp4`, creator: realKey(r),
     feeMode: i % 4 === 3 ? "holders" : "creator", tx: null,
     mcapUsd: Math.round(i === 0 ? 84_200 : 3_000 + r() * 60_000), change24h: Math.round((r() * 300 - 60) * 10) / 10,

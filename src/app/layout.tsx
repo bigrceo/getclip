@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Inter, Bungee } from "next/font/google";
+import { Inter } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { BRAND, SITE_URL } from "@/lib/brand";
 import { WalletProvider } from "@/components/wallet";
@@ -8,13 +9,13 @@ import { Footer } from "@/components/Footer";
 import { Toaster } from "@/components/toast";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const bungee = Bungee({ subsets: ["latin"], weight: "400", variable: "--font-bungee" });
+const pricedown = localFont({ src: "./fonts/Pricedown.otf", variable: "--font-pricedown", display: "swap" });
 
-export const viewport = { themeColor: "#14123a" };
+export const viewport = { themeColor: "#0d0716" };
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: { default: `${BRAND.name}: viral clips, pump.fun coins`, template: `%s · ${BRAND.name}` },
+  title: { default: `${BRAND.name}: GTA 6 clips, pump.fun coins`, template: `%s · ${BRAND.name}` },
   description: BRAND.tagline,
   applicationName: BRAND.name,
   openGraph: { title: BRAND.name, description: BRAND.tagline },
@@ -23,7 +24,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${bungee.variable}`}>
+    <html lang="en" className={`${inter.variable} ${pricedown.variable}`}>
       <body className="min-h-dvh flex flex-col">
         <a href="#content" className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-50 focus:bg-sun focus:px-3 focus:py-2 focus:text-night">Skip to the content</a>
         <WalletProvider>

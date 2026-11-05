@@ -11,7 +11,7 @@ import { CopyButton } from "@/components/toast";
 export const dynamic = "force-dynamic";
 export async function generateMetadata({ params }: { params: Promise<{ mint: string }> }) {
   const c = await getCoin((await params).mint);
-  return c ? { title: `$${c.ticker} ${c.name}`, description: `$${c.ticker} on clip.fun: ${usd(c.mcapUsd)} market cap. ${c.description ?? ""}`.trim() } : {};
+  return c ? { title: `$${c.ticker} ${c.name}`, description: `$${c.ticker} on wasted.fun: ${usd(c.mcapUsd)} market cap. ${c.description ?? ""}`.trim() } : {};
 }
 
 export default async function CoinPage({ params }: { params: Promise<{ mint: string }> }) {

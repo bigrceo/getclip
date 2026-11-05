@@ -34,10 +34,10 @@ export function HeroLaunch() {
       className={`relative mx-auto mt-8 w-full max-w-2xl border-2 border-dashed p-2 text-left transition-[border-color,background-color,transform] duration-150 ${drag ? "scale-[1.02] border-sun bg-deck-hi" : platform ? "border-sky bg-deck" : "border-line bg-deck"}`}>
       <div className="flex flex-col gap-2 sm:flex-row">
         <input value={url} onChange={(e) => { setUrl(e.target.value); setErr(""); }} onPaste={(e) => { if (detect(e.clipboardData.getData("text"))) setNudge((n) => n + 1); }}
-          placeholder="Paste a TikTok, Reels, Shorts or X link" inputMode="url" autoComplete="off"
+          placeholder="Paste a GTA 6 clip link (TikTok, X, YouTube)" inputMode="url" autoComplete="off"
           className="h-12 min-w-0 flex-1 bg-transparent px-3 text-base outline-none placeholder:text-haze/70" aria-label="Clip link" />
         <div className="flex gap-2">
-          <button type="button" disabled={busy} onClick={() => file.current?.click()} className="btn btn-ghost h-12 flex-1 whitespace-nowrap">{busy ? "Uploading…" : "Drop a video"}</button>
+          <button type="button" disabled={busy} onClick={() => file.current?.click()} className="btn btn-ghost h-12 flex-1 whitespace-nowrap">{busy ? "Uploading…" : "Drop a capture"}</button>
           <button key={nudge} disabled={busy} className={`btn btn-hot h-12 flex-1 px-6 ${nudge ? "nudge" : ""}`}>Launch</button>
         </div>
       </div>
