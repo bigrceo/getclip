@@ -41,13 +41,15 @@ export function Ocean({ mode }: { mode: Mode }) {
     uniforms.uDeep.value.lerp(new THREE.Color(m.ocean1), 0.05); uniforms.uShallow.value.lerp(new THREE.Color(m.ocean2), 0.05); uniforms.uFog.value.lerp(new THREE.Color(m.fog), 0.05);
     uniforms.uCam.value.copy(camera.position); uniforms.uNight.value += (m.neon - uniforms.uNight.value) * 0.05;
   });
+  // Same maths as the map plane: water colour × mode tint, multiplied in linear space, so the seam disappears.
+  const WATER = "#2c68a6";
   const base = useRef<THREE.MeshBasicMaterial>(null);
-  useFrame(() => { base.current?.color.lerp(new THREE.Color(MODES[mode].ocean1), 0.05); });
+  useFrame(() => { base.current?.color.lerp(new THREE.Color(WATER).multiply(new THREE.Color(MODES[mode].tint)), 0.05); });
   return (
     <>
       <mesh rotation-x={-Math.PI / 2} position-y={-0.03}>
         <planeGeometry args={[260, 260]} />
-        <meshBasicMaterial ref={base} color={MODES[mode].ocean1} toneMapped={false} />
+        <meshBasicMaterial ref={base} color={WATER} toneMapped={false} />
       </mesh>
       <mesh rotation-x={-Math.PI / 2} position-y={-0.025}>
         <planeGeometry args={[260, 260]} />
