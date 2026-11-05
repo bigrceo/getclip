@@ -4,7 +4,9 @@ import { useState } from "react";
 import { BRAND, OFFICIAL_MINT } from "@/lib/brand";
 import type { Coin } from "@/lib/types";
 import { pct, usd } from "@/lib/format";
-import { StateMap, plotFor } from "./StateMap";
+import dynamic from "next/dynamic";
+import { plotFor } from "./StateMap";
+const StateMap = dynamic(() => import("./StateMap").then((m) => m.StateMap), { ssr: false, loading: () => <div className="absolute inset-0 grid place-items-center font-sign text-[28px] tracking-wide" style={{ background: "radial-gradient(circle, #23104a, #0a0618)" }}>Loading Leonida…</div> });
 import { HeroLaunch } from "./HeroLaunch";
 import { Countdown } from "./Countdown";
 
@@ -13,7 +15,7 @@ export function MapHero({ coins, volumeSol }: { coins: Coin[]; volumeSol: number
   const [active, setActive] = useState<string | null>(null);
   const [lead, tail] = BRAND.tagline.split(". ");
   const card = (
-        <div className="glass z-20 w-[min(440px,100%-48px)] p-5 pb-4 md:absolute md:left-6 md:top-6 max-md:mx-4 max-md:mt-3 max-md:w-auto">
+        <div data-pin-obstacle className="glass z-20 w-[min(440px,100%-48px)] p-5 pb-4 md:absolute md:left-6 md:top-6 max-md:mx-4 max-md:mt-3 max-md:w-auto">
           <p className="script">Welcome to the</p>
           <h1 className="font-sign text-[64px] uppercase leading-[.92] max-md:text-[50px]">
             <span className="sunset-text block" style={{ filter: "drop-shadow(0 4px 22px rgba(255,61,139,.45))" }}>{BRAND.state}</span>
@@ -38,7 +40,7 @@ export function MapHero({ coins, volumeSol }: { coins: Coin[]; volumeSol: number
         </div>
   );
   const rail = (
-        <aside className="glass z-20 flex w-[290px] flex-col px-2.5 pb-2 pt-3.5 md:absolute md:bottom-[70px] md:right-6 md:top-6 max-md:mx-4 max-md:mt-3 max-md:max-h-[360px] max-md:w-auto">
+        <aside data-pin-obstacle className="glass z-20 flex w-[290px] flex-col px-2.5 pb-2 pt-3.5 md:absolute md:bottom-[70px] md:right-6 md:top-6 max-md:mx-4 max-md:mt-3 max-md:max-h-[360px] max-md:w-auto">
           <div className="flex items-baseline justify-between px-2 pb-2.5">
             <b className="font-sign text-[20px] font-normal uppercase tracking-wide">On the map</b>
             <i className="text-[12px] not-italic text-haze">{coins.length} {coins.length === 1 ? "clip" : "clips"}</i>
@@ -70,7 +72,7 @@ export function MapHero({ coins, volumeSol }: { coins: Coin[]; volumeSol: number
       <StateMap coins={coins} active={active} onActive={setActive}>
         <div className="hidden md:contents">{card}{rail}</div>
         <div className="pointer-events-none absolute bottom-[18px] left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-full border border-line bg-night/70 px-3 py-1.5 text-[12px] font-semibold uppercase tracking-[.06em] text-haze max-md:hidden">
-          Drag to pan · scroll to zoom · click a pin
+          Drag to pan · scroll to zoom · click a beacon
         </div>
       </StateMap>
       </div>

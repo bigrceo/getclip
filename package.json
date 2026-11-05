@@ -16,8 +16,10 @@
     "@neondatabase/serverless": "^1.0.0",
     "@pump-fun/pump-sdk": "^3.2.0",
     "@pump-fun/pump-swap-sdk": "^2.2.0",
+    "@react-three/fiber": "^9.8.2",
     "@solana/spl-token": "^0.4.15",
     "@solana/web3.js": "^1.99.0",
+    "@types/three": "^0.187.0",
     "@vercel/blob": "^2.8.2",
     "bn.js": "^5.2.5",
     "bs58": "^6.0.0",
@@ -29,7 +31,8 @@
     "postgres": "^3.4.9",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "server-only": "^0.0.1"
+    "server-only": "^0.0.1",
+    "three": "^0.187.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
