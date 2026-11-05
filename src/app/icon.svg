@@ -28,8 +28,8 @@
   <g filter="url(#bloom)">
     <text x="252" y="400" text-anchor="middle" font-family="Anton, Impact, 'Arial Black', sans-serif" font-size="430" fill="#ffffff" transform="skewX(-8)">C</text>
   </g>
-  <g filter="url(#neon)" transform="translate(318 318) scale(0.95)">
-    <path d="M18 6v96c0 8 8 13 15 9l84-48c7-4 7-14 0-18L33-3c-7-4-15 1-15 9z" fill="none" stroke="#ff6fb5" stroke-width="12" stroke-linejoin="round"/>
-    <path d="M18 6v96c0 8 8 13 15 9l84-48c7-4 7-14 0-18L33-3c-7-4-15 1-15 9z" fill="none" stroke="#ffffff" stroke-width="4" stroke-linejoin="round"/>
+  <g filter="url(#neon)" transform="translate(300 318) scale(0.95)">
+    <path d="M60 0l17.6 36.6L118 42.5l-29 28.3 6.9 40.2L60 92l-35.9 19 6.9-40.2-29-28.3 40.4-5.9z" fill="none" stroke="#ff6fb5" stroke-width="12" stroke-linejoin="round"/>
+    <path d="M60 0l17.6 36.6L118 42.5l-29 28.3 6.9 40.2L60 92l-35.9 19 6.9-40.2-29-28.3 40.4-5.9z" fill="none" stroke="#ffffff" stroke-width="4" stroke-linejoin="round"/>
   </g>
 </svg>
