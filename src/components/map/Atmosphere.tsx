@@ -6,9 +6,9 @@ import * as THREE from "three";
 
 export type Mode = "day" | "dusk" | "night";
 export const MODES: Record<Mode, { sky: string; horizon: string; fog: string; ocean1: string; ocean2: string; tint: string; sun: string; sunY: number; neon: number; label: string }> = {
-  day:   { sky: "#5fc4e8", horizon: "#cfeefb", fog: "#cfeefb", ocean1: "#2c68a6", ocean2: "#3474b3", tint: "#ffffff", sun: "#fff6d8", sunY: 9, neon: 0.0, label: "Day" },
-  dusk:  { sky: "#3b1b6b", horizon: "#ff8a5c", fog: "#ff8a5c", ocean1: "#2c577b", ocean2: "#345f86", tint: "#ffd7bd", sun: "#ffb36b", sunY: 2.4, neon: 0.7, label: "Dusk" },
-  night: { sky: "#070418", horizon: "#2a1150", fog: "#2a1150", ocean1: "#183a8b", ocean2: "#1d4296", tint: "#8a8fd6", sun: "#dfe6ff", sunY: 7, neon: 1.0, label: "Night" },
+  day:   { sky: "#5fc4e8", horizon: "#cfeefb", fog: "#cfeefb", ocean1: "#2c68a6", ocean2: "#5a9ad8", tint: "#ffffff", sun: "#fff6d8", sunY: 9, neon: 0.0, label: "Day" },
+  dusk:  { sky: "#3b1b6b", horizon: "#ff8a5c", fog: "#ff8a5c", ocean1: "#2c587b", ocean2: "#7a8ab8", tint: "#ffd7bd", sun: "#ffb36b", sunY: 2.4, neon: 0.7, label: "Dusk" },
+  night: { sky: "#070418", horizon: "#2a1150", fog: "#2a1150", ocean1: "#183a8b", ocean2: "#3a5fc0", tint: "#8a8fd6", sun: "#dfe6ff", sunY: 7, neon: 1.0, label: "Night" },
 };
 
 const oceanVert = /* glsl */`
@@ -24,13 +24,12 @@ const oceanFrag = /* glsl */`
     vec2 p = vPos.xz * 0.9;
     float n = noise(p * 1.2 + vec2(uTime*0.06, uTime*0.04)) * 0.6 + noise(p * 3.1 - vec2(uTime*0.09, uTime*0.05)) * 0.4;
     float w = sin(p.x*2.0 + uTime*0.8 + n*4.0) * 0.5 + 0.5;
-    vec3 col = mix(uDeep, uShallow, n * 0.5 + w * 0.1);
     float sp = pow(noise(p * 9.0 + vec2(uTime*0.35, -uTime*0.25)), 14.0) * (1.0 - uNight*0.8);
-    col += vec3(sp) * 0.22;
     float d = distance(vPos.xz, uCam.xz);
-    float f = smoothstep(20.0, 60.0, d);
-    col = mix(col, uFog, f);
-    gl_FragColor = vec4(col, 1.0);
+    float f = 1.0 - smoothstep(16.0, 40.0, d);
+    // additive shimmer only: the base water colour comes from the fogged plane underneath, so there is no seam with the map
+    vec3 col = uShallow * (n * 0.06 + w * 0.03) + vec3(sp) * 0.18;
+    gl_FragColor = vec4(col * f, 1.0);
   }`;
 
 export function Ocean({ mode }: { mode: Mode }) {
@@ -42,11 +41,19 @@ export function Ocean({ mode }: { mode: Mode }) {
     uniforms.uDeep.value.lerp(new THREE.Color(m.ocean1), 0.05); uniforms.uShallow.value.lerp(new THREE.Color(m.ocean2), 0.05); uniforms.uFog.value.lerp(new THREE.Color(m.fog), 0.05);
     uniforms.uCam.value.copy(camera.position); uniforms.uNight.value += (m.neon - uniforms.uNight.value) * 0.05;
   });
+  const base = useRef<THREE.MeshBasicMaterial>(null);
+  useFrame(() => { base.current?.color.lerp(new THREE.Color(MODES[mode].ocean1), 0.05); });
   return (
-    <mesh rotation-x={-Math.PI / 2} position-y={-0.03}>
-      <planeGeometry args={[260, 260]} />
-      <shaderMaterial ref={mat} vertexShader={oceanVert} fragmentShader={oceanFrag} uniforms={uniforms} />
-    </mesh>
+    <>
+      <mesh rotation-x={-Math.PI / 2} position-y={-0.03}>
+        <planeGeometry args={[260, 260]} />
+        <meshBasicMaterial ref={base} color={MODES[mode].ocean1} toneMapped={false} />
+      </mesh>
+      <mesh rotation-x={-Math.PI / 2} position-y={-0.025}>
+        <planeGeometry args={[260, 260]} />
+        <shaderMaterial ref={mat} vertexShader={oceanVert} fragmentShader={oceanFrag} uniforms={uniforms} transparent blending={THREE.AdditiveBlending} depthWrite={false} />
+      </mesh>
+    </>
   );
 }
 
