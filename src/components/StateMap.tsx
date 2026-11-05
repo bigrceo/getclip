@@ -131,8 +131,14 @@ function Controls({ entities, selected, api }: { entities: Entity[]; selected: s
     };
     api.current = { zoom };
     const onWheel = (e: WheelEvent) => {
-      if (!(e.ctrlKey || e.metaKey)) return; // plain wheel: let the page scroll
-      e.preventDefault(); zoom(Math.exp(e.deltaY * 0.01));
+      // Wheel up zooms in. Wheel down zooms out until the camera is fully out, then the page scrolls.
+      const dist = camera.position.distanceTo(controls.target);
+      if (e.deltaY < 0) {
+        if (window.scrollY > 4) return; // coming back up the page: keep scrolling
+        e.preventDefault(); zoom(Math.exp(e.deltaY * 0.0045));
+      } else if (dist < controls.maxDistance - 0.01) {
+        e.preventDefault(); zoom(Math.exp(e.deltaY * 0.0045));
+      }
     };
     dom.addEventListener("wheel", onWheel, { passive: false });
     return () => { dom.removeEventListener("wheel", onWheel); api.current = null; };
@@ -256,7 +262,7 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
       </div>
       <div className="absolute bottom-[18px] left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 max-md:bottom-3">
         <button type="button" onClick={() => api.current?.zoom(1.35)} className="grid size-9 place-items-center rounded-full border border-line bg-night/70 text-lg font-bold text-ink hover:bg-night/90" aria-label="Zoom out">−</button>
-        <span className="whitespace-nowrap rounded-full border border-line bg-night/70 px-3 py-1.5 text-[12px] font-semibold uppercase tracking-[.06em] text-haze max-md:hidden">Drag to pan · ⌘ + scroll or pinch to zoom · click a beacon</span>
+        <span className="whitespace-nowrap rounded-full border border-line bg-night/70 px-3 py-1.5 text-[12px] font-semibold uppercase tracking-[.06em] text-haze max-md:hidden">Drag to pan · scroll to zoom · click a beacon</span>
         <button type="button" onClick={() => api.current?.zoom(0.74)} className="grid size-9 place-items-center rounded-full border border-line bg-night/70 text-lg font-bold text-ink hover:bg-night/90" aria-label="Zoom in">+</button>
       </div>
       {children}
