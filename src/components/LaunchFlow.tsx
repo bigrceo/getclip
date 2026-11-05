@@ -1,12 +1,13 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { MapPicker, type MapPos } from "./MapPicker";
 import { BRAND } from "@/lib/brand";
 import { useWallet } from "./wallet";
 import { CopyButton } from "./toast";
 
 type Draft = { ref: string; title?: string; author?: string };
-type Step = "source" | "crop" | "details" | "done";
+type Step = "source" | "crop" | "map" | "details" | "done";
 const fileUrl = (ref: string) => `/api/drafts/file?ref=${encodeURIComponent(ref)}`;
 
 export function LaunchFlow({ initialUrl, initialRef }: { initialUrl?: string; initialRef?: string }) {
@@ -19,9 +20,10 @@ export function LaunchFlow({ initialUrl, initialRef }: { initialUrl?: string; in
   const [render, setRender] = useState<{ stillRef: string; loopRef: string } | null>(null);
   const [form, setForm] = useState({ name: "", ticker: "", description: "", recipient: "", feeMode: "creator", firstBuySol: "" });
   const [done, setDone] = useState<{ mint: string; sig: string; dryRun?: boolean } | null>(null);
+  const [mapPos, setMapPos] = useState<MapPos | null>(null);
   const file = useRef<HTMLInputElement>(null);
   const [over, setOver] = useState(false);
-  const STEPS: Step[] = ["source", "crop", "details", "done"];
+  const STEPS: Step[] = ["source", "crop", "map", "details", "done"];
   const at = STEPS.indexOf(step);
 
   useEffect(() => { if (initialUrl) resolve(initialUrl); /* eslint-disable-next-line */ }, []);
@@ -54,7 +56,7 @@ export function LaunchFlow({ initialUrl, initialRef }: { initialUrl?: string; in
     const r = await fetch("/api/drafts/render", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ref: draft.ref, crop }) }).then((r) => r.json()).catch(() => ({ error: "Render failed" }));
     setBusy("");
     if (r.error) return setErr(r.error);
-    setRender(r); setStep("details");
+    setRender(r); setStep("map");
   }
   async function launch() {
     if (!render) return;
@@ -66,7 +68,7 @@ export function LaunchFlow({ initialUrl, initialRef }: { initialUrl?: string; in
     try {
       // The create alone (sponsored) fits in one tx; create+buy is over Solana's 1232-byte limit, so the first buy follows as its own tx.
       const body = { name: form.name, ticker: form.ticker, description: form.description, recipient: form.recipient, feeMode: form.feeMode,
-        stillRef: render.stillRef, loopRef: render.loopRef, sourceUrl: url || undefined };
+        stillRef: render.stillRef, loopRef: render.loopRef, sourceUrl: url || undefined, mapU: mapPos?.u, mapV: mapPos?.v };
       const r = await fetch("/api/launch/prepare", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }).then((r) => r.json());
       if (r.error) throw new Error(r.error);
       setDone(r);
@@ -90,11 +92,11 @@ export function LaunchFlow({ initialUrl, initialRef }: { initialUrl?: string; in
     <div className="mx-auto max-w-2xl px-4 py-10">
       <h1 className="font-sign text-3xl sm:text-4xl">Launch a clip</h1>
       <p className="mt-2 text-haze">Free: {BRAND.name} pays the launch. Your coin goes live on pump.fun in one transaction.</p>
-      <ol className="mt-6 grid grid-cols-4 gap-2" aria-label="Steps">
+      <ol className="mt-6 grid grid-cols-5 gap-2" aria-label="Steps">
         {STEPS.map((s, i) => (
           <li key={s} aria-current={step === s ? "step" : undefined} className={`label transition-colors ${i === at ? "!text-coral" : i < at ? "!text-ink" : ""}`}>
             <span className="mb-1.5 block h-1 overflow-hidden bg-line"><span className={`block h-full origin-left transition-transform duration-500 ease-[var(--ease-snap)] ${i === at ? "bg-coral" : "bg-sun"} ${i <= at ? "scale-x-100" : "scale-x-0"}`} /></span>
-            {i + 1} {s === "source" ? "Clip" : s === "crop" ? "Square" : s === "details" ? "Coin" : "Live"}
+            {i + 1} {s === "source" ? "Clip" : s === "crop" ? "Square" : s === "map" ? "Map" : s === "details" ? "Coin" : "Live"}
           </li>
         ))}
       </ol>
@@ -116,6 +118,7 @@ export function LaunchFlow({ initialUrl, initialRef }: { initialUrl?: string; in
           </div>
         )}
         {step === "crop" && draft && <CropPicker src={fileUrl(draft.ref)} crop={crop} onChange={setCrop} onDone={doRender} />}
+        {step === "map" && <MapPicker value={mapPos} onChange={setMapPos} onDone={() => setStep("details")} />}
         {step === "details" && render && (
           <div className="grid gap-5 sm:grid-cols-[180px_1fr]">
             <video src={fileUrl(render.loopRef)} autoPlay loop muted playsInline className="aspect-square w-full bg-night object-cover" />

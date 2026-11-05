@@ -3,6 +3,7 @@
 import { useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
+import { DISTRICTS } from "./districts";
 
 export type Mode = "day" | "dusk" | "night";
 export const MODES: Record<Mode, { sky: string; horizon: string; fog: string; ocean1: string; ocean2: string; tint: string; sun: string; sunY: number; neon: number; label: string }> = {
@@ -137,14 +138,8 @@ function labelTexture(text: string, sub?: string) {
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
 }
 
-const DISTRICTS: { name: string; sub: string; u: number; v: number }[] = [
-  { name: "VICE CITY", sub: "downtown", u: 0.64, v: 0.5 }, { name: "VICE BEACH", sub: "ocean drive", u: 0.85, v: 0.44 },
-  { name: "PORT GELLHORN", sub: "west coast", u: 0.26, v: 0.51 }, { name: "AMBROSIA", sub: "sugar country", u: 0.53, v: 0.33 },
-  { name: "GRASSRIVERS", sub: "north west", u: 0.22, v: 0.28 }, { name: "MOUNT KALAGA", sub: "national park", u: 0.47, v: 0.18 },
-  { name: "EVERGLADES", sub: "gator country", u: 0.42, v: 0.66 }, { name: "LEONARD KEYS", sub: "island road", u: 0.45, v: 0.88 },
-];
 export function DistrictLabels({ toWorld }: { toWorld: (u: number, v: number) => [number, number, number] }) {
-  const texs = useMemo(() => DISTRICTS.map((d) => labelTexture(d.name, d.sub)), []);
+  const texs = useMemo(() => DISTRICTS.filter((d) => d.name !== "Vice City Intl").map((d) => labelTexture(d.name.toUpperCase(), d.sub)), []);
   const group = useRef<THREE.Group>(null);
   const camera = useThree((s) => s.camera);
   useFrame(() => {
@@ -155,7 +150,7 @@ export function DistrictLabels({ toWorld }: { toWorld: (u: number, v: number) =>
   });
   return (
     <group ref={group}>
-      {DISTRICTS.map((d, i) => { const [x, , z] = toWorld(d.u, d.v); return (
+      {DISTRICTS.filter((d) => d.name !== "Vice City Intl").map((d, i) => { const [x, , z] = toWorld(d.u, d.v); return (
         <sprite key={d.name} position={[x, 0.55, z]} scale={[3.2, 1, 1]}><spriteMaterial map={texs[i]} transparent opacity={0} depthWrite={false} depthTest={false} /></sprite>
       ); })}
     </group>

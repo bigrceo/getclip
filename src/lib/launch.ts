@@ -21,6 +21,7 @@ export type LaunchInput = {
   buyer?: string;               // connected wallet, only when it makes the first buy
   firstBuySol?: number;
   twitter?: string; website?: string;
+  mapU?: number; mapV?: number;     // where the clip happens in Leonida (0..1 of the map image)
 };
 
 const PER_DAY = Number(process.env.LAUNCHES_PER_IP_PER_DAY ?? 5);
@@ -40,7 +41,9 @@ export function validate(i: LaunchInput) {
   if (buy > 0 && !i.buyer) throw new Error("Connect a wallet to make the first buy.");
   const okRef = (r?: string) => !r || r.startsWith("local:drafts/") || /^https:\/\/[a-z0-9]+\.public\.blob\.vercel-storage\.com\/drafts\//.test(r);
   if (!i.stillRef || !okRef(i.stillRef) || !okRef(i.loopRef)) throw new Error("Pick the square of your clip first.");
-  return { ...i, name, ticker, firstBuySol: buy };
+  const mapU = i.mapU == null ? undefined : Number(i.mapU), mapV = i.mapV == null ? undefined : Number(i.mapV);
+  if ((mapU != null || mapV != null) && !(mapU! >= 0 && mapU! <= 1 && mapV! >= 0 && mapV! <= 1)) throw new Error("Bad map position.");
+  return { ...i, name, ticker, firstBuySol: buy, mapU, mapV };
 }
 
 /** Takes one pre-ground mint ending in BRAND.vanitySuffix from the pool (skip-locked so two launches never share one). */
@@ -180,6 +183,7 @@ export async function recordCoin(r: any, sig: string) {
   await d.insert(schema.coins).values({
     mint: r.mint, name: r.name, ticker: r.ticker, description: r.description ?? null, sourceUrl: r.sourceUrl ?? null,
     still: r.stillRef, loop: r.loopRef ?? null, metadataUri: r.uri, creator: r.recipient, feeMode: r.feeMode ?? "creator", tx: sig, ip: r.ip ?? null,
+    mapU: r.mapU ?? null, mapV: r.mapV ?? null,
   }).onConflictDoNothing();
   await d.update(schema.mintPool).set({ usedAt: new Date() }).where(and(eq(schema.mintPool.pubkey, r.mint), isNull(schema.mintPool.usedAt)));
 }

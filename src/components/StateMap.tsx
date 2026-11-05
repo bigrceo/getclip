@@ -12,6 +12,8 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import type { Coin } from "@/lib/types";
 import { pct } from "@/lib/format";
 import { CityNeon, Clouds, DistrictLabels, MODES, Ocean, Sky, Sun, type Mode } from "./map/Atmosphere";
+import { TileLayer } from "./map/TileLayer";
+import { districtOf } from "./map/districts";
 
 // ---- Yanis V16 GTA VI community map (gtadb.org, CC BY 4.0), island crop stitched from the z5 tiles: 6118×8192 ----
 const IMG_W = 6118, IMG_H = 8192;
@@ -52,6 +54,7 @@ const DISTRICT_COLOR: Record<string, string> = { "Vice City": "#ff5fa8", "Vice B
 
 /** Stable plot per coin: the official coin owns HQ, the rest hash their mint onto the other plots. */
 export function plotFor(c: Coin, i: number): Plot {
+  if (c.mapU != null && c.mapV != null) return { id: `drop:${c.mint}`, district: districtOf(c.mapU, c.mapV), u: c.mapU, v: c.mapV };
   if (c.official) return PLOTS[0];
   let h = 0; for (const ch of c.mint) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
   const free = PLOTS.slice(1);
@@ -123,7 +126,7 @@ function Lot({ p, onSelect, onHover }: { p: Plot; onSelect: () => void; onHover:
   );
 }
 
-type Api = { zoom: (k: number) => void };
+type Api = { zoom: (k: number) => void; target: THREE.Vector3 };
 function FogCtl({ mode }: { mode: Mode }) {
   const scene = useThree((s) => s.scene);
   useEffect(() => { (window as unknown as { __scene?: THREE.Scene }).__scene = scene; }, [scene]);
@@ -158,7 +161,7 @@ function Controls({ entities, selected, api }: { entities: Entity[]; selected: s
       const d = THREE.MathUtils.clamp(dir.length() * k, controls.minDistance, controls.maxDistance);
       camera.position.copy(controls.target).add(dir.setLength(d));
     };
-    api.current = { zoom };
+    api.current = { zoom, target: controls.target };
     const onWheel = (e: WheelEvent) => {
       // Wheel up zooms in. Wheel down zooms out until the camera is fully out, then the page scrolls.
       const dist = camera.position.distanceTo(controls.target);
@@ -277,6 +280,7 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
   const takenPlots = useMemo(() => new Set(entities.map((e) => e.plot.id)), [entities]);
   const small = typeof window !== "undefined" && window.innerWidth < 700;
   const api = useRef<Api | null>(null);
+  const tileTarget = useMemo(() => new THREE.Vector3(), []);
   const [ready, setReady] = useState(false);
   const [mode, setMode] = useState<Mode>("dusk");
   const [lotTip, setLotTip] = useState<{ plot: Plot; x: number; y: number } | null>(null);
@@ -290,7 +294,7 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
         <Sky mode={mode} />
         <Sun mode={mode} />
         <Suspense fallback={null}><Ground onReady={onReady} mode={mode} /></Suspense>
-        {ready && <><Clouds mode={mode} /><DistrictLabels toWorld={toWorld} /><CityNeon mode={mode} toWorld={toWorld} /></>}
+        {ready && <><Clouds mode={mode} /><DistrictLabels toWorld={toWorld} /><CityNeon mode={mode} toWorld={toWorld} />{!small && <TileLayer mode={mode} planeW={PLANE_W} planeH={PLANE_H} target={tileTarget} api={api} />}</>}
         {ready && entities.map((e) => <Beacon key={e.coin.mint} e={e} active={active === e.coin.mint || hovered === e.coin.mint} onHover={setHovered} onSelect={() => select(e.coin.mint)} />)}
         {ready && PLOTS.filter((p) => !takenPlots.has(p.id)).map((p) => <Lot key={p.id} p={p} onSelect={() => router.push("/launch")} onHover={(x, y) => setLotTip(x == null ? null : { plot: p, x, y: y! })} />)}
         <Controls entities={entities} selected={active} api={api} />

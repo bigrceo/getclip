@@ -24,6 +24,9 @@ export const coins = pgTable("coins", {
   hidden: boolean("hidden").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   lastTradeAt: timestamp("last_trade_at", { withTimezone: true }),
+  /** Where the clip happens in Leonida, u/v of the map image (null = auto plot). */
+  mapU: doublePrecision("map_u"),
+  mapV: doublePrecision("map_v"),
 }, (t) => [index("coins_creator_idx").on(t.creator)]);
 
 export const trades = pgTable("trades", {
