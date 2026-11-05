@@ -6,9 +6,9 @@ import * as THREE from "three";
 
 export type Mode = "day" | "dusk" | "night";
 export const MODES: Record<Mode, { sky: string; horizon: string; fog: string; ocean1: string; ocean2: string; tint: string; sun: string; sunY: number; neon: number; label: string }> = {
-  day:   { sky: "#5fc4e8", horizon: "#cfeefb", fog: "#9adbf0", ocean1: "#0b6f8e", ocean2: "#19a8c8", tint: "#ffffff", sun: "#fff6d8", sunY: 9, neon: 0.0, label: "Day" },
-  dusk:  { sky: "#3b1b6b", horizon: "#ff8a5c", fog: "#b0527f", ocean1: "#13385f", ocean2: "#7a3f7f", tint: "#ffd7bd", sun: "#ffb36b", sunY: 2.4, neon: 0.7, label: "Dusk" },
-  night: { sky: "#070418", horizon: "#2a1150", fog: "#1a0d3a", ocean1: "#06182f", ocean2: "#0f2a52", tint: "#8a8fd6", sun: "#dfe6ff", sunY: 7, neon: 1.0, label: "Night" },
+  day:   { sky: "#5fc4e8", horizon: "#cfeefb", fog: "#cfeefb", ocean1: "#2c68a6", ocean2: "#3474b3", tint: "#ffffff", sun: "#fff6d8", sunY: 9, neon: 0.0, label: "Day" },
+  dusk:  { sky: "#3b1b6b", horizon: "#ff8a5c", fog: "#ff8a5c", ocean1: "#2c577b", ocean2: "#345f86", tint: "#ffd7bd", sun: "#ffb36b", sunY: 2.4, neon: 0.7, label: "Dusk" },
+  night: { sky: "#070418", horizon: "#2a1150", fog: "#2a1150", ocean1: "#183a8b", ocean2: "#1d4296", tint: "#8a8fd6", sun: "#dfe6ff", sunY: 7, neon: 1.0, label: "Night" },
 };
 
 const oceanVert = /* glsl */`
@@ -24,11 +24,11 @@ const oceanFrag = /* glsl */`
     vec2 p = vPos.xz * 0.9;
     float n = noise(p * 1.2 + vec2(uTime*0.06, uTime*0.04)) * 0.6 + noise(p * 3.1 - vec2(uTime*0.09, uTime*0.05)) * 0.4;
     float w = sin(p.x*2.0 + uTime*0.8 + n*4.0) * 0.5 + 0.5;
-    vec3 col = mix(uDeep, uShallow, n * 0.7 + w * 0.15);
-    float sp = pow(noise(p * 9.0 + vec2(uTime*0.35, -uTime*0.25)), 9.0) * (1.2 - uNight*0.6);
-    col += vec3(sp) * 0.9;
+    vec3 col = mix(uDeep, uShallow, n * 0.5 + w * 0.1);
+    float sp = pow(noise(p * 9.0 + vec2(uTime*0.35, -uTime*0.25)), 14.0) * (1.0 - uNight*0.8);
+    col += vec3(sp) * 0.22;
     float d = distance(vPos.xz, uCam.xz);
-    float f = smoothstep(14.0, 32.0, d);
+    float f = smoothstep(20.0, 60.0, d);
     col = mix(col, uFog, f);
     gl_FragColor = vec4(col, 1.0);
   }`;
@@ -44,7 +44,7 @@ export function Ocean({ mode }: { mode: Mode }) {
   });
   return (
     <mesh rotation-x={-Math.PI / 2} position-y={-0.03}>
-      <planeGeometry args={[140, 140]} />
+      <planeGeometry args={[260, 260]} />
       <shaderMaterial ref={mat} vertexShader={oceanVert} fragmentShader={oceanFrag} uniforms={uniforms} />
     </mesh>
   );
@@ -61,7 +61,7 @@ const skyFrag = /* glsl */`
     vec3 col = mix(uHorizon, uTop, pow(h, 0.55));
     float s = max(dot(d, normalize(uSunDir)), 0.0);
     col += uSun * (pow(s, 220.0) * 1.4 + pow(s, 12.0) * 0.25);
-    float st = step(0.9985, hash(floor(d * 420.0))) * uNight * smoothstep(0.05, 0.4, h);
+    float st = step(0.9985, hash(floor(d * 420.0))) * smoothstep(0.85, 1.0, uNight) * smoothstep(0.12, 0.5, h);
     col += vec3(st);
     gl_FragColor = vec4(col, 1.0);
   }`;
@@ -75,7 +75,7 @@ export function Sky({ mode }: { mode: Mode }) {
   });
   return (
     <mesh>
-      <sphereGeometry args={[90, 32, 16]} />
+      <sphereGeometry args={[200, 32, 16]} />
       <shaderMaterial vertexShader={skyVert} fragmentShader={skyFrag} uniforms={uniforms} side={THREE.BackSide} depthWrite={false} fog={false} />
     </mesh>
   );
@@ -92,7 +92,7 @@ function cloudTexture() {
 export function Clouds({ mode, count = 9 }: { mode: Mode; count?: number }) {
   const tex = useMemo(() => cloudTexture(), []);
   const group = useRef<THREE.Group>(null);
-  const seeds = useMemo(() => Array.from({ length: count }, (_, i) => ({ x: (Math.random() - 0.5) * 30, z: (Math.random() - 0.5) * 18, y: 3.2 + Math.random() * 1.2, s: 2.2 + Math.random() * 2.2, v: 0.08 + Math.random() * 0.08, r: Math.random() * Math.PI, i })), [count]);
+  const seeds = useMemo(() => Array.from({ length: count }, (_, i) => ({ x: (Math.random() - 0.5) * 30, z: (Math.random() - 0.5) * 26, y: 3.2 + Math.random() * 1.2, s: 2.2 + Math.random() * 2.2, v: 0.08 + Math.random() * 0.08, r: Math.random() * Math.PI, i })), [count]);
   useFrame((_, dt) => {
     const g = group.current; if (!g) return;
     g.children.forEach((child, i) => {
@@ -126,9 +126,10 @@ function labelTexture(text: string, sub?: string) {
 }
 
 const DISTRICTS: { name: string; sub: string; u: number; v: number }[] = [
-  { name: "VICE CITY", sub: "downtown", u: 0.63, v: 0.36 }, { name: "OCEAN STRIP", sub: "the beach", u: 0.76, v: 0.56 },
-  { name: "THE KEYS", sub: "island road", u: 0.3, v: 0.9 }, { name: "THE SWAMP", sub: "gator country", u: 0.33, v: 0.65 },
-  { name: "THE HILLS", sub: "north leonida", u: 0.32, v: 0.12 }, { name: "THE PORT", sub: "container yard", u: 0.2, v: 0.3 },
+  { name: "VICE CITY", sub: "downtown", u: 0.64, v: 0.5 }, { name: "VICE BEACH", sub: "ocean drive", u: 0.85, v: 0.44 },
+  { name: "PORT GELLHORN", sub: "west coast", u: 0.26, v: 0.51 }, { name: "AMBROSIA", sub: "sugar country", u: 0.53, v: 0.33 },
+  { name: "GRASSRIVERS", sub: "north west", u: 0.22, v: 0.28 }, { name: "MOUNT KALAGA", sub: "national park", u: 0.47, v: 0.18 },
+  { name: "EVERGLADES", sub: "gator country", u: 0.42, v: 0.66 }, { name: "LEONARD KEYS", sub: "island road", u: 0.45, v: 0.88 },
 ];
 export function DistrictLabels({ toWorld }: { toWorld: (u: number, v: number) => [number, number, number] }) {
   const texs = useMemo(() => DISTRICTS.map((d) => labelTexture(d.name, d.sub)), []);
@@ -137,13 +138,13 @@ export function DistrictLabels({ toWorld }: { toWorld: (u: number, v: number) =>
   useFrame(() => {
     const g = group.current; if (!g) return;
     const d = camera.position.length();
-    const o = THREE.MathUtils.clamp((d - 4) / 6, 0, 1); // fade out when close
+    const o = THREE.MathUtils.clamp((d - 5) / 8, 0, 1); // fade out when close
     g.children.forEach((c) => { const m = (c as THREE.Sprite).material as THREE.SpriteMaterial; m.opacity += (o * 0.95 - m.opacity) * 0.1; });
   });
   return (
     <group ref={group}>
       {DISTRICTS.map((d, i) => { const [x, , z] = toWorld(d.u, d.v); return (
-        <sprite key={d.name} position={[x, 0.55, z]} scale={[2.6, 0.81, 1]}><spriteMaterial map={texs[i]} transparent opacity={0} depthWrite={false} depthTest={false} /></sprite>
+        <sprite key={d.name} position={[x, 0.55, z]} scale={[3.2, 1, 1]}><spriteMaterial map={texs[i]} transparent opacity={0} depthWrite={false} depthTest={false} /></sprite>
       ); })}
     </group>
   );
@@ -162,10 +163,10 @@ export function CityNeon({ mode, toWorld }: { mode: Mode; toWorld: (u: number, v
     const target = MODES[mode].neon;
     for (const [r, k] of [[a, 0.5], [b, 0.35]] as const) { const s = r.current; if (!s) continue; const m = s.material; m.opacity += (target * k * (0.9 + Math.sin(clock.elapsedTime * 2 + k) * 0.1) - m.opacity) * 0.08; }
   });
-  const [x, , z] = toWorld(0.63, 0.42);
+  const [x, , z] = toWorld(0.65, 0.52);
   return (
     <>
-      <sprite ref={a} position={[x, 0.5, z]} scale={[5.5, 3.2, 1]}><spriteMaterial map={pink} transparent opacity={0} depthWrite={false} blending={THREE.AdditiveBlending} /></sprite>
+      <sprite ref={a} position={[x, 0.5, z]} scale={[5.5, 4.2, 1]}><spriteMaterial map={pink} transparent opacity={0} depthWrite={false} blending={THREE.AdditiveBlending} /></sprite>
       <sprite ref={b} position={[x + 0.8, 0.4, z + 0.5]} scale={[3.4, 2.2, 1]}><spriteMaterial map={cyan} transparent opacity={0} depthWrite={false} blending={THREE.AdditiveBlending} /></sprite>
     </>
   );

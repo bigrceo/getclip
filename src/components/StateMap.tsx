@@ -13,32 +13,42 @@ import type { Coin } from "@/lib/types";
 import { pct } from "@/lib/format";
 import { CityNeon, Clouds, DistrictLabels, MODES, Ocean, Sky, Sun, type Mode } from "./map/Atmosphere";
 
-// ---- geometry of the two map images (from the original site) ----
-const PLANE_W = 16, PLANE_H = 36576 / 4096; // core plane: 16 wide, same aspect as the 4K image
-const EXT = { w: 2528, h: 1696, coreX: 330, coreY: 336, coreW: 1868 };
-const UNIT = PLANE_W / EXT.coreW, EXT_W = EXT.w * UNIT, EXT_H = EXT.h * UNIT, CORE_H_PX = EXT.coreW * 2286 / 4096;
-const EXT_OFF: [number, number] = [(EXT.w / 2 - (EXT.coreX + EXT.coreW / 2)) * UNIT, (EXT.h / 2 - (EXT.coreY + CORE_H_PX / 2)) * UNIT];
-const OCEAN = "#06617a";
+// ---- Yanis V16 GTA VI community map (gtadb.org, CC BY 4.0), island crop stitched from the z5 tiles: 6118×8192 ----
+const IMG_W = 6118, IMG_H = 8192;
+const PLANE_W = 16, PLANE_H = PLANE_W * IMG_H / IMG_W;
+const OCEAN = "#2c68a6";
 const toWorld = (u: number, v: number): [number, number, number] => [(u - 0.5) * PLANE_W, 0, (v - 0.5) * PLANE_H];
+/** Feathered rectangle so the map's own water dissolves into the ocean shader. */
+function edgeMask() {
+  const c = document.createElement("canvas"); c.width = 512; c.height = 512; const g = c.getContext("2d")!;
+  g.fillStyle = "#000"; g.fillRect(0, 0, 512, 512);
+  const f = 40;
+  for (const [x0, y0, x1, y1, h] of [[0, 0, 512, f, true], [0, 512 - f, 512, 512, true], [0, 0, f, 512, false], [512 - f, 0, 512, 512, false]] as [number, number, number, number, boolean][]) {
+    const gr = h ? g.createLinearGradient(0, y0, 0, y1) : g.createLinearGradient(x0, 0, x1, 0);
+    const out = h ? y0 === 0 : x0 === 0;
+    gr.addColorStop(0, out ? "#000" : "#fff"); gr.addColorStop(1, out ? "#fff" : "#000");
+    g.fillStyle = gr; g.fillRect(x0, y0, x1 - x0, y1 - y0);
+  }
+  g.fillStyle = "#fff"; g.fillRect(f, f, 512 - 2 * f, 512 - 2 * f);
+  return new THREE.CanvasTexture(c);
+}
 
 export type Plot = { id: string; district: string; u: number; v: number };
 export const PLOTS: Plot[] = [
-  { id: "hq", district: "Vice City", u: 0.627, v: 0.405 },
-  { id: "east", district: "Vice City", u: 0.66, v: 0.44 }, { id: "west", district: "Vice City", u: 0.595, v: 0.435 },
-  { id: "club", district: "Vice City", u: 0.595, v: 0.52 }, { id: "studio", district: "Vice City", u: 0.69, v: 0.31 },
-  { id: "bank", district: "Vice City", u: 0.575, v: 0.27 }, { id: "boardwalk", district: "Ocean Strip", u: 0.695, v: 0.6 },
-  { id: "stilthouse", district: "The Keys", u: 0.12, v: 0.85 }, { id: "boatyard", district: "The Keys", u: 0.545, v: 0.8 },
-  { id: "swamp", district: "The Swamp", u: 0.33, v: 0.62 }, { id: "hills", district: "The Hills", u: 0.31, v: 0.13 },
-  { id: "lot-1", district: "Outskirts", u: 0.49, v: 0.47 }, { id: "lot-2", district: "Outskirts", u: 0.48, v: 0.53 },
-  { id: "lot-3", district: "Outskirts", u: 0.52, v: 0.6 }, { id: "lot-4", district: "Outskirts", u: 0.56, v: 0.62 },
-  { id: "lot-5", district: "Outskirts", u: 0.49, v: 0.66 }, { id: "lot-6", district: "Outskirts", u: 0.415, v: 0.32 },
-  { id: "lot-7", district: "Outskirts", u: 0.45, v: 0.3 }, { id: "lot-8", district: "Outskirts", u: 0.37, v: 0.4 },
-  { id: "lot-9", district: "Outskirts", u: 0.73, v: 0.19 }, { id: "lot-10", district: "Outskirts", u: 0.77, v: 0.22 },
-  { id: "lot-11", district: "Outskirts", u: 0.8, v: 0.18 }, { id: "lot-12", district: "Outskirts", u: 0.855, v: 0.165 },
-  { id: "port", district: "The Port", u: 0.21, v: 0.33 }, { id: "lot-14", district: "The Keys", u: 0.47, v: 0.86 },
-  { id: "lot-15", district: "The Keys", u: 0.26, v: 0.92 }, { id: "lot-16", district: "The Keys", u: 0.055, v: 0.745 },
+  { id: "hq", district: "Vice City", u: 0.64, v: 0.52 },
+  { id: "vc-1", district: "Vice City", u: 0.67, v: 0.49 }, { id: "vc-2", district: "Vice City", u: 0.61, v: 0.55 }, { id: "vc-3", district: "Vice City", u: 0.66, v: 0.56 }, { id: "vc-4", district: "Vice City", u: 0.62, v: 0.48 },
+  { id: "vb-1", district: "Vice Beach", u: 0.84, v: 0.45 }, { id: "vb-2", district: "Vice Beach", u: 0.86, v: 0.5 }, { id: "vb-3", district: "Vice Beach", u: 0.8, v: 0.41 },
+  { id: "air", district: "Vice City Intl", u: 0.55, v: 0.59 },
+  { id: "pg-1", district: "Port Gellhorn", u: 0.26, v: 0.53 }, { id: "pg-2", district: "Port Gellhorn", u: 0.29, v: 0.57 },
+  { id: "am-1", district: "Ambrosia", u: 0.53, v: 0.35 }, { id: "am-2", district: "Ambrosia", u: 0.58, v: 0.38 },
+  { id: "gr-1", district: "Grassrivers", u: 0.22, v: 0.3 }, { id: "gr-2", district: "Grassrivers", u: 0.27, v: 0.34 },
+  { id: "mk-1", district: "Mount Kalaga", u: 0.47, v: 0.2 }, { id: "mk-2", district: "Mount Kalaga", u: 0.55, v: 0.16 }, { id: "mk-3", district: "Mount Kalaga", u: 0.4, v: 0.26 },
+  { id: "ev-1", district: "Everglades", u: 0.44, v: 0.66 }, { id: "ev-2", district: "Everglades", u: 0.38, v: 0.6 }, { id: "ev-3", district: "Everglades", u: 0.5, v: 0.7 },
+  { id: "so-1", district: "South Leonida", u: 0.6, v: 0.73 }, { id: "so-2", district: "South Leonida", u: 0.66, v: 0.66 },
+  { id: "lk-1", district: "Leonard Keys", u: 0.52, v: 0.86 }, { id: "lk-2", district: "Leonard Keys", u: 0.58, v: 0.82 }, { id: "lk-3", district: "Leonard Keys", u: 0.26, v: 0.85 }, { id: "lk-4", district: "Leonard Keys", u: 0.4, v: 0.9 },
+  { id: "ne-1", district: "Vice City", u: 0.72, v: 0.44 }, { id: "ne-2", district: "Vice Beach", u: 0.9, v: 0.56 },
 ];
-const DISTRICT_COLOR: Record<string, string> = { "Vice City": "#ff5fa8", "Ocean Strip": "#ffc38a", "The Keys": "#2affc6", "The Swamp": "#7bff6a", "The Hills": "#ffe17a", Outskirts: "#ffffff", "The Port": "#48d6ff" };
+const DISTRICT_COLOR: Record<string, string> = { "Vice City": "#ff5fa8", "Vice Beach": "#ffc38a", "Vice City Intl": "#ffffff", "Port Gellhorn": "#48d6ff", Ambrosia: "#ffe17a", Grassrivers: "#b6ff6a", "Mount Kalaga": "#d9b8ff", Everglades: "#7bff6a", "South Leonida": "#ffd1a1", "Leonard Keys": "#2affc6" };
 
 /** Stable plot per coin: the official coin owns HQ, the rest hash their mint onto the other plots. */
 export function plotFor(c: Coin, i: number): Plot {
@@ -54,18 +64,18 @@ const beamColor = (e: Entity) => e.main ? "#ff5fa8" : e.coin.change24h >= 0 ? "#
 
 // ---- scene ----
 function Ground({ onReady, mode }: { onReady: () => void; mode: Mode }) {
-  const m1 = useRef<THREE.MeshBasicMaterial>(null), m2 = useRef<THREE.MeshBasicMaterial>(null);
-  useFrame(() => { const t = new THREE.Color(MODES[mode].tint); for (const r of [m1, m2]) r.current?.color.lerp(t, 0.05); });
+  const m1 = useRef<THREE.MeshBasicMaterial>(null);
+  useFrame(() => { m1.current?.color.lerp(new THREE.Color(MODES[mode].tint), 0.05); });
   const small = typeof window !== "undefined" && window.innerWidth < 900;
-  const [core, mask, ext] = useLoader(THREE.TextureLoader, [small ? "/map/leonida-2k.jpg" : "/map/leonida.jpg", "/map/leonida-core-mask.png", "/map/leonida-ext.jpg"]);
+  const map = useLoader(THREE.TextureLoader, small ? "/map/yanis-4k.jpg" : "/map/yanis-8k.jpg");
   const gl = useThree((s) => s.gl);
-  useMemo(() => { for (const t of [core, ext]) { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = gl.capabilities.getMaxAnisotropy(); } }, [core, ext, gl]);
+  const mask = useMemo(() => edgeMask(), []);
+  useMemo(() => { map.colorSpace = THREE.SRGBColorSpace; map.anisotropy = gl.capabilities.getMaxAnisotropy(); map.generateMipmaps = true; map.minFilter = THREE.LinearMipmapLinearFilter; }, [map, gl]);
   useEffect(() => { onReady(); }, [onReady]);
   return (
     <group>
       <Ocean mode={mode} />
-      <mesh rotation-x={-Math.PI / 2} position={[EXT_OFF[0], -0.015, EXT_OFF[1]]}><planeGeometry args={[EXT_W, EXT_H]} /><meshBasicMaterial ref={m1} map={ext} toneMapped={false} /></mesh>
-      <mesh rotation-x={-Math.PI / 2}><planeGeometry args={[PLANE_W, PLANE_H]} /><meshBasicMaterial ref={m2} map={core} alphaMap={mask} transparent depthWrite={false} toneMapped={false} /></mesh>
+      <mesh rotation-x={-Math.PI / 2}><planeGeometry args={[PLANE_W, PLANE_H]} /><meshBasicMaterial ref={m1} map={map} alphaMap={mask} transparent depthWrite={false} toneMapped={false} /></mesh>
     </group>
   );
 }
@@ -126,8 +136,9 @@ function Controls({ entities, selected, api }: { entities: Entity[]; selected: s
     const c = new OrbitControls(camera, dom);
     c.enableDamping = true; c.dampingFactor = 0.08; c.screenSpacePanning = false;
     c.enableZoom = false; // the wheel scrolls the page; zoom = ctrl/cmd + wheel, pinch, or the buttons
-    c.minDistance = 3; c.maxDistance = 13; c.minPolarAngle = 0.15; c.maxPolarAngle = 1.05; c.minAzimuthAngle = -0.6; c.maxAzimuthAngle = 0.6; c.zoomSpeed = 0.8;
-    const off = new THREE.Vector3(window.innerWidth < 700 ? 1.4 : 0.6, 0, 0.2);
+    c.minDistance = 2.2; c.maxDistance = 26; c.minPolarAngle = 0.15; c.maxPolarAngle = 1.05; c.minAzimuthAngle = -0.6; c.maxAzimuthAngle = 0.6; c.zoomSpeed = 0.8;
+    const [hx, , hz] = toWorld(0.64, 0.5);
+    const off = new THREE.Vector3(hx + (window.innerWidth < 700 ? 0.8 : 1.2), 0, hz + 0.6);
     c.target.copy(off); camera.position.add(off);
     return c;
   }, [camera, dom]);
@@ -136,7 +147,7 @@ function Controls({ entities, selected, api }: { entities: Entity[]; selected: s
   const intro = useRef<{ from: THREE.Vector3; to: THREE.Vector3; t: number } | null>(null);
   useEffect(() => {
     const to = camera.position.clone();
-    const from = to.clone().add(new THREE.Vector3(-6, 16, 14));
+    const from = to.clone().add(new THREE.Vector3(-8, 22, 18));
     camera.position.copy(from); intro.current = { from, to, t: 0 }; controls.enabled = false;
   }, [camera, controls]);
   useEffect(() => () => controls.dispose(), [controls]);
@@ -178,7 +189,7 @@ function Controls({ entities, selected, api }: { entities: Entity[]; selected: s
       if (d.lengthSq() < 1e-6) goal.current = null;
     }
     const t = controls.target;
-    const dx = THREE.MathUtils.clamp(t.x, -8, 8) - t.x, dz = THREE.MathUtils.clamp(t.z, -PLANE_H / 2, PLANE_H / 2) - t.z;
+    const dx = THREE.MathUtils.clamp(t.x, -PLANE_W / 2, PLANE_W / 2) - t.x, dz = THREE.MathUtils.clamp(t.z, -PLANE_H / 2, PLANE_H / 2) - t.z;
     if (dx || dz) { t.x += dx; t.z += dz; camera.position.x += dx; camera.position.z += dz; }
     controls.update();
   });
@@ -272,8 +283,8 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
   const select = (m: string) => onActive(m);
   return (
     <div className="map-canvas absolute inset-0">
-      <Canvas dpr={[1, 2]} camera={{ position: small ? [0, 12, 4.8] : [0, 10.5, 7.6], fov: 42, near: 0.1, far: 200 }} gl={{ antialias: true }} onPointerMissed={() => onActive(null)}>
-        <fog attach="fog" args={[MODES.dusk.fog, 14, 30]} />
+      <Canvas dpr={[1, 2]} camera={{ position: small ? [0, 15, 6] : [0, 12.5, 9], fov: 42, near: 0.1, far: 260 }} gl={{ antialias: true }} onPointerMissed={() => onActive(null)}>
+        <fog attach="fog" args={[MODES.dusk.fog, 18, 60]} />
         <FogCtl mode={mode} />
         <Sky mode={mode} />
         <Sun mode={mode} />
