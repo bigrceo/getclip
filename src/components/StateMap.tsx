@@ -190,7 +190,7 @@ function Controls({ entities, selected, api }: { entities: Entity[]; selected: s
     c.mouseButtons = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE };
     c.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_ROTATE };
     c.panSpeed = 1.2; c.enableZoom = true; c.zoomToCursor = false;
-    c.minDistance = MIAMI ? 0.2 : 0.9; c.maxDistance = MIAMI ? 45 : 26; c.minPolarAngle = 0.15; c.maxPolarAngle = 1.05; c.minAzimuthAngle = -0.6; c.maxAzimuthAngle = 0.6; c.zoomSpeed = 0.8;
+    c.minDistance = MIAMI ? 0.2 : 0.9; c.maxDistance = MIAMI ? 320 : 26; c.minPolarAngle = 0.15; c.maxPolarAngle = 1.05; c.minAzimuthAngle = -0.6; c.maxAzimuthAngle = 0.6; c.zoomSpeed = 0.8;
     const [hx, , hz] = MIAMI ? [0, 0, 0] : toWorld(0.7, 0.53);
     const off = new THREE.Vector3(hx + (window.innerWidth < 700 ? 0.8 : 1.2), 0, hz + 0.6);
     c.target.copy(off); camera.position.add(off);
@@ -201,7 +201,7 @@ function Controls({ entities, selected, api }: { entities: Entity[]; selected: s
   const intro = useRef<{ from: THREE.Vector3; to: THREE.Vector3; t: number } | null>(null);
   useEffect(() => {
     const to = camera.position.clone();
-    const from = to.clone().add(MIAMI ? new THREE.Vector3(-4, 10, 9) : new THREE.Vector3(-8, 22, 18));
+    const from = to.clone().add(MIAMI ? new THREE.Vector3(-40, 180, 120) : new THREE.Vector3(-8, 22, 18));
     camera.position.copy(from); intro.current = { from, to, t: 0 }; controls.enabled = false;
   }, [camera, controls]);
   useEffect(() => () => controls.dispose(), [controls]);
@@ -233,7 +233,7 @@ function Controls({ entities, selected, api }: { entities: Entity[]; selected: s
   }, [selected, entities]);
   useFrame((_, dt) => {
     if (intro.current) {
-      const i = intro.current; i.t = Math.min(1, i.t + dt / 2.6);
+      const i = intro.current; i.t = Math.min(1, i.t + dt / (MIAMI ? 4.5 : 2.6));
       const e = 1 - Math.pow(1 - i.t, 3);
       camera.position.lerpVectors(i.from, i.to, e);
       if (i.t >= 1) { intro.current = null; controls.enabled = true; }
@@ -245,7 +245,7 @@ function Controls({ entities, selected, api }: { entities: Entity[]; selected: s
       if (d.lengthSq() < 1e-6) goal.current = null;
     }
     const t = controls.target;
-    const LX = MIAMI ? 30 : PLANE_W / 2, LZ = MIAMI ? 45 : PLANE_H / 2;
+    const LX = MIAMI ? 220 : PLANE_W / 2, LZ = MIAMI ? 220 : PLANE_H / 2;
     const dx = THREE.MathUtils.clamp(t.x, -LX, LX) - t.x, dz = THREE.MathUtils.clamp(t.z, -LZ, LZ) - t.z;
     if (dx || dz) { t.x += dx; t.z += dz; camera.position.x += dx; camera.position.z += dz; }
     controls.update();
@@ -342,8 +342,8 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
   const select = (m: string) => onActive(m);
   return (
     <div className="map-canvas absolute inset-0">
-      <Canvas dpr={[1, 2]} camera={{ position: MIAMI ? (small ? [0, 3.2, 1.6] : [0, 2.4, 2.2]) : small ? [0, 15, 6] : [0, 12.5, 9], fov: 42, near: MIAMI ? 0.01 : 0.1, far: MIAMI ? 400 : 260 }} gl={{ antialias: true }} shadows onPointerMissed={() => onActive(null)}>
-        <fog attach="fog" args={[MODES.dusk.fog, MIAMI ? 60 : 18, MIAMI ? 400 : 60]} />
+      <Canvas dpr={[1, 2]} camera={{ position: MIAMI ? (small ? [0, 3.2, 1.6] : [0, 2.4, 2.2]) : small ? [0, 15, 6] : [0, 12.5, 9], fov: 42, near: MIAMI ? 0.01 : 0.1, far: MIAMI ? 2000 : 260 }} gl={{ antialias: true }} shadows onPointerMissed={() => onActive(null)}>
+        <fog attach="fog" args={[MODES.dusk.fog, MIAMI ? 150 : 18, MIAMI ? 1200 : 60]} />
         <FogCtl mode={mode} />
         <Sky mode={mode} />
         <Sun mode={mode} />
