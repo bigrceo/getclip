@@ -13,7 +13,7 @@ import { buildFacades, FLOOR_METERS, TILE_FLOORS, type Facade } from "./facades"
 
 const METER = 16 / 14848;
 const HEIGHT_SCALE = 1.5;
-const PALETTE = ["#ff8fb8", "#ffb86b", "#7de3c9", "#8fd3ff", "#fff07a", "#c9a7ff", "#ff7f98", "#ffffff", "#ffd1dc", "#9ff2e4", "#39c6ea", "#4fd1c5", "#6c9dff", "#b388ff", "#ffe29a", "#f4f1ea"];
+const PALETTE = ["#f5f2ec", "#ebe6dc", "#e2ddd3", "#f0ece4", "#d9d6cf", "#e8e2d4", "#f3eee6", "#ffffff", "#e6e9ee", "#dfe4ea", "#cfd6de", "#e9e4da", "#f1ebe0", "#ddd8cf", "#f6f1e8", "#e4e0d8"];
 
 /** Unit archetypes: footprint 1×1, total height 1; roof faces carry a darker vertex colour. */
 function box(w: number, h: number, d: number, y: number, x = 0, z = 0, shade = 1) {

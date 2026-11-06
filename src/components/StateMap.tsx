@@ -16,12 +16,12 @@ import { TileLayer } from "./map/TileLayer";
 import { CityLight } from "./map/Buildings";
 import { City } from "./map/City";
 import { RealCity } from "./map/RealCity";
-void City;
+void RealCity;
 import { Landmarks } from "./map/Landmarks";
 import { districtOf } from "./map/districts";
 
 // ---- Yanis V16 GTA VI community map (gtadb.org, CC BY 4.0), island crop stitched from the z5 tiles: 6118×8192 ----
-const IMG_W = 6014, IMG_H = 8192; // Yanis V17 island crop: tiles x 21..78, y 21..99
+const IMG_W = 14848, IMG_H = 20224; // Yanis V17 island crop: tiles x 21..78, y 21..99 (ground textures keep this aspect)
 const PLANE_W = 16, PLANE_H = PLANE_W * IMG_H / IMG_W;
 const OCEAN = "#2c68a6";
 import { uvToWorldMiami } from "./map/georef";
@@ -365,7 +365,7 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
         <Sun mode={mode} />
         {MIAMI ? <><MiamiTiles onReady={onReady} onCredits={setCredits} /><Clouds mode={mode} count={5} /></>
           : <><Suspense fallback={null}><Ground onReady={onReady} mode={mode} /></Suspense>
-        {ready && <><Clouds mode={mode} /><DistrictLabels toWorld={toWorld} />{false && !small && <TileLayer mode={mode} planeW={PLANE_W} planeH={PLANE_H} target={tileTarget} api={api} />}<CityLight mode={mode} api={api} /><RealCity mode={mode} planeW={PLANE_W} planeH={PLANE_H} /></>}</>}
+        {ready && <><Clouds mode={mode} /><DistrictLabels toWorld={toWorld} />{false && !small && <TileLayer mode={mode} planeW={PLANE_W} planeH={PLANE_H} target={tileTarget} api={api} />}<CityLight mode={mode} api={api} /><City mode={mode} planeW={PLANE_W} planeH={PLANE_H} /><Landmarks mode={mode} planeW={PLANE_W} planeH={PLANE_H} /></>}</>}
         {ready && entities.map((e) => <Beacon key={e.coin.mint} e={e} active={active === e.coin.mint || hovered === e.coin.mint} onHover={setHovered} onSelect={() => select(e.coin.mint)} />)}
         {ready && PLOTS.filter((p) => !takenPlots.has(p.id)).map((p) => <Lot key={p.id} p={p} onSelect={() => router.push("/launch")} onHover={(x, y) => setLotTip(x == null ? null : { plot: p, x, y: y! })} />)}
         <Controls entities={entities} selected={active} api={api} onWorld={setReal} />
