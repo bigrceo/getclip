@@ -351,7 +351,7 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
   const [real, setRealState] = useState(false);
   const setReal = (v: boolean) => { if (v === real) return; setReady(false); setRealState(v); };
   MIAMI = real && CAN_REAL;
-  const [mode, setMode] = useState<Mode>("dusk");
+  const [mode, setMode] = useState<Mode>("day");
   const [lotTip, setLotTip] = useState<{ plot: Plot; x: number; y: number } | null>(null);
   const onReady = useMemo(() => () => setReady(true), []);
   const select = (m: string) => onActive(m);
@@ -364,7 +364,7 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
         <Sun mode={mode} />
         {MIAMI ? <><MiamiTiles onReady={onReady} onCredits={setCredits} /><Clouds mode={mode} count={5} /></>
           : <><Suspense fallback={null}><Ground onReady={onReady} mode={mode} /></Suspense>
-        {ready && <><Clouds mode={mode} /><DistrictLabels toWorld={toWorld} /><CityNeon mode={mode} toWorld={toWorld} />{false && !small && <TileLayer mode={mode} planeW={PLANE_W} planeH={PLANE_H} target={tileTarget} api={api} />}<CityLight mode={mode} api={api} /><City mode={mode} planeW={PLANE_W} planeH={PLANE_H} /><Landmarks mode={mode} planeW={PLANE_W} planeH={PLANE_H} /></>}</>}
+        {ready && <><Clouds mode={mode} /><DistrictLabels toWorld={toWorld} />{false && !small && <TileLayer mode={mode} planeW={PLANE_W} planeH={PLANE_H} target={tileTarget} api={api} />}<CityLight mode={mode} api={api} /></>}</>}
         {ready && entities.map((e) => <Beacon key={e.coin.mint} e={e} active={active === e.coin.mint || hovered === e.coin.mint} onHover={setHovered} onSelect={() => select(e.coin.mint)} />)}
         {ready && PLOTS.filter((p) => !takenPlots.has(p.id)).map((p) => <Lot key={p.id} p={p} onSelect={() => router.push("/launch")} onHover={(x, y) => setLotTip(x == null ? null : { plot: p, x, y: y! })} />)}
         <Controls entities={entities} selected={active} api={api} onWorld={setReal} />
