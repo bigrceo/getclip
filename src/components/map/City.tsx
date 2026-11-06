@@ -12,7 +12,7 @@ import { MODES, type Mode } from "./Atmosphere";
 import { buildFacades, FLOOR_METERS, TILE_FLOORS, type Facade } from "./facades";
 
 const METER = 16 / 14848;
-const HEIGHT_SCALE = 1.5;
+const HEIGHT_SCALE = 0.42; // ~2.4 m per map pixel: real metres scaled to the island
 const PALETTE = ["#f5f2ec", "#ebe6dc", "#e2ddd3", "#f0ece4", "#d9d6cf", "#e8e2d4", "#f3eee6", "#ffffff", "#e6e9ee", "#dfe4ea", "#cfd6de", "#e9e4da", "#f1ebe0", "#ddd8cf", "#f6f1e8", "#e4e0d8"];
 
 /** Unit archetypes: footprint 1×1, total height 1; roof faces carry a darker vertex colour. */
@@ -109,7 +109,7 @@ export function City({ mode, planeW, planeH }: { mode: Mode; planeW: number; pla
     for (let i = 0; i < data.trees.length; i += 4) {
       const [u, v, s, kind] = Array.from(data.trees.subarray(i, i + 4));
       const m = trefs.current[kind | 0]; if (!m) continue;
-      const size = (kind ? 16 : 11) * METER * s * 1.5;
+      const size = (kind ? 16 : 11) * METER * s * 0.7;
       o.position.set((u - 0.5) * planeW, 0, (v - 0.5) * planeH); o.rotation.set(0, u * 97, 0); o.scale.set(size, size * 1.3, size); o.updateMatrix();
       const k = tidx[kind | 0]++; m.setMatrixAt(k, o.matrix);
       col.set(kind ? "#2fbf71" : ["#2e9e5b", "#4fb86b", "#1f8a4c"][k % 3]); m.setColorAt(k, col);

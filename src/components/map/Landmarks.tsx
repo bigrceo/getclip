@@ -11,7 +11,7 @@ import { MODES, type Mode } from "./Atmosphere";
 
 type Lm = { name: string; id: string; u: number; v: number; h: number; w: number; shape: string; tex: string | null };
 const METER = 16 / 14848;
-const HEIGHT_SCALE = 1.5;
+const HEIGHT_SCALE = 0.42; // ~2.4 m per map pixel: real metres scaled to the island
 const loader = new THREE.TextureLoader();
 
 function Tower({ l, planeW, planeH, mode }: { l: Lm; planeW: number; planeH: number; mode: Mode }) {
