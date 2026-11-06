@@ -26,6 +26,9 @@ export function MiamiTiles({ onReady, onCredits }: { onReady: () => void; onCred
     t.registerPlugin(new TileCompressionPlugin());
     t.registerPlugin(new ReorientationPlugin({ lat: ORIGIN.lat * Math.PI / 180, lon: ORIGIN.lon * Math.PI / 180, height: 0, recenter: true }));
     t.errorTarget = 12;
+    t.addEventListener("load-error", ((e: { error?: unknown; url?: string }) => console.warn("[tiles] load-error", e.url, e.error)) as EventListener);
+    t.addEventListener("load-tile-set", (() => console.info("[tiles] tileset loaded")) as EventListener);
+    (window as unknown as { __tiles?: TilesRenderer }).__tiles = t;
     t.group.scale.setScalar(WU_PER_M);
     return t;
   }, []);
