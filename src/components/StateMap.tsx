@@ -190,7 +190,7 @@ function Controls({ entities, selected, api }: { entities: Entity[]; selected: s
     c.mouseButtons = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE };
     c.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_ROTATE };
     c.panSpeed = 1.2; c.enableZoom = true; c.zoomToCursor = false;
-    c.minDistance = MIAMI ? 0.2 : 0.9; c.maxDistance = MIAMI ? 120 : 26; c.minPolarAngle = 0.15; c.maxPolarAngle = 1.05; c.minAzimuthAngle = -0.6; c.maxAzimuthAngle = 0.6; c.zoomSpeed = 0.8;
+    c.minDistance = MIAMI ? 0.2 : 0.9; c.maxDistance = MIAMI ? 45 : 26; c.minPolarAngle = 0.15; c.maxPolarAngle = 1.05; c.minAzimuthAngle = -0.6; c.maxAzimuthAngle = 0.6; c.zoomSpeed = 0.8;
     const [hx, , hz] = MIAMI ? [0, 0, 0] : toWorld(0.7, 0.53);
     const off = new THREE.Vector3(hx + (window.innerWidth < 700 ? 0.8 : 1.2), 0, hz + 0.6);
     c.target.copy(off); camera.position.add(off);
@@ -245,7 +245,7 @@ function Controls({ entities, selected, api }: { entities: Entity[]; selected: s
       if (d.lengthSq() < 1e-6) goal.current = null;
     }
     const t = controls.target;
-    const LX = MIAMI ? 40 : PLANE_W / 2, LZ = MIAMI ? 60 : PLANE_H / 2;
+    const LX = MIAMI ? 30 : PLANE_W / 2, LZ = MIAMI ? 45 : PLANE_H / 2;
     const dx = THREE.MathUtils.clamp(t.x, -LX, LX) - t.x, dz = THREE.MathUtils.clamp(t.z, -LZ, LZ) - t.z;
     if (dx || dz) { t.x += dx; t.z += dz; camera.position.x += dx; camera.position.z += dz; }
     controls.update();
@@ -343,11 +343,11 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
   return (
     <div className="map-canvas absolute inset-0">
       <Canvas dpr={[1, 2]} camera={{ position: MIAMI ? (small ? [0, 3.2, 1.6] : [0, 2.4, 2.2]) : small ? [0, 15, 6] : [0, 12.5, 9], fov: 42, near: MIAMI ? 0.01 : 0.1, far: MIAMI ? 400 : 260 }} gl={{ antialias: true }} shadows onPointerMissed={() => onActive(null)}>
-        <fog attach="fog" args={[MODES.dusk.fog, MIAMI ? 40 : 18, MIAMI ? 260 : 60]} />
+        <fog attach="fog" args={[MODES.dusk.fog, MIAMI ? 60 : 18, MIAMI ? 400 : 60]} />
         <FogCtl mode={mode} />
         <Sky mode={mode} />
         <Sun mode={mode} />
-        {MIAMI ? <><Ocean mode={mode} half={[60, 80]} /><MiamiTiles onReady={onReady} onCredits={setCredits} /><Clouds mode={mode} /></>
+        {MIAMI ? <><MiamiTiles onReady={onReady} onCredits={setCredits} /><Clouds mode={mode} count={5} /></>
           : <><Suspense fallback={null}><Ground onReady={onReady} mode={mode} /></Suspense>
         {ready && <><Clouds mode={mode} /><DistrictLabels toWorld={toWorld} /><CityNeon mode={mode} toWorld={toWorld} />{!small && <TileLayer mode={mode} planeW={PLANE_W} planeH={PLANE_H} target={tileTarget} api={api} />}<CityLight mode={mode} api={api} /><City mode={mode} planeW={PLANE_W} planeH={PLANE_H} /><Landmarks mode={mode} planeW={PLANE_W} planeH={PLANE_H} /></>}</>}
         {ready && entities.map((e) => <Beacon key={e.coin.mint} e={e} active={active === e.coin.mint || hovered === e.coin.mint} onHover={setHovered} onSelect={() => select(e.coin.mint)} />)}
