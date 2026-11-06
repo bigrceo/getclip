@@ -121,7 +121,8 @@ function Ground({ onReady, mode }: { onReady: () => void; mode: Mode }) {
   const m1 = useRef<THREE.MeshBasicMaterial>(null);
   useFrame(() => { m1.current?.color.lerp(new THREE.Color(MODES[mode].tint), 0.05); });
   const small = typeof window !== "undefined" && window.innerWidth < 900;
-  const map = useLoader(THREE.TextureLoader, small ? "/map/yanis-4k.jpg" : "/map/yanis-8k.jpg");
+  // Satellite Leonida: real Florida imagery (Esri World Imagery) warped into the island with the gtadb landmark pairs.
+  const map = useLoader(THREE.TextureLoader, "/map/leonida-sat.jpg");
   const gl = useThree((s) => s.gl);
   const mask = useMemo(() => edgeMask(), []);
   useMemo(() => { map.colorSpace = THREE.SRGBColorSpace; map.anisotropy = gl.capabilities.getMaxAnisotropy(); map.generateMipmaps = true; map.minFilter = THREE.LinearMipmapLinearFilter; }, [map, gl]);
@@ -363,7 +364,7 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
         <Sun mode={mode} />
         {MIAMI ? <><MiamiTiles onReady={onReady} onCredits={setCredits} /><Clouds mode={mode} count={5} /></>
           : <><Suspense fallback={null}><Ground onReady={onReady} mode={mode} /></Suspense>
-        {ready && <><Clouds mode={mode} /><DistrictLabels toWorld={toWorld} /><CityNeon mode={mode} toWorld={toWorld} />{!small && <TileLayer mode={mode} planeW={PLANE_W} planeH={PLANE_H} target={tileTarget} api={api} />}<CityLight mode={mode} api={api} /><City mode={mode} planeW={PLANE_W} planeH={PLANE_H} /><Landmarks mode={mode} planeW={PLANE_W} planeH={PLANE_H} /></>}</>}
+        {ready && <><Clouds mode={mode} /><DistrictLabels toWorld={toWorld} /><CityNeon mode={mode} toWorld={toWorld} />{false && !small && <TileLayer mode={mode} planeW={PLANE_W} planeH={PLANE_H} target={tileTarget} api={api} />}<CityLight mode={mode} api={api} /><City mode={mode} planeW={PLANE_W} planeH={PLANE_H} /><Landmarks mode={mode} planeW={PLANE_W} planeH={PLANE_H} /></>}</>}
         {ready && entities.map((e) => <Beacon key={e.coin.mint} e={e} active={active === e.coin.mint || hovered === e.coin.mint} onHover={setHovered} onSelect={() => select(e.coin.mint)} />)}
         {ready && PLOTS.filter((p) => !takenPlots.has(p.id)).map((p) => <Lot key={p.id} p={p} onSelect={() => router.push("/launch")} onHover={(x, y) => setLotTip(x == null ? null : { plot: p, x, y: y! })} />)}
         <Controls entities={entities} selected={active} api={api} onWorld={setReal} />
