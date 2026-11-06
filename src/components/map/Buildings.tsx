@@ -150,7 +150,6 @@ export function CityLight({ mode, api }: { mode: Mode; api?: React.MutableRefObj
       <ambientLight ref={amb} intensity={1.1} />
       <directionalLight ref={sun} position={[6, 8, -8]} intensity={2} castShadow shadow-mapSize={[2048, 2048]} shadow-bias={-0.0004} shadow-normalBias={0.02}
         shadow-camera-left={-3.5} shadow-camera-right={3.5} shadow-camera-top={3.5} shadow-camera-bottom={-3.5} shadow-camera-near={0.5} shadow-camera-far={40} />
-      <mesh rotation-x={-Math.PI / 2} position-y={0.002} receiveShadow renderOrder={1}><planeGeometry args={[60, 60]} /><shadowMaterial transparent opacity={0.32} depthWrite={false} /></mesh>
     </>
   );
 }

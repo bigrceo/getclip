@@ -34,7 +34,7 @@ function Tower({ l, planeW, planeH, mode }: { l: Lm; planeW: number; planeH: num
   const w = Math.max(l.w || 20, 18) * METER * 1.6, h = l.h * METER * HEIGHT_SCALE;
   const x = (l.u - 0.5) * planeW, z = (l.v - 0.5) * planeH;
   return (
-    <mesh position={[x, h / 2, z]} material={mats} renderOrder={2}>
+    <mesh position={[x, h / 2, z]} material={mats} renderOrder={2} castShadow>
       {l.shape === "pyramid" ? <coneGeometry args={[w * 0.7, h, 4]} /> : <boxGeometry args={[w, h, w]} />}
     </mesh>
   );

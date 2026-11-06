@@ -10,6 +10,11 @@ import { MODES, type Mode } from "./Atmosphere";
 
 const COLS = 58, ROWS = 79;
 const loader = new THREE.TextureLoader();
+let landMask: THREE.Texture | null = null;
+function maskFor(i: number, j: number) {
+  if (!landMask) { landMask = loader.load("/map/landmask.png"); landMask.colorSpace = THREE.NoColorSpace; }
+  const t = landMask.clone(); t.repeat.set(1 / COLS, 1 / ROWS); t.offset.set(i / COLS, 1 - (j + 1) / ROWS); t.needsUpdate = true; return t;
+}
 const cache = new Map<string, THREE.Texture>();
 const order: string[] = [];
 const MAX_CACHE = 700;
@@ -28,15 +33,16 @@ function Tile({ k, i, j, tw, th, w, h, mode, gl }: { k: string; i: number; j: nu
   const mat = useRef<THREE.MeshBasicMaterial>(null);
   const [loaded, setLoaded] = useState(cache.has(k) && !!cache.get(k)!.image);
   const tex = useMemo(() => getTexture(k, gl, () => setLoaded(true)), [k, gl]);
+  const alpha = useMemo(() => maskFor(i, j), [i, j]);
   useFrame((_, dt) => {
     const m = mat.current; if (!m) return;
     m.color.lerp(new THREE.Color(MODES[mode].tint), 0.05);
     const target = loaded ? 1 : 0; m.opacity += (target - m.opacity) * Math.min(1, dt * 6);
   });
   return (
-    <mesh rotation-x={-Math.PI / 2} position={[-w / 2 + (i + 0.5) * tw, 0.003, -h / 2 + (j + 0.5) * th]} renderOrder={1}>
+    <mesh rotation-x={-Math.PI / 2} position={[-w / 2 + (i + 0.5) * tw, 0.004, -h / 2 + (j + 0.5) * th]} renderOrder={1}>
       <planeGeometry args={[tw, th]} />
-      <meshBasicMaterial ref={mat} map={tex} transparent opacity={0} depthWrite={false} toneMapped={false} />
+      <meshBasicMaterial ref={mat} map={tex} alphaMap={alpha} alphaTest={0.3} transparent opacity={0} depthWrite={false} toneMapped={false} />
     </mesh>
   );
 }

@@ -14,7 +14,8 @@ import { pct } from "@/lib/format";
 import { CityNeon, Clouds, DistrictLabels, MODES, Ocean, Sky, Sun, type Mode } from "./map/Atmosphere";
 import { TileLayer } from "./map/TileLayer";
 import { CityLight } from "./map/Buildings";
-import { City } from "./map/City";
+import { Island, LAND_Y } from "./map/Island";
+import { ClipBoard } from "./map/ClipBoards";
 import { RealCity } from "./map/RealCity";
 void RealCity;
 import { Landmarks } from "./map/Landmarks";
@@ -33,7 +34,7 @@ let MIAMI = false;
 const CAN_REAL = !!GOOGLE_KEY;
 /** Where to land when switching worlds (set by the dive logic). */
 const pendingFocus: { world: [number, number, number] | null; dist: number } = { world: null, dist: 2.5 };
-const toWorld = (u: number, v: number): [number, number, number] => MIAMI ? uvToWorldMiami(u, v) : [(u - 0.5) * PLANE_W, 0, (v - 0.5) * PLANE_H];
+const toWorld = (u: number, v: number): [number, number, number] => MIAMI ? uvToWorldMiami(u, v) : [(u - 0.5) * PLANE_W, LAND_Y, (v - 0.5) * PLANE_H];
 /** Feathered rectangle so the map's own water dissolves into the ocean shader. */
 function edgeMask() {
   const c = document.createElement("canvas"); c.width = 512; c.height = 512; const g = c.getContext("2d")!;
@@ -120,19 +121,10 @@ const beamColor = (e: Entity) => e.main ? "#ff5fa8" : e.coin.change24h >= 0 ? "#
 
 // ---- scene ----
 function Ground({ onReady, mode }: { onReady: () => void; mode: Mode }) {
-  const m1 = useRef<THREE.MeshBasicMaterial>(null);
-  useFrame(() => { m1.current?.color.lerp(new THREE.Color(MODES[mode].tint).multiplyScalar(mode === "day" ? 1.25 : 1.05), 0.05); }); // satellite imagery reads dark under the vignette
-  const small = typeof window !== "undefined" && window.innerWidth < 900;
-  // Satellite Leonida: real Florida imagery (Esri World Imagery) warped into the island with the gtadb landmark pairs.
-  const map = useLoader(THREE.TextureLoader, small ? "/map/leonida-sat.jpg" : "/map/leonida-sat-8k.jpg");
-  const gl = useThree((s) => s.gl);
-  const mask = useMemo(() => edgeMask(), []);
-  useMemo(() => { map.colorSpace = THREE.SRGBColorSpace; map.anisotropy = gl.capabilities.getMaxAnisotropy(); map.generateMipmaps = true; map.minFilter = THREE.LinearMipmapLinearFilter; }, [map, gl]);
-  useEffect(() => { onReady(); }, [onReady]);
   return (
     <group>
       <Ocean mode={mode} half={[PLANE_W / 2, PLANE_H / 2]} />
-      <mesh rotation-x={-Math.PI / 2}><planeGeometry args={[PLANE_W, PLANE_H]} /><meshBasicMaterial ref={m1} map={map} alphaMap={mask} transparent depthWrite={false} toneMapped={false} /></mesh>
+      <Island mode={mode} planeW={PLANE_W} planeH={PLANE_H} onReady={onReady} />
     </group>
   );
 }
@@ -155,7 +147,7 @@ function Beacon({ e, active, onHover, onSelect }: { e: Entity; active: boolean; 
     onClick: (ev: { stopPropagation: () => void }) => { ev.stopPropagation(); onSelect(); },
   };
   return (
-    <group position={[x, 0, z]}>
+    <group position={[x, LAND_Y, z]}>
       <mesh rotation-x={-Math.PI / 2} position-y={0.01}><circleGeometry args={[e.main ? 0.32 : 0.2, 40]} /><meshBasicMaterial color={dist} transparent opacity={active ? 0.55 : 0.32} depthWrite={false} /></mesh>
       <mesh ref={ring} rotation-x={-Math.PI / 2} position-y={0.015}><ringGeometry args={[e.main ? 0.3 : 0.18, e.main ? 0.34 : 0.21, 48]} /><meshBasicMaterial color={col} transparent depthWrite={false} /></mesh>
       <mesh ref={beam} position-y={h / 2} {...ev}><cylinderGeometry args={[r * 0.6, r, h, 20, 1, true]} /><meshBasicMaterial color={col} transparent depthWrite={false} side={THREE.DoubleSide} toneMapped={false} /></mesh>
@@ -168,7 +160,7 @@ function Beacon({ e, active, onHover, onSelect }: { e: Entity; active: boolean; 
 function Lot({ p, onSelect, onHover }: { p: Plot; onSelect: () => void; onHover: (x: number | null, y?: number) => void }) {
   const [x, , z] = toWorld(p.u, p.v);
   return (
-    <group position={[x, 0, z]}>
+    <group position={[x, LAND_Y, z]}>
       <mesh rotation-x={-Math.PI / 2} position-y={0.012} onClick={(e) => { e.stopPropagation(); onSelect(); }}
         onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = "pointer"; const r = (e.nativeEvent.target as HTMLElement).getBoundingClientRect(); onHover(e.nativeEvent.clientX - r.left, e.nativeEvent.clientY - r.top); }}
         onPointerMove={(e) => { const r = (e.nativeEvent.target as HTMLElement).getBoundingClientRect(); onHover(e.nativeEvent.clientX - r.left, e.nativeEvent.clientY - r.top); }}
@@ -200,7 +192,7 @@ function Controls({ entities, selected, api, onWorld }: { entities: Entity[]; se
     c.panSpeed = 1.2; c.enableZoom = true; c.zoomToCursor = false;
     c.minDistance = MIAMI ? 0.2 : 0.9; c.maxDistance = MIAMI ? 320 : 26; c.minPolarAngle = 0.15; c.maxPolarAngle = 1.05; c.minAzimuthAngle = -0.6; c.maxAzimuthAngle = 0.6; c.zoomSpeed = 0.8;
     const [hx, , hz] = MIAMI ? (pendingFocus.world ?? [0, 0, 0]) : (pendingFocus.world ?? toWorld(0.7, 0.53));
-    const off = new THREE.Vector3(hx + (window.innerWidth < 700 ? 0.8 : 1.2), 0, hz + 0.6);
+    const off = new THREE.Vector3(hx + (window.innerWidth < 700 ? 0.8 : 1.2), MIAMI ? 0 : LAND_Y, hz + 0.6);
     c.target.copy(off); camera.position.add(off);
     return c;
   }, [camera, dom]);
@@ -237,7 +229,7 @@ function Controls({ entities, selected, api, onWorld }: { entities: Entity[]; se
   }, [camera, controls, dom, api]);
   useEffect(() => {
     const e = entities.find((e) => e.coin.mint === selected); if (!e) return;
-    const [x, , z] = toWorld(e.plot.u, e.plot.v); goal.current = new THREE.Vector3(x, 0, z);
+    const [x, , z] = toWorld(e.plot.u, e.plot.v); goal.current = new THREE.Vector3(x, MIAMI ? 0 : LAND_Y, z);
   }, [selected, entities]);
   useFrame((_, dt) => {
     if (intro.current) {
@@ -287,7 +279,7 @@ function PinLayout({ entities, slots, hovered, selected }: { entities: Entity[];
     for (const e of order) {
       const s = slots.get(e.coin.mint); if (!s?.el) continue;
       const [x, , z] = toWorld(e.plot.u, e.plot.v);
-      v.set(x, beamHeight(e), z).project(camera);
+      v.set(x, (MIAMI ? 0 : LAND_Y) + beamHeight(e), z).project(camera);
       const sx = (v.x + 1) / 2 * size.width, sy = (1 - v.y) / 2 * size.height;
       const onScreen = v.z < 1 && sx > -40 && sx < size.width + 40 && sy > -40 && sy < size.height + 40;
       if (s.measuredAt < 0 || frame.current - s.measuredAt > 120) {
@@ -365,13 +357,15 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
         <Sun mode={mode} />
         {MIAMI ? <><MiamiTiles onReady={onReady} onCredits={setCredits} /><Clouds mode={mode} count={5} /></>
           : <><Suspense fallback={null}><Ground onReady={onReady} mode={mode} /></Suspense>
-        {ready && <><Clouds mode={mode} /><DistrictLabels toWorld={toWorld} />{false && !small && <TileLayer mode={mode} planeW={PLANE_W} planeH={PLANE_H} target={tileTarget} api={api} />}<CityLight mode={mode} api={api} /><City mode={mode} planeW={PLANE_W} planeH={PLANE_H} /><Landmarks mode={mode} planeW={PLANE_W} planeH={PLANE_H} /></>}</>}
+        {ready && <><Clouds mode={mode} /><DistrictLabels toWorld={toWorld} /><CityLight mode={mode} api={api} /><group position-y={LAND_Y}>{!small && <TileLayer mode={mode} planeW={PLANE_W} planeH={PLANE_H} target={tileTarget} api={api} />}<Landmarks mode={mode} planeW={PLANE_W} planeH={PLANE_H} /></group></>}</>}
         {ready && entities.map((e) => <Beacon key={e.coin.mint} e={e} active={active === e.coin.mint || hovered === e.coin.mint} onHover={setHovered} onSelect={() => select(e.coin.mint)} />)}
+        {ready && !MIAMI && entities.map((e) => { const [x, , z] = toWorld(e.plot.u, e.plot.v); return <group key={`b${e.coin.mint}`} position-y={LAND_Y}><ClipBoard coin={e.coin} x={x} z={z} main={e.main} active={active === e.coin.mint || hovered === e.coin.mint} onHover={setHovered} onSelect={() => select(e.coin.mint)} /></group>; })}
         {ready && PLOTS.filter((p) => !takenPlots.has(p.id)).map((p) => <Lot key={p.id} p={p} onSelect={() => router.push("/launch")} onHover={(x, y) => setLotTip(x == null ? null : { plot: p, x, y: y! })} />)}
         <Controls entities={entities} selected={active} api={api} onWorld={setReal} />
         <PinLayout entities={entities} slots={slots} hovered={hovered} selected={active} />
       </Canvas>
       <Pins entities={entities} slots={slots} hovered={hovered} selected={active} onHover={setHovered} onSelect={select} />
+      {!MIAMI && <><div className="map-tilt map-tilt-top" aria-hidden="true" /><div className="map-tilt map-tilt-bottom" aria-hidden="true" /></>}
       <div className="map-vignette" aria-hidden="true" />
       <div aria-hidden={ready} className={`pointer-events-none absolute inset-0 z-10 grid place-items-center transition-opacity duration-700 ${ready ? "opacity-0" : "opacity-100"}`} style={{ background: "radial-gradient(circle, #23104a, #0a0618)" }}>
         <div className="text-center"><img src="/brand/pfp-512.png" alt="" width={96} height={96} className="mx-auto mb-4 rounded-[20px]" style={{ filter: "drop-shadow(0 0 24px rgba(255,61,139,.6))" }} /><p className="script">Flying into</p><p className="sec-title sunset-text">Leonida</p><p className="mt-3 text-[12px] font-semibold uppercase tracking-[.1em] text-haze">getclip.fun</p></div>
