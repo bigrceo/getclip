@@ -51,7 +51,7 @@ export function TileLayer({ mode, planeW, planeH, target, api }: { mode: Mode; p
     last.current.at = clock.elapsedTime;
     if (api.current) target.copy(api.current.target);
     const dist = camera.position.distanceTo(target);
-    const r = dist < 3.2 ? 7 : dist < 5 ? 6 : dist < 7.5 ? 4 : 0;
+    const r = dist < 2 ? 5 : dist < 3.2 ? 7 : dist < 5 ? 6 : dist < 7.5 ? 4 : 0;
     const ci = Math.floor((target.x + planeW / 2) / tw), cj = Math.floor((target.z + planeH / 2) / th);
     const sig = r ? `${r}:${ci}:${cj}` : "";
     if (sig === last.current.sig) return;
