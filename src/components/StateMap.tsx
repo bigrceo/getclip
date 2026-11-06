@@ -24,8 +24,13 @@ const PLANE_W = 16, PLANE_H = PLANE_W * IMG_H / IMG_W;
 const OCEAN = "#2c68a6";
 import { uvToWorldMiami } from "./map/georef";
 import { GOOGLE_KEY, MiamiTiles, MiamiCredits } from "./map/MiamiTiles";
-/** Photoreal Miami (Google 3D Tiles) when a key is set, else the Leonida fan map. Both use u/v of the map image for pins. */
-export const MIAMI = !!GOOGLE_KEY;
+/** Two worlds sharing the same u/v: the Leonida fan map (default, the shape people know) and photoreal Miami (Google 3D
+ * Tiles) that the camera dives into when it gets close to a district, or on the "Real" toggle. MIAMI is flipped right before
+ * the Canvas remounts (key), so every helper below reads the current world. */
+let MIAMI = false;
+const CAN_REAL = !!GOOGLE_KEY;
+/** Where to land when switching worlds (set by the dive logic). */
+const pendingFocus: { world: [number, number, number] | null; dist: number } = { world: null, dist: 2.5 };
 const toWorld = (u: number, v: number): [number, number, number] => MIAMI ? uvToWorldMiami(u, v) : [(u - 0.5) * PLANE_W, 0, (v - 0.5) * PLANE_H];
 /** Feathered rectangle so the map's own water dissolves into the ocean shader. */
 function edgeMask() {
@@ -179,7 +184,7 @@ function FogCtl({ mode }: { mode: Mode }) {
   useFrame(() => { const f = scene.fog as THREE.Fog | null; if (f) f.color.lerp(new THREE.Color(MODES[mode].fog), 0.05); });
   return null;
 }
-function Controls({ entities, selected, api }: { entities: Entity[]; selected: string | null; api: React.MutableRefObject<Api | null> }) {
+function Controls({ entities, selected, api, onWorld }: { entities: Entity[]; selected: string | null; api: React.MutableRefObject<Api | null>; onWorld: (real: boolean) => void }) {
   const camera = useThree((s) => s.camera);
   const dom = useThree((s) => s.gl.domElement);
   const controls = useMemo(() => {
@@ -191,7 +196,7 @@ function Controls({ entities, selected, api }: { entities: Entity[]; selected: s
     c.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_ROTATE };
     c.panSpeed = 1.2; c.enableZoom = true; c.zoomToCursor = false;
     c.minDistance = MIAMI ? 0.2 : 0.9; c.maxDistance = MIAMI ? 320 : 26; c.minPolarAngle = 0.15; c.maxPolarAngle = 1.05; c.minAzimuthAngle = -0.6; c.maxAzimuthAngle = 0.6; c.zoomSpeed = 0.8;
-    const [hx, , hz] = MIAMI ? [0, 0, 0] : toWorld(0.7, 0.53);
+    const [hx, , hz] = MIAMI ? (pendingFocus.world ?? [0, 0, 0]) : (pendingFocus.world ?? toWorld(0.7, 0.53));
     const off = new THREE.Vector3(hx + (window.innerWidth < 700 ? 0.8 : 1.2), 0, hz + 0.6);
     c.target.copy(off); camera.position.add(off);
     return c;
@@ -201,7 +206,7 @@ function Controls({ entities, selected, api }: { entities: Entity[]; selected: s
   const intro = useRef<{ from: THREE.Vector3; to: THREE.Vector3; t: number } | null>(null);
   useEffect(() => {
     const to = camera.position.clone();
-    const from = to.clone().add(MIAMI ? new THREE.Vector3(-40, 180, 120) : new THREE.Vector3(-8, 22, 18));
+    const from = to.clone().add(pendingFocus.world || MIAMI ? new THREE.Vector3(-1, 3, 2.5) : new THREE.Vector3(-8, 22, 18));
     camera.position.copy(from); intro.current = { from, to, t: 0 }; controls.enabled = false;
   }, [camera, controls]);
   useEffect(() => () => controls.dispose(), [controls]);
@@ -233,7 +238,7 @@ function Controls({ entities, selected, api }: { entities: Entity[]; selected: s
   }, [selected, entities]);
   useFrame((_, dt) => {
     if (intro.current) {
-      const i = intro.current; i.t = Math.min(1, i.t + dt / (MIAMI ? 4.5 : 2.6));
+      const i = intro.current; i.t = Math.min(1, i.t + dt / 2.2);
       const e = 1 - Math.pow(1 - i.t, 3);
       camera.position.lerpVectors(i.from, i.to, e);
       if (i.t >= 1) { intro.current = null; controls.enabled = true; }
@@ -245,6 +250,12 @@ function Controls({ entities, selected, api }: { entities: Entity[]; selected: s
       if (d.lengthSq() < 1e-6) goal.current = null;
     }
     const t = controls.target;
+    // Dive: close to the ground on Leonida → the same spot in real Miami; far above Miami → back to Leonida.
+    const dist = camera.position.distanceTo(t);
+    if (CAN_REAL && !intro.current) {
+      if (!MIAMI && dist < 1.1) { const u = t.x / PLANE_W + 0.5, v = t.z / PLANE_H + 0.5; pendingFocus.world = uvToWorldMiami(u, v); pendingFocus.dist = 2.2; onWorld(true); return; }
+      if (MIAMI && dist > 60) { pendingFocus.world = null; pendingFocus.dist = 10; onWorld(false); return; }
+    }
     const LX = MIAMI ? 220 : PLANE_W / 2, LZ = MIAMI ? 220 : PLANE_H / 2;
     const dx = THREE.MathUtils.clamp(t.x, -LX, LX) - t.x, dz = THREE.MathUtils.clamp(t.z, -LZ, LZ) - t.z;
     if (dx || dz) { t.x += dx; t.z += dz; camera.position.x += dx; camera.position.z += dz; }
@@ -336,13 +347,16 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
   const tileTarget = useMemo(() => new THREE.Vector3(), []);
   const [ready, setReady] = useState(false);
   const [credits, setCredits] = useState("");
+  const [real, setRealState] = useState(false);
+  const setReal = (v: boolean) => { if (v === real) return; setReady(false); setRealState(v); };
+  MIAMI = real && CAN_REAL;
   const [mode, setMode] = useState<Mode>("dusk");
   const [lotTip, setLotTip] = useState<{ plot: Plot; x: number; y: number } | null>(null);
   const onReady = useMemo(() => () => setReady(true), []);
   const select = (m: string) => onActive(m);
   return (
     <div className="map-canvas absolute inset-0">
-      <Canvas dpr={[1, 2]} camera={{ position: MIAMI ? (small ? [0, 3.2, 1.6] : [0, 2.4, 2.2]) : small ? [0, 15, 6] : [0, 12.5, 9], fov: 42, near: MIAMI ? 0.01 : 0.1, far: MIAMI ? 2000 : 260 }} gl={{ antialias: true }} shadows onPointerMissed={() => onActive(null)}>
+      <Canvas key={real ? "real" : "leonida"} dpr={[1, 2]} camera={{ position: MIAMI ? (small ? [0, 3.2, 1.6] : [0, 2.4, 2.2]) : small ? [0, 15, 6] : [0, 12.5, 9], fov: 42, near: MIAMI ? 0.01 : 0.1, far: MIAMI ? 2000 : 260 }} gl={{ antialias: true }} shadows onPointerMissed={() => onActive(null)}>
         <fog attach="fog" args={[MODES.dusk.fog, MIAMI ? 150 : 18, MIAMI ? 1200 : 60]} />
         <FogCtl mode={mode} />
         <Sky mode={mode} />
@@ -352,7 +366,7 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
         {ready && <><Clouds mode={mode} /><DistrictLabels toWorld={toWorld} /><CityNeon mode={mode} toWorld={toWorld} />{!small && <TileLayer mode={mode} planeW={PLANE_W} planeH={PLANE_H} target={tileTarget} api={api} />}<CityLight mode={mode} api={api} /><City mode={mode} planeW={PLANE_W} planeH={PLANE_H} /><Landmarks mode={mode} planeW={PLANE_W} planeH={PLANE_H} /></>}</>}
         {ready && entities.map((e) => <Beacon key={e.coin.mint} e={e} active={active === e.coin.mint || hovered === e.coin.mint} onHover={setHovered} onSelect={() => select(e.coin.mint)} />)}
         {ready && PLOTS.filter((p) => !takenPlots.has(p.id)).map((p) => <Lot key={p.id} p={p} onSelect={() => router.push("/launch")} onHover={(x, y) => setLotTip(x == null ? null : { plot: p, x, y: y! })} />)}
-        <Controls entities={entities} selected={active} api={api} />
+        <Controls entities={entities} selected={active} api={api} onWorld={setReal} />
         <PinLayout entities={entities} slots={slots} hovered={hovered} selected={active} />
       </Canvas>
       <Pins entities={entities} slots={slots} hovered={hovered} selected={active} onHover={setHovered} onSelect={select} />
@@ -365,9 +379,12 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
       <div className="absolute bottom-[18px] left-6 z-20 flex rounded-full border border-line bg-black/40 p-[3px] max-md:bottom-3 max-md:left-3">
         {(Object.keys(MODES) as Mode[]).map((k) => <button key={k} type="button" onClick={() => setMode(k)} className={`rounded-full px-3 py-1.5 text-[12px] font-bold transition-colors ${mode === k ? "text-[#1a0b26]" : "text-ink/75 hover:text-ink"}`} style={mode === k ? { background: "var(--sunset)" } : undefined}>{MODES[k].label}</button>)}
       </div>
+      {CAN_REAL && <div className="absolute bottom-[18px] left-[214px] z-20 flex rounded-full border border-line bg-black/40 p-[3px] max-md:bottom-3 max-md:left-[200px]">
+        {([["leonida", "Leonida"], ["real", "Real Miami"]] as const).map(([k, l]) => <button key={k} type="button" onClick={() => { pendingFocus.world = null; setReal(k === "real"); }} className={`rounded-full px-3 py-1.5 text-[12px] font-bold transition-colors ${(k === "real") === real ? "text-[#1a0b26]" : "text-ink/75 hover:text-ink"}`} style={(k === "real") === real ? { background: "var(--sunset)" } : undefined}>{l}</button>)}
+      </div>}
       <div className="absolute bottom-[18px] left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 max-md:bottom-3">
         <button type="button" onClick={() => api.current?.zoom(1.35)} className="grid size-9 place-items-center rounded-full border border-line bg-night/70 text-lg font-bold text-ink hover:bg-night/90" aria-label="Zoom out">−</button>
-        <span className="whitespace-nowrap rounded-full border border-line bg-night/70 px-3 py-1.5 text-[12px] font-semibold uppercase tracking-[.06em] text-haze max-md:hidden">Drag to pan · right-drag to tilt · scroll to zoom · click a beacon</span>
+        <span className="whitespace-nowrap rounded-full border border-line bg-night/70 px-3 py-1.5 text-[12px] font-semibold uppercase tracking-[.06em] text-haze max-md:hidden">Drag to pan · scroll in to dive into real Miami · click a beacon</span>
         <button type="button" onClick={() => api.current?.zoom(0.74)} className="grid size-9 place-items-center rounded-full border border-line bg-night/70 text-lg font-bold text-ink hover:bg-night/90" aria-label="Zoom in">+</button>
       </div>
       {children}
