@@ -380,12 +380,12 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
       <div className="absolute bottom-[18px] left-6 z-20 flex rounded-full border border-line bg-black/40 p-[3px] max-md:bottom-3 max-md:left-3">
         {(Object.keys(MODES) as Mode[]).map((k) => <button key={k} type="button" onClick={() => setMode(k)} className={`rounded-full px-3 py-1.5 text-[12px] font-bold transition-colors ${mode === k ? "text-[#1a0b26]" : "text-ink/75 hover:text-ink"}`} style={mode === k ? { background: "var(--sunset)" } : undefined}>{MODES[k].label}</button>)}
       </div>
-      {CAN_REAL && <div className="absolute bottom-[18px] left-[214px] z-20 flex rounded-full border border-line bg-black/40 p-[3px] max-md:bottom-3 max-md:left-[200px]">
+      {CAN_REAL && <div className="absolute bottom-[18px] left-[214px] z-20 flex rounded-full border border-line bg-black/40 p-[3px] max-md:bottom-14 max-md:left-3">
         {([["leonida", "Leonida"], ["real", "Real Miami"]] as const).map(([k, l]) => <button key={k} type="button" onClick={() => { pendingFocus.world = null; setReal(k === "real"); }} className={`rounded-full px-3 py-1.5 text-[12px] font-bold transition-colors ${(k === "real") === real ? "text-[#1a0b26]" : "text-ink/75 hover:text-ink"}`} style={(k === "real") === real ? { background: "var(--sunset)" } : undefined}>{l}</button>)}
       </div>}
       <div className="absolute bottom-[18px] left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 max-md:bottom-3">
         <button type="button" onClick={() => api.current?.zoom(1.35)} className="grid size-9 place-items-center rounded-full border border-line bg-night/70 text-lg font-bold text-ink hover:bg-night/90" aria-label="Zoom out">−</button>
-        <span className="whitespace-nowrap rounded-full border border-line bg-night/70 px-3 py-1.5 text-[12px] font-semibold uppercase tracking-[.06em] text-haze max-md:hidden">Drag to pan · scroll in to dive into real Miami · click a beacon</span>
+        <span className="whitespace-nowrap rounded-full border border-line bg-night/70 px-3 py-1.5 text-[12px] font-semibold uppercase tracking-[.06em] text-haze max-xl:hidden">Drag to pan · scroll in to dive into real Miami · click a beacon</span>
         <button type="button" onClick={() => api.current?.zoom(0.74)} className="grid size-9 place-items-center rounded-full border border-line bg-night/70 text-lg font-bold text-ink hover:bg-night/90" aria-label="Zoom in">+</button>
       </div>
       {children}
