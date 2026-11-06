@@ -15,6 +15,8 @@ import { CityNeon, Clouds, DistrictLabels, MODES, Ocean, Sky, Sun, type Mode } f
 import { TileLayer } from "./map/TileLayer";
 import { CityLight } from "./map/Buildings";
 import { City } from "./map/City";
+import { RealCity } from "./map/RealCity";
+void City;
 import { Landmarks } from "./map/Landmarks";
 import { districtOf } from "./map/districts";
 
@@ -119,10 +121,10 @@ const beamColor = (e: Entity) => e.main ? "#ff5fa8" : e.coin.change24h >= 0 ? "#
 // ---- scene ----
 function Ground({ onReady, mode }: { onReady: () => void; mode: Mode }) {
   const m1 = useRef<THREE.MeshBasicMaterial>(null);
-  useFrame(() => { m1.current?.color.lerp(new THREE.Color(MODES[mode].tint), 0.05); });
+  useFrame(() => { m1.current?.color.lerp(new THREE.Color(MODES[mode].tint).multiplyScalar(mode === "day" ? 1.25 : 1.05), 0.05); }); // satellite imagery reads dark under the vignette
   const small = typeof window !== "undefined" && window.innerWidth < 900;
   // Satellite Leonida: real Florida imagery (Esri World Imagery) warped into the island with the gtadb landmark pairs.
-  const map = useLoader(THREE.TextureLoader, "/map/leonida-sat.jpg");
+  const map = useLoader(THREE.TextureLoader, small ? "/map/leonida-sat.jpg" : "/map/leonida-sat-8k.jpg");
   const gl = useThree((s) => s.gl);
   const mask = useMemo(() => edgeMask(), []);
   useMemo(() => { map.colorSpace = THREE.SRGBColorSpace; map.anisotropy = gl.capabilities.getMaxAnisotropy(); map.generateMipmaps = true; map.minFilter = THREE.LinearMipmapLinearFilter; }, [map, gl]);
@@ -254,8 +256,7 @@ function Controls({ entities, selected, api, onWorld }: { entities: Entity[]; se
     // Dive: close to the ground on Leonida → the same spot in real Miami; far above Miami → back to Leonida.
     const dist = camera.position.distanceTo(t);
     if (CAN_REAL && !intro.current) {
-      if (!MIAMI && dist < 1.1) { const u = t.x / PLANE_W + 0.5, v = t.z / PLANE_H + 0.5; pendingFocus.world = uvToWorldMiami(u, v); pendingFocus.dist = 2.2; onWorld(true); return; }
-      if (MIAMI && dist > 60) { pendingFocus.world = null; pendingFocus.dist = 10; onWorld(false); return; }
+      void dist; void onWorld; // worlds switch only from the toggle
     }
     const LX = MIAMI ? 220 : PLANE_W / 2, LZ = MIAMI ? 220 : PLANE_H / 2;
     const dx = THREE.MathUtils.clamp(t.x, -LX, LX) - t.x, dz = THREE.MathUtils.clamp(t.z, -LZ, LZ) - t.z;
@@ -364,7 +365,7 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
         <Sun mode={mode} />
         {MIAMI ? <><MiamiTiles onReady={onReady} onCredits={setCredits} /><Clouds mode={mode} count={5} /></>
           : <><Suspense fallback={null}><Ground onReady={onReady} mode={mode} /></Suspense>
-        {ready && <><Clouds mode={mode} /><DistrictLabels toWorld={toWorld} />{false && !small && <TileLayer mode={mode} planeW={PLANE_W} planeH={PLANE_H} target={tileTarget} api={api} />}<CityLight mode={mode} api={api} /></>}</>}
+        {ready && <><Clouds mode={mode} /><DistrictLabels toWorld={toWorld} />{false && !small && <TileLayer mode={mode} planeW={PLANE_W} planeH={PLANE_H} target={tileTarget} api={api} />}<CityLight mode={mode} api={api} /><RealCity mode={mode} planeW={PLANE_W} planeH={PLANE_H} /></>}</>}
         {ready && entities.map((e) => <Beacon key={e.coin.mint} e={e} active={active === e.coin.mint || hovered === e.coin.mint} onHover={setHovered} onSelect={() => select(e.coin.mint)} />)}
         {ready && PLOTS.filter((p) => !takenPlots.has(p.id)).map((p) => <Lot key={p.id} p={p} onSelect={() => router.push("/launch")} onHover={(x, y) => setLotTip(x == null ? null : { plot: p, x, y: y! })} />)}
         <Controls entities={entities} selected={active} api={api} onWorld={setReal} />
@@ -385,7 +386,7 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
       </div>}
       <div className="absolute bottom-[18px] left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 max-md:bottom-3">
         <button type="button" onClick={() => api.current?.zoom(1.35)} className="grid size-9 place-items-center rounded-full border border-line bg-night/70 text-lg font-bold text-ink hover:bg-night/90" aria-label="Zoom out">−</button>
-        <span className="whitespace-nowrap rounded-full border border-line bg-night/70 px-3 py-1.5 text-[12px] font-semibold uppercase tracking-[.06em] text-haze max-xl:hidden">Drag to pan · scroll in to dive into real Miami · click a beacon</span>
+        <span className="whitespace-nowrap rounded-full border border-line bg-night/70 px-3 py-1.5 text-[12px] font-semibold uppercase tracking-[.06em] text-haze max-xl:hidden">Drag to pan · scroll to zoom · click a beacon</span>
         <button type="button" onClick={() => api.current?.zoom(0.74)} className="grid size-9 place-items-center rounded-full border border-line bg-night/70 text-lg font-bold text-ink hover:bg-night/90" aria-label="Zoom in">+</button>
       </div>
       {children}
