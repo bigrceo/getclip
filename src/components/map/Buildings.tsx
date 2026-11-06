@@ -124,13 +124,33 @@ export function Buildings({ mode, planeW, planeH }: { mode: Mode; planeW: number
   );
 }
 
-/** Sun + ambient so the boxes read in 3D; follows the mode. */
-export function CityLight({ mode }: { mode: Mode }) {
+/** Sun (with a shadow camera that follows the view) + ambient + room environment for PBR, following the mode. */
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+import { useThree } from "@react-three/fiber";
+export function CityLight({ mode, api }: { mode: Mode; api?: React.MutableRefObject<{ target: THREE.Vector3 } | null> }) {
   const sun = useRef<THREE.DirectionalLight>(null), amb = useRef<THREE.AmbientLight>(null);
+  const { gl, scene } = useThree();
+  useEffect(() => {
+    const pm = new THREE.PMREMGenerator(gl); const env = pm.fromScene(new RoomEnvironment(), 0.04).texture;
+    scene.environment = env; return () => { scene.environment = null; env.dispose(); pm.dispose(); };
+  }, [gl, scene]);
   useFrame(() => {
     const m = MODES[mode];
-    if (sun.current) { sun.current.color.lerp(new THREE.Color(m.sun), 0.05); sun.current.intensity += ((mode === "night" ? 0.35 : mode === "dusk" ? 1.6 : 2.2) - sun.current.intensity) * 0.05; sun.current.position.lerp(new THREE.Vector3(6, m.sunY + 3, -8), 0.05); }
-    if (amb.current) { amb.current.intensity += ((mode === "night" ? 0.9 : 1.5) - amb.current.intensity) * 0.05; amb.current.color.lerp(new THREE.Color(mode === "night" ? "#5a62c9" : "#ffffff"), 0.05); }
+    const s = sun.current;
+    if (s) {
+      s.color.lerp(new THREE.Color(m.sun), 0.05); s.intensity += ((mode === "night" ? 0.3 : mode === "dusk" ? 2.2 : 3.0) - s.intensity) * 0.05;
+      const t = api?.current?.target ?? new THREE.Vector3();
+      s.target.position.copy(t); s.target.updateMatrixWorld();
+      s.position.copy(t).add(new THREE.Vector3(4, m.sunY * 0.9 + 3, -5)); s.shadow.camera.updateProjectionMatrix();
+    }
+    if (amb.current) { amb.current.intensity += ((mode === "night" ? 0.7 : 1.1) - amb.current.intensity) * 0.05; amb.current.color.lerp(new THREE.Color(mode === "night" ? "#5a62c9" : "#ffffff"), 0.05); }
   });
-  return <><ambientLight ref={amb} intensity={1.5} /><directionalLight ref={sun} position={[6, 8, -8]} intensity={1.8} /></>;
+  return (
+    <>
+      <ambientLight ref={amb} intensity={1.1} />
+      <directionalLight ref={sun} position={[6, 8, -8]} intensity={2} castShadow shadow-mapSize={[2048, 2048]} shadow-bias={-0.0004} shadow-normalBias={0.02}
+        shadow-camera-left={-3.5} shadow-camera-right={3.5} shadow-camera-top={3.5} shadow-camera-bottom={-3.5} shadow-camera-near={0.5} shadow-camera-far={40} />
+      <mesh rotation-x={-Math.PI / 2} position-y={0.002} receiveShadow renderOrder={1}><planeGeometry args={[60, 60]} /><shadowMaterial transparent opacity={0.32} depthWrite={false} /></mesh>
+    </>
+  );
 }
