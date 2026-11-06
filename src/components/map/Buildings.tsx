@@ -69,7 +69,7 @@ export function Buildings({ mode, planeW, planeH }: { mode: Mode; planeW: number
   const facade = useMemo(() => facadeTexture(), []);
   const geo = useMemo(() => { const g = new THREE.BoxGeometry(1, 1, 1); g.translate(0, 0.5, 0); return g; }, []);
   const roofGeo = useMemo(() => { const g = new THREE.BoxGeometry(1, 1, 1); g.translate(0, 0.5, 0); return g; }, []);
-  const count = (data?.fps.length ?? 0) + (data?.lms.length ?? 0);
+  const count = data?.fps.length ?? 0;
   useEffect(() => {
     const m = body.current, r = roof.current; if (!m || !r || !data) return;
     const o = new THREE.Object3D(), col = new THREE.Color(), rc = new THREE.Color();
@@ -85,8 +85,9 @@ export function Buildings({ mode, planeW, planeH }: { mode: Mode; planeW: number
       r.setMatrixAt(i, o.matrix); r.setColorAt(i, roofC); i++;
     };
     for (const [cu, cv, w, d, rot, area] of data.fps) {
-      let h = 0;
-      for (const [lu, lv, lh] of lmPts) if (Math.abs(lu - cu) < 0.004 && Math.abs(lv - cv) < 0.004) h = Math.max(h, lh);
+      let h = 0, under = false;
+      for (const [lu, lv] of lmPts) if (Math.abs(lu - cu) < 0.003 && Math.abs(lv - cv) < 0.003) under = true;
+      if (under) continue;
       const district = districtOf(cu, cv);
       if (!h) {
         const core = Math.min(...CORES.map((c) => Math.hypot((c.u - cu) * 0.73, c.v - cv)));
@@ -99,12 +100,6 @@ export function Buildings({ mode, planeW, planeH }: { mode: Mode; planeW: number
       if (h > 90) col.lerp(new THREE.Color("#8fe3ff"), 0.45);
       rc.set(ROOFS[Math.floor(hash(cu * 3, cv * 7) * ROOFS.length) % ROOFS.length]);
       place(cu, cv, Math.max(w * planeW, 0.012), Math.max(d * planeH, 0.012), rot, h, col, rc);
-    }
-    for (const l of data.lms) {
-      const side = Math.max(l.w || 20, 18) * METER * 1.6;
-      col.set(["#39c6ea", "#4fd1c5", "#6c9dff", "#b388ff", "#ff6fa8"][Math.floor(hash(l.u, l.v) * 5)]);
-      rc.set("#ffffff");
-      place(l.u, l.v, side, side, 0, l.h, col, rc);
     }
     m.count = i; r.count = i;
     m.instanceMatrix.needsUpdate = true; r.instanceMatrix.needsUpdate = true;
