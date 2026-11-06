@@ -190,7 +190,7 @@ function Controls({ entities, selected, api }: { entities: Entity[]; selected: s
     c.mouseButtons = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE };
     c.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_ROTATE };
     c.panSpeed = 1.2; c.enableZoom = true; c.zoomToCursor = false;
-    c.minDistance = MIAMI ? 0.25 : 0.9; c.maxDistance = MIAMI ? 220 : 26; c.minPolarAngle = 0.15; c.maxPolarAngle = 1.05; c.minAzimuthAngle = -0.6; c.maxAzimuthAngle = 0.6; c.zoomSpeed = 0.8;
+    c.minDistance = MIAMI ? 0.2 : 0.9; c.maxDistance = MIAMI ? 120 : 26; c.minPolarAngle = 0.15; c.maxPolarAngle = 1.05; c.minAzimuthAngle = -0.6; c.maxAzimuthAngle = 0.6; c.zoomSpeed = 0.8;
     const [hx, , hz] = MIAMI ? [0, 0, 0] : toWorld(0.7, 0.53);
     const off = new THREE.Vector3(hx + (window.innerWidth < 700 ? 0.8 : 1.2), 0, hz + 0.6);
     c.target.copy(off); camera.position.add(off);
@@ -201,7 +201,7 @@ function Controls({ entities, selected, api }: { entities: Entity[]; selected: s
   const intro = useRef<{ from: THREE.Vector3; to: THREE.Vector3; t: number } | null>(null);
   useEffect(() => {
     const to = camera.position.clone();
-    const from = to.clone().add(MIAMI ? new THREE.Vector3(-20, 60, 50) : new THREE.Vector3(-8, 22, 18));
+    const from = to.clone().add(MIAMI ? new THREE.Vector3(-4, 10, 9) : new THREE.Vector3(-8, 22, 18));
     camera.position.copy(from); intro.current = { from, to, t: 0 }; controls.enabled = false;
   }, [camera, controls]);
   useEffect(() => () => controls.dispose(), [controls]);
@@ -342,8 +342,8 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
   const select = (m: string) => onActive(m);
   return (
     <div className="map-canvas absolute inset-0">
-      <Canvas dpr={[1, 2]} camera={{ position: small ? [0, 15, 6] : [0, 12.5, 9], fov: 42, near: MIAMI ? 0.02 : 0.1, far: MIAMI ? 900 : 260 }} gl={{ antialias: true }} shadows onPointerMissed={() => onActive(null)}>
-        <fog attach="fog" args={[MODES.dusk.fog, MIAMI ? 30 : 18, MIAMI ? 120 : 60]} />
+      <Canvas dpr={[1, 2]} camera={{ position: MIAMI ? (small ? [0, 3.2, 1.6] : [0, 2.4, 2.2]) : small ? [0, 15, 6] : [0, 12.5, 9], fov: 42, near: MIAMI ? 0.01 : 0.1, far: MIAMI ? 400 : 260 }} gl={{ antialias: true }} shadows onPointerMissed={() => onActive(null)}>
+        <fog attach="fog" args={[MODES.dusk.fog, MIAMI ? 40 : 18, MIAMI ? 260 : 60]} />
         <FogCtl mode={mode} />
         <Sky mode={mode} />
         <Sun mode={mode} />
