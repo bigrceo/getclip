@@ -331,6 +331,10 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
   const [mode, setMode] = useState<Mode>("day");
   const [lotTip, setLotTip] = useState<{ plot: Plot; x: number; y: number } | null>(null);
   const onReady = useMemo(() => () => setReady(true), []);
+  // The intro card never blocks the map: it lifts as soon as the ground is ready, or after 1.4 s at the latest.
+  const [lift, setLift] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setLift(true), 1400); return () => clearTimeout(t); }, [real]);
+  const shown = ready || lift;
   const select = (m: string) => onActive(m);
   return (
     <div className="map-canvas absolute inset-0">
@@ -350,7 +354,7 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
       </Canvas>
       <Pins entities={entities} slots={slots} hovered={hovered} selected={active} onHover={setHovered} onSelect={select} />
       <div className="map-vignette" aria-hidden="true" />
-      <div aria-hidden={ready} className={`pointer-events-none absolute inset-0 z-10 grid place-items-center transition-opacity duration-700 ${ready ? "opacity-0" : "opacity-100"}`} style={{ background: "radial-gradient(circle, #23104a, #0a0618)" }}>
+      <div aria-hidden={shown} className={`pointer-events-none absolute inset-0 z-10 grid place-items-center transition-opacity duration-500 ${shown ? "opacity-0" : "opacity-100"}`} style={{ background: "radial-gradient(circle, #23104a, #0a0618)" }}>
         <div className="text-center"><img src="/brand/pfp-512.png" alt="" width={96} height={96} className="mx-auto mb-4 rounded-[20px]" style={{ filter: "drop-shadow(0 0 24px rgba(255,61,139,.6))" }} /><p className="script">Flying into</p><p className="sec-title sunset-text">Leonida</p><p className="mt-3 text-[12px] font-semibold uppercase tracking-[.1em] text-haze">getclip.fun</p></div>
       </div>
       {MIAMI && <MiamiCredits credits={credits} />}
