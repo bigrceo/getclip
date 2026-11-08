@@ -201,7 +201,7 @@ function Controls({ entities, selected, api, onWorld }: { entities: Entity[]; se
       if (e.deltaY < 0) {
         if (window.scrollY > 4) return; // coming back up the page: keep scrolling
         e.preventDefault(); zoom(Math.exp(e.deltaY * 0.0045));
-      } else if (dist < controls.maxDistance - 0.01 && document.documentElement.dataset.introDone !== "0") {
+      } else if (dist < controls.maxDistance - 0.01) {
         e.preventDefault(); zoom(Math.exp(e.deltaY * 0.0045));
       }
     };
