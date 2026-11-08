@@ -88,7 +88,7 @@ export function MapHero({ coins, volumeSol }: { coins: Coin[]; volumeSol: number
         </aside>
   );
   return (
-    <section className="hero-over relative md:h-[calc(160svh-4rem)] md:min-h-[620px] max-md:flex max-md:flex-col max-md:pb-4">
+    <section className="relative md:h-[calc(160svh-4rem)] md:min-h-[620px] max-md:flex max-md:flex-col max-md:pb-4">
       <div ref={stage} className="intro-stage md:sticky md:top-16 md:h-[calc(100svh-4rem)] md:min-h-[620px] md:overflow-hidden max-md:relative max-md:h-[64svh] max-md:min-h-[420px]">
       <StateMap coins={coins} active={active} onActive={setActive}>
         <div className="hidden md:contents">{card}{rail}</div>
