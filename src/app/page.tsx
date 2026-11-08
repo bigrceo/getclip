@@ -5,6 +5,7 @@ import { Ticker } from "@/components/Ticker";
 import { LiveTrades } from "@/components/LiveTrades";
 import { CoinGrid } from "@/components/CoinGrid";
 import { MapHero } from "@/components/MapHero";
+import { LocalsSection } from "@/components/LocalsSection";
 import { Countdown } from "@/components/Countdown";
 import { CopyCA } from "@/components/CopyCA";
 
@@ -41,6 +42,12 @@ export default async function Home() {
           <p className="leading-[1.55] text-haze">Downtown never sleeps. The Keys never ask questions. Out in the swamp something with a gold chain runs the water, and up in the hills a hunter swears he saw it take a selfie.</p>
           <p className="leading-[1.55] text-haze">Fifty million players, a phone in every pocket, a fake brand on every corner. The first clip of each of them is a coin. {BRAND.state} is the map it all lands on.</p>
         </div>
+      </section>
+
+      <section id="locals" className="mx-auto max-w-[1160px] px-6 pt-[90px] max-md:px-4 max-md:pt-16">
+        <H2 script="Meet the">Locals</H2>
+        <p className="mb-6 mt-2.5 max-w-[720px] leading-[1.55] text-haze">A sunburnt peninsula of neon nights, swamp kings and bad decisions. Every face of {BRAND.state} is in 3D here, and every clip of them can become a coin.</p>
+        <LocalsSection />
       </section>
 
       <section id="launch" className="mx-auto max-w-[1160px] px-6 pt-[90px] max-md:px-4 max-md:pt-16">
