@@ -17,7 +17,6 @@ import { Island, LAND_Y } from "./map/Island";
 import { ClipBoard } from "./map/ClipBoards";
 import { RealCity } from "./map/RealCity";
 void RealCity;
-import { Landmarks } from "./map/Landmarks";
 import { districtOf } from "./map/districts";
 
 // ---- Yanis V16 GTA VI community map (gtadb.org, CC BY 4.0), island crop stitched from the z5 tiles: 6118×8192 ----
@@ -339,7 +338,7 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
         <Sun mode={mode} />
         {MIAMI ? <><MiamiTiles onReady={onReady} onCredits={setCredits} /><Clouds mode={mode} count={5} /></>
           : <><Suspense fallback={null}><Ground onReady={onReady} mode={mode} /></Suspense>
-        {ready && <><DistrictLabels toWorld={toWorld} /><CityLight mode={mode} api={api} /><Landmarks mode={mode} planeW={PLANE_W} planeH={PLANE_H} /></>}</>}
+        {ready && <><DistrictLabels toWorld={toWorld} /><CityLight mode={mode} api={api} /></>}</>}
         {ready && entities.map((e) => <Beacon key={e.coin.mint} e={e} active={active === e.coin.mint || hovered === e.coin.mint} onHover={setHovered} onSelect={() => select(e.coin.mint)} />)}
         {ready && !MIAMI && entities.map((e) => { const [x, , z] = toWorld(e.plot.u, e.plot.v); return <group key={`b${e.coin.mint}`} position-y={LAND_Y}><ClipBoard coin={e.coin} x={x} z={z} main={e.main} active={active === e.coin.mint || hovered === e.coin.mint} onHover={setHovered} onSelect={() => select(e.coin.mint)} /></group>; })}
         {ready && PLOTS.filter((p) => !takenPlots.has(p.id)).map((p) => <Lot key={p.id} p={p} onSelect={() => router.push("/launch")} onHover={(x, y) => setLotTip(x == null ? null : { plot: p, x, y: y! })} />)}
