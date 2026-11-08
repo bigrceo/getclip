@@ -14,7 +14,7 @@ import { PalmBackdrop } from "./PalmBackdrop";
 
 export type Local = { id: string; name: string; ticker: string; role: string; bio: string; file: string; credit: string; creditUrl: string; height?: number; view?: "full" | "bust"; fade?: boolean; cam?: number };
 export const LOCALS: Local[] = [
-  { id: "lucia", name: "Lucia", ticker: "LUCIA", role: "Out on parole", bio: "Did her time, kept her fists taped. Fresh out and done waiting for anyone to hand her a way up.", file: "/models/lucia.glb", credit: "BakhtiarSource", creditUrl: "https://sketchfab.com/3d-models/lucia-caminos-gta-vi-17902730e81b48f4a70cbc53e5387526", view: "bust", fade: true, cam: 2.1 },
+  { id: "lucia", name: "Lucia", ticker: "LUCIA", role: "Out on parole", bio: "Did her time, kept her fists taped. Fresh out and done waiting for anyone to hand her a way up.", file: "/models/lucia2.glb", credit: "pariuudit", creditUrl: "https://sketchfab.com/3d-models/lucia-8973f1637b0c44848279895e91a96ea3", view: "full", height: 1.0, fade: true, cam: 2.3 },
   { id: "jason", name: "Jason", ticker: "JASON", role: "Keys runner", bio: "Ex-army, now moving boats through the Keys for people who pay cash. Wants out of the small jobs.", file: "/models/jason-bust.glb", credit: "Sketchfab community", creditUrl: "https://sketchfab.com/search?q=jason+duval+gta+vi&type=models", view: "full", height: 1.0, fade: true, cam: 2.3 },
 ];
 
