@@ -24,8 +24,9 @@ export function MapHero({ coins, volumeSol }: { coins: Coin[]; volumeSol: number
     let raf = 0;
     const apply = () => {
       raf = 0;
-      const span = Math.max(240, window.innerHeight * 0.6);
-      const p = mq.matches ? Math.min(1, Math.max(0, window.scrollY / span)) : 1;
+      const sec = el.parentElement!; const r = sec.getBoundingClientRect(); const header = 64;
+      const span = Math.max(240, r.height - el.offsetHeight);
+      const p = mq.matches ? Math.min(1, Math.max(0, (header - r.top) / span)) : 1;
       el.style.setProperty("--p", p.toFixed(4));
       document.documentElement.dataset.introDone = p >= 0.999 ? "1" : "0";
     };

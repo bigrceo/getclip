@@ -171,3 +171,9 @@ body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
   .intro-card { transform: translate3d(0, calc((1 - var(--p)) * 140%), 0); opacity: var(--p); will-change: transform, opacity; }
   .intro-rail { transform: translate3d(calc((1 - var(--p)) * 140%), 0, 0); opacity: var(--p); will-change: transform, opacity; }
 }
+
+/* Opening scene: --q 0 → 1 while pinned. Title fades early, palms push in, the veil closes at the end of the zoom. */
+.intro3d { --q: 0; }
+.intro3d .intro-title { opacity: calc(1 - var(--q) * 2.2); transform: translate3d(0, calc(var(--q) * 60px), 0); }
+.intro3d .intro-veil { opacity: clamp(0, calc((var(--q) - 0.78) / 0.22), 1); }
+.intro3d > div:first-child { transform: scale(calc(1 + var(--q) * 0.35)); transform-origin: 50% 62%; }
