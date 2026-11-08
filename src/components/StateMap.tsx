@@ -173,7 +173,7 @@ function Controls({ entities, selected, api, onWorld }: { entities: Entity[]; se
     c.mouseButtons = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE };
     c.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_ROTATE };
     c.panSpeed = 1.2; c.enableZoom = true; c.zoomToCursor = false;
-    c.minDistance = MIAMI ? 0.2 : 0.9; c.maxDistance = MIAMI ? 320 : 26; c.minPolarAngle = 0.15; c.maxPolarAngle = 1.05; c.minAzimuthAngle = -0.6; c.maxAzimuthAngle = 0.6; c.zoomSpeed = 0.8;
+    c.minDistance = MIAMI ? 0.2 : 0.9; c.maxDistance = MIAMI ? 320 : (window.innerWidth < 700 ? 11 : 13); c.minPolarAngle = 0.15; c.maxPolarAngle = 1.05; c.minAzimuthAngle = -0.6; c.maxAzimuthAngle = 0.6; c.zoomSpeed = 0.8;
     const [hx, , hz] = MIAMI ? (pendingFocus.world ?? [0, 0, 0]) : (pendingFocus.world ?? toWorld(0.7, 0.53));
     const off = new THREE.Vector3(hx + (window.innerWidth < 700 ? 0.8 : 1.2), MIAMI ? 0 : LAND_Y, hz + 0.6);
     c.target.copy(off); camera.position.add(off);
@@ -184,7 +184,7 @@ function Controls({ entities, selected, api, onWorld }: { entities: Entity[]; se
   const intro = useRef<{ from: THREE.Vector3; to: THREE.Vector3; t: number } | null>(null);
   useEffect(() => {
     const to = camera.position.clone();
-    const from = to.clone().add(pendingFocus.world || MIAMI ? new THREE.Vector3(-1, 3, 2.5) : new THREE.Vector3(-8, 22, 18));
+    const from = to.clone().add(pendingFocus.world || MIAMI ? new THREE.Vector3(-1, 3, 2.5) : new THREE.Vector3(-2.5, 7, 5.5));
     camera.position.copy(from); intro.current = { from, to, t: 0 }; controls.enabled = false;
   }, [camera, controls]);
   useEffect(() => () => controls.dispose(), [controls]);
@@ -233,7 +233,9 @@ function Controls({ entities, selected, api, onWorld }: { entities: Entity[]; se
     if (CAN_REAL && !intro.current) {
       void dist; void onWorld; // worlds switch only from the toggle
     }
-    const LX = MIAMI ? 220 : PLANE_W / 2, LZ = MIAMI ? 220 : PLANE_H / 2;
+    // Keep the whole view on the map: the farther the camera, the smaller the area the target may roam.
+    const vis = MIAMI ? 0 : dist * 0.62;
+    const LX = MIAMI ? 220 : Math.max(0.2, PLANE_W / 2 - vis), LZ = MIAMI ? 220 : Math.max(0.2, PLANE_H / 2 - vis * 0.9);
     const dx = THREE.MathUtils.clamp(t.x, -LX, LX) - t.x, dz = THREE.MathUtils.clamp(t.z, -LZ, LZ) - t.z;
     if (dx || dz) { t.x += dx; t.z += dz; camera.position.x += dx; camera.position.z += dz; }
     controls.update();
@@ -332,7 +334,7 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
   const select = (m: string) => onActive(m);
   return (
     <div className="map-canvas absolute inset-0">
-      <Canvas key={real ? "real" : "leonida"} dpr={[1, 2]} camera={{ position: MIAMI ? (small ? [0, 3.2, 1.6] : [0, 2.4, 2.2]) : small ? [0, 15, 6] : [0, 12.5, 9], fov: 42, near: MIAMI ? 0.01 : 0.1, far: MIAMI ? 2000 : 260 }} gl={{ antialias: true }} shadows onPointerMissed={() => onActive(null)}>
+      <Canvas key={real ? "real" : "leonida"} dpr={[1, 1.5]} camera={{ position: MIAMI ? (small ? [0, 3.2, 1.6] : [0, 2.4, 2.2]) : small ? [0, 9.5, 4.5] : [0, 9.5, 7], fov: 42, near: MIAMI ? 0.01 : 0.1, far: MIAMI ? 2000 : 260 }} gl={{ antialias: true }} shadows onPointerMissed={() => onActive(null)}>
         <fog attach="fog" args={[MODES.dusk.fog, MIAMI ? 150 : 18, MIAMI ? 1200 : 60]} />
         <FogCtl mode={mode} />
         <Sky mode={mode} />

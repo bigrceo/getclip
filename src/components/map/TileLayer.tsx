@@ -43,14 +43,14 @@ export function TileLayer({ mode, planeW, planeH, api }: { mode: Mode; planeW: n
     // shared fade: 0 while the layer is hidden, 1 once revealed
     const tint = new THREE.Color(MODES[mode].tint);
     const want = shown.length ? 1 : 0;
-    fade.current += (want - fade.current) * Math.min(1, dt * 4);
+    fade.current += (want - fade.current) * Math.min(1, dt * 2.5);
     for (const m of mats.current.values()) { m.opacity = fade.current; m.color.lerp(tint, 0.1); }
     if (clock.elapsedTime - last.current.at < 0.2) return;
     last.current.at = clock.elapsedTime;
     if (api.current) target.copy(api.current.target);
     const dist = camera.position.distanceTo(target);
     // start fetching far out (the base map still looks fine there), reveal when close
-    const r = dist < 2 ? 7 : dist < 3.5 ? 8 : dist < 6 ? 7 : dist < 9 ? 6 : 0;
+    const r = dist < 2 ? 7 : dist < 3.5 ? 8 : dist < 6 ? 7 : 6; // always prefetching: the zoom-out cap keeps us near the map
     const ci = Math.floor((target.x + planeW / 2) / tw), cj = Math.floor((target.z + planeH / 2) / th);
     const sig = r ? `${r}:${ci}:${cj}` : "";
     if (sig !== last.current.sig) {
@@ -67,10 +67,10 @@ export function TileLayer({ mode, planeW, planeH, api }: { mode: Mode; planeW: n
       pending.current = { tiles, since: clock.elapsedTime };
     }
     const p = pending.current;
-    if (p && dist < 7.5) {
+    if (p && dist < 8.5) {
       const ready = p.tiles.filter((t) => cache.get(t.k)?.ready).length;
-      // reveal once 92 % decoded, or after 1.2 s whatever is there (then the rest fades in as it lands)
-      if (ready >= p.tiles.length * 0.92 || clock.elapsedTime - p.since > 1.2) { setShown(p.tiles); pending.current = null; }
+      // reveal only once every tile is decoded (no square-by-square), with a 3 s safety
+      if (ready === p.tiles.length || clock.elapsedTime - p.since > 3) { setShown(p.tiles); pending.current = null; }
     }
   });
   useEffect(() => () => { mats.current.clear(); }, []);

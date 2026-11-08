@@ -158,3 +158,8 @@ body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
 .route i::after { content: ""; position: absolute; right: -2px; top: -5px; border: 6px solid transparent; border-left-color: var(--color-orange); }
 .num-badge { width: 40px; height: 40px; flex: none; display: grid; place-items: center; border-radius: 50%; background: var(--sunset); color: #1a0b26; font-family: var(--font-sign); font-size: 22px; }
 .wave { display: inline-block; text-transform: uppercase; letter-spacing: 1px; font-size: 11px; font-weight: 800; color: #1a0b26; background: var(--sunset); border-radius: 999px; padding: 2px 8px; }
+
+/* Meet the Locals: GTA VI sunset backdrop */
+.locals-bg { background: linear-gradient(170deg, #2a0f4e 0%, #6a1d8f 38%, #d6298b 68%, #ff8c46 100%); }
+.locals-sun { position: absolute; left: 50%; top: 58%; width: 62%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; background: radial-gradient(circle, rgba(255,214,120,.95), rgba(255,140,70,.55) 45%, transparent 70%); filter: blur(6px); }
+.locals-palms { position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 16px, rgba(255,255,255,.035) 16px 17px); mix-blend-mode: overlay; }

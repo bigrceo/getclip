@@ -3,7 +3,7 @@
  * Meet the Locals, in 3D: fan-made GTA VI character models (glTF, CC BY, see LOCALS[].credit) spinning in their own
  * card. Each model only loads when its card scrolls into view; a card whose file is missing shows a silhouette.
  */
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useLoader } from "@react-three/fiber";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
@@ -11,13 +11,14 @@ import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 
-export type Local = { id: string; name: string; ticker: string; role: string; bio: string; file: string; credit: string; creditUrl: string; height?: number };
+export type Local = { id: string; name: string; ticker: string; role: string; bio: string; file: string; credit: string; creditUrl: string; height?: number; view?: "full" | "bust"; fade?: boolean; cam?: number };
 export const LOCALS: Local[] = [
   { id: "lucia", name: "Lucia", ticker: "LUCIA", role: "Out on parole", bio: "Did her time, kept her fists taped. Fresh out and done waiting for anyone to hand her a way up.", file: "/models/lucia.glb", credit: "BakhtiarSource", creditUrl: "https://sketchfab.com/3d-models/lucia-caminos-gta-vi-17902730e81b48f4a70cbc53e5387526" },
   { id: "jason", name: "Jason", ticker: "JASON", role: "Keys runner", bio: "Ex-army, now moving boats through the Keys for people who pay cash. Wants out of the small jobs.", file: "/models/jason.glb", credit: "BakhtiarSource", creditUrl: "https://sketchfab.com/3d-models/jason-duval-gta-vi-e6eefc3185fb4bcda7cdf9753924e162" },
-  { id: "jason-bust", name: "Jason, up close", ticker: "JASON", role: "Portrait", bio: "The face that sells the Keys. Cap on backwards, eyes on the money.", file: "/models/jason-bust.glb", credit: "Sketchfab community", creditUrl: "https://sketchfab.com/search?q=jason+duval+gta+vi&type=models" },
-  { id: "duo", name: "Lucia & Jason", ticker: "BONNIE", role: "Partners in crime", bio: "Two people who should never have met, in the one state where it was always going to happen.", file: "/models/duo.glb", credit: "BakhtiarSource", creditUrl: "https://sketchfab.com/3d-models/lucia-caminos-jason-duval-3adea72a5e6f41849c60a282fbac196e", height: 1.8 },
+  { id: "lucia-bust", name: "Lucia, up close", ticker: "LUCIA", role: "Portrait", bio: "Gold chain, taped knuckles, a look that already knows how the night ends.", file: "/models/lucia.glb", credit: "BakhtiarSource", creditUrl: "https://sketchfab.com/3d-models/lucia-caminos-gta-vi-17902730e81b48f4a70cbc53e5387526", view: "bust", fade: true, cam: 1.25 },
+  { id: "jason-bust", name: "Jason, up close", ticker: "JASON", role: "Portrait", bio: "The face that sells the Keys. Cap on backwards, eyes on the money.", file: "/models/jason-bust.glb", credit: "Sketchfab community", creditUrl: "https://sketchfab.com/search?q=jason+duval+gta+vi&type=models", view: "full", height: 1.0, fade: true, cam: 2.3 },
 ];
+
 
 
 function setupLoader(l: GLTFLoader) {
@@ -25,20 +26,24 @@ function setupLoader(l: GLTFLoader) {
   l.setDRACOLoader(draco); l.setMeshoptDecoder(MeshoptDecoder);
 }
 
-function Model({ url, height = 1.8 }: { url: string; height?: number }) {
+function Model({ url, height = 1.8, view = "full" }: { url: string; height?: number; view?: "full" | "bust" }) {
   const gltf = useLoader(GLTFLoader, url, setupLoader);
+  // useLoader caches by URL: two cards showing the same file each need their own copy of the scene graph
+  const scene = useMemo(() => gltf.scene.clone(true), [gltf]);
   const g = useRef<THREE.Group>(null);
   const [fit, setFit] = useState<{ s: number; y: number } | null>(null);
   useEffect(() => {
-    const box = new THREE.Box3().setFromObject(gltf.scene); const size = new THREE.Vector3(); box.getSize(size); const c = new THREE.Vector3(); box.getCenter(c);
+    scene.position.set(0, 0, 0);
+    const box = new THREE.Box3().setFromObject(scene); const size = new THREE.Vector3(); box.getSize(size); const c = new THREE.Vector3(); box.getCenter(c);
     const s = height / Math.max(size.y, 1e-3);
-    gltf.scene.position.set(-c.x, -box.min.y, -c.z);
-    gltf.scene.traverse((o) => { if ((o as THREE.Mesh).isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    scene.position.set(-c.x, -box.min.y, -c.z);
+    scene.traverse((o) => { if ((o as THREE.Mesh).isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     setFit({ s, y: 0 });
-  }, [gltf, height]);
+  }, [scene, height]);
   useFrame((_, dt) => { if (g.current) g.current.rotation.y += dt * 0.45; });
   if (!fit) return null;
-  return <group ref={g} scale={fit.s} position-y={-height / 2}><primitive object={gltf.scene} /></group>;
+  // full: whole body centred; bust: the top ~32 % of the model (head and shoulders) centred, the rest fades out below
+  return <group ref={g} scale={fit.s} position-y={view === "bust" ? -height * 0.9 : -height / 2}><primitive object={scene} /></group>;
 }
 
 function Env() {
@@ -48,13 +53,13 @@ function Env() {
 
 function Viewer({ local, active }: { local: Local; active: boolean }) {
   return (
-    <Canvas dpr={[1, 1.5]} camera={{ position: [0, 0.1, 4.5], fov: 30 }} frameloop={active ? "always" : "never"} gl={{ antialias: true, alpha: true }} shadows style={{ background: "transparent" }}>
+    <Canvas dpr={[1, 1.5]} camera={{ position: [0, local.view === "bust" ? 0.02 : 0.1, local.cam ?? 4.5], fov: 30 }} frameloop={active ? "always" : "never"} gl={{ antialias: true, alpha: true }} shadows style={{ background: "transparent" }}>
       <Env />
       <ambientLight intensity={0.5} />
       <directionalLight position={[2.5, 4, 3]} intensity={2.2} castShadow shadow-mapSize={[1024, 1024]} />
       <directionalLight position={[-3, 2, -2]} intensity={0.8} color="#ff5fa8" />
-      <Suspense fallback={null}><Model url={local.file} height={local.height} /></Suspense>
-      <mesh rotation-x={-Math.PI / 2} position-y={-0.9} receiveShadow><circleGeometry args={[1.1, 48]} /><shadowMaterial transparent opacity={0.35} /></mesh>
+      <Suspense fallback={null}><Model url={local.file} height={local.height} view={local.view} /></Suspense>
+      {!local.fade && <mesh rotation-x={-Math.PI / 2} position-y={-0.9} receiveShadow><circleGeometry args={[1.1, 48]} /><shadowMaterial transparent opacity={0.35} /></mesh>}
     </Canvas>
   );
 }
@@ -71,13 +76,16 @@ function Card({ local }: { local: Local }) {
   }, []);
   return (
     <div ref={ref} className="glass overflow-hidden">
-      <div className="relative aspect-[4/5]" style={{ background: "radial-gradient(80% 60% at 50% 70%, rgba(255,61,139,.28), transparent 70%), linear-gradient(#2a0f4e, #0d0720)" }}>
+      <div className="locals-bg relative aspect-[4/5] overflow-hidden">
+        <div className="locals-sun" aria-hidden="true" />
+        <div className="locals-palms" aria-hidden="true" />
         {exists && visible ? <Viewer local={local} active={visible} /> : (
           <div className="absolute inset-0 grid place-items-center">
             <div className="h-[62%] w-[34%] rounded-t-full bg-black/45" style={{ clipPath: "polygon(30% 0, 70% 0, 72% 18%, 95% 28%, 100% 100%, 0 100%, 5% 28%, 28% 18%)" }} />
             {exists === false && <span className="absolute bottom-3 text-[11px] font-semibold uppercase tracking-[.1em] text-haze">3D model coming</span>}
           </div>
         )}
+        {local.fade && <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[42%]" style={{ background: "linear-gradient(to bottom, transparent, rgba(13,7,32,.92) 70%, #0d0720)" }} aria-hidden="true" />}
       </div>
       <div className="p-[18px]">
         <p className="label text-sun">${local.ticker} · {local.role}</p>
