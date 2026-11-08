@@ -19,7 +19,7 @@ function setupLoader(l: GLTFLoader) {
   l.setDRACOLoader(draco); l.setMeshoptDecoder(MeshoptDecoder);
 }
 
-function Head({ url, height, x, y = 0, z, yaw, dim = 1 }: { url: string; height: number; x: number; y?: number; z: number; yaw: number; dim?: number }) {
+function Head({ url, height, x, y = 0, z, yaw, turn = 0, progress, dim = 1 }: { url: string; height: number; x: number; y?: number; z: number; yaw: number; turn?: number; progress?: React.MutableRefObject<number>; dim?: number }) {
   const gltf = useLoader(GLTFLoader, url, setupLoader);
   const scene = useMemo(() => gltf.scene.clone(true), [gltf]);
   const g = useRef<THREE.Group>(null);
@@ -37,7 +37,13 @@ function Head({ url, height, x, y = 0, z, yaw, dim = 1 }: { url: string; height:
     });
     setS(height / Math.max(size.y, 1e-3));
   }, [scene, height, dim]);
-  useFrame(({ clock }) => { if (g.current) g.current.rotation.y = yaw + Math.sin(clock.elapsedTime * 0.5 + x) * 0.06; });
+  // Scroll-driven head turn (Rockstar scrubs a frame sequence; here the model itself turns), plus a faint idle sway.
+  useFrame(({ clock }) => {
+    if (!g.current) return;
+    const q = progress?.current ?? 0, e = q * q * (3 - 2 * q);
+    g.current.rotation.y = yaw + turn * e + Math.sin(clock.elapsedTime * 0.5 + x) * 0.04;
+    g.current.rotation.x = -0.06 * e;
+  });
   return <group ref={g} position={[x, -height / 2 + y, z]} scale={s}><primitive object={scene} /></group>;
 }
 
@@ -86,8 +92,8 @@ export function IntroScene() {
             <directionalLight position={[2.5, 4, 3]} intensity={2.2} castShadow shadow-mapSize={[1024, 1024]} />
             <directionalLight position={[-3, 2, -2]} intensity={0.8} color="#ff5fa8" />
             <Suspense fallback={null}>
-              <Head url="/models/lucia2.glb" height={0.66} x={-0.42} y={-0.16} z={0.1} yaw={0.35} dim={0.82} />
-              <Head url="/models/jason-bust.glb" height={1.0} x={0.38} y={-0.12} z={-0.15} yaw={-0.3} />
+              <Head url="/models/lucia2.glb" height={0.66} x={-0.42} y={-0.16} z={0.1} yaw={0.55} turn={-0.45} progress={progress} dim={0.82} />
+              <Head url="/models/jason-bust.glb" height={1.0} x={0.38} y={-0.12} z={-0.15} yaw={-0.75} turn={0.95} progress={progress} />
             </Suspense>
           </Canvas>
         </div>}
