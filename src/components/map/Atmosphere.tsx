@@ -141,12 +141,23 @@ function labelTexture(text: string, sub?: string) {
 export function DistrictLabels({ toWorld }: { toWorld: (u: number, v: number) => [number, number, number] }) {
   const texs = useMemo(() => DISTRICTS.filter((d) => d.big).map((d) => labelTexture(d.name.toUpperCase(), d.sub)), []);
   const group = useRef<THREE.Group>(null);
-  const camera = useThree((s) => s.camera);
+  const camera = useThree((s) => s.camera), size = useThree((s) => s.size);
+  const v = useMemo(() => new THREE.Vector3(), []);
   useFrame(() => {
     const g = group.current; if (!g) return;
-    const d = camera.position.length();
-    const o = THREE.MathUtils.clamp((d - 5) / 8, 0, 1); // fade out when close
-    g.children.forEach((c) => { const m = (c as THREE.Sprite).material as THREE.SpriteMaterial; m.opacity += (o * 0.95 - m.opacity) * 0.1; });
+    // Zoom fade: camera height stands in for zoom (the tilt is bounded). Gone below ~3.2, full above ~6.
+    const zoomFade = THREE.MathUtils.smoothstep(camera.position.y, 3.2, 6.2);
+    // Panel fade: the hero card (left) and the rail (right) sit over the canvas; a label sliding under them fades instead of being cut.
+    const wide = size.width >= 1200;
+    const leftEdge = wide ? 680 : 0, rightEdge = wide ? size.width - 440 : size.width;
+    g.children.forEach((c) => {
+      const m = (c as THREE.Sprite).material as THREE.SpriteMaterial;
+      v.copy(c.position).project(camera);
+      const sx = (v.x + 1) / 2 * size.width;
+      const edge = Math.min(THREE.MathUtils.smoothstep(sx - leftEdge, -40, 160), THREE.MathUtils.smoothstep(rightEdge - sx, -40, 160));
+      const o = zoomFade * edge * 0.95;
+      m.opacity += (o - m.opacity) * 0.12;
+    });
   });
   return (
     <group ref={group}>
