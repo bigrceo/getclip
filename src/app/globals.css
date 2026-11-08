@@ -179,9 +179,19 @@ body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
 /* the map hero rises over the pinned opening, rounded like Rockstar's card */
 .hero-over { position: relative; z-index: 2; margin-top: -22svh; border-radius: 28px 28px 0 0; overflow: hidden; box-shadow: 0 -30px 80px rgba(0,0,0,.45); }
 
-/* Opening (JS Mastery GTA VI mechanics): logo mask closes over the zooming background, then the hero fades; the video stage fades in and is scrubbed by scroll */
-.opening-hero { --scale: 1.25; --mask: 3500%; --fade: 1; --heroOpacity: 1; opacity: var(--heroOpacity); }
-.opening-mask { -webkit-mask-image: url("/brand/logo-mask.png"); mask-image: url("/brand/logo-mask.png"); -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: 50% 22%; mask-position: 50% 22%; -webkit-mask-size: var(--mask) var(--mask); mask-size: var(--mask) var(--mask); }
-.opening-bg { transform: scale(var(--scale)); transform-origin: 50% 50%; will-change: transform; }
-.opening-logo { opacity: var(--fade); filter: drop-shadow(0 8px 30px rgba(255,61,139,.5)); }
-.opening-video { --vidOpacity: 0; opacity: var(--vidOpacity); background: #0d0720; }
+/* Landing (port of the JS Mastery GTA VI landing): hero mask, entrance wipe, scrubbed clips, person sections */
+.landing { background: linear-gradient(223.17deg, rgb(28,24,41) 0%, rgb(27,24,40) 8.61%, rgb(25,23,36) 17.21%, rgb(22,21,32) 25.82%, rgb(20,19,28) 34.42%, rgb(18,18,24) 43.03%, rgb(17,17,23) 51.63%); }
+.landing-hero { --fadeOut: 1; --scale: 1.25; --mask: 3500%; --mx: 19.6%; --my: 56.5%; --maskOpacity: 1; --entrance: 0%; --heroOpacity: 1; opacity: var(--heroOpacity); background: #0d0720; }
+.landing-mask { opacity: var(--maskOpacity); -webkit-mask-image: url("/brand/logo-mask.png"); mask-image: url("/brand/logo-mask.png"); -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: var(--mx) var(--my); mask-position: var(--mx) var(--my); -webkit-mask-size: var(--mask) var(--mask); mask-size: var(--mask) var(--mask); }
+.landing-bg { transform: scale(var(--scale)); transform-origin: 50% 50%; will-change: transform; }
+.landing-fade { opacity: var(--fadeOut); }
+.landing-entrance { -webkit-mask-image: radial-gradient(circle at 50% 0vh, black var(--entrance), transparent calc(var(--entrance) * 2)); mask-image: radial-gradient(circle at 50% 0vh, black var(--entrance), transparent calc(var(--entrance) * 2)); }
+.landing-vid { --vid: 0; --vidOut: 1; opacity: calc(var(--vid) * var(--vidOut)); background: #120a24; }
+.landing-final { --fin: 0; --finOut: 1; opacity: calc(var(--fin) * var(--finOut)); transform: scale(calc(1.1 - 0.1 * var(--fin))); }
+.gradient-title { font-family: var(--font-sign); text-transform: uppercase; font-weight: 800; font-size: 8rem; line-height: 7rem; text-align: center; background: linear-gradient(90deg, #f472b6, #f87171, #fb923c); -webkit-background-clip: text; background-clip: text; color: transparent; }
+@media (max-width: 768px) { .gradient-title { font-size: 5rem; line-height: 4.5rem; } }
+.landing-person h1 { color: #fff9cb; font-family: var(--font-sign); text-transform: uppercase; font-size: 6rem; line-height: 1; margin-bottom: 5rem; }
+.landing-person h2 { color: #ffb0c4; font-size: 3rem; line-height: 1.1; margin-bottom: 1.75rem; padding-right: 5rem; }
+.landing-person p { color: #fff; font-size: 1.5rem; line-height: 1.4; padding-right: 7rem; }
+.landing-person .person-content { background: radial-gradient(ellipse, #111117 20%, transparent 70%); }
+@media (max-width: 768px) { .landing-person h1 { font-size: 4rem; } .landing-person h2 { font-size: 1.875rem; padding-right: 2.5rem; } .landing-person p { font-size: 1.125rem; padding-right: 3.5rem; } }

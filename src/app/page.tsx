@@ -6,7 +6,7 @@ import { LiveTrades } from "@/components/LiveTrades";
 import { CoinGrid } from "@/components/CoinGrid";
 import { MapHero } from "@/components/MapHero";
 import { LocalsSection } from "@/components/LocalsSection";
-import { Opening } from "@/components/Opening";
+import { Landing } from "@/components/Landing";
 import { Countdown } from "@/components/Countdown";
 import { CopyCA } from "@/components/CopyCA";
 
@@ -21,7 +21,8 @@ export default async function Home() {
   const volume = byMcap.reduce((a, c) => a + (c.volumeSol || 0), 0);
   return (
     <>
-      <Opening />
+      <Landing />
+      <div id="map" />
       <MapHero coins={byMcap} volumeSol={volume} />
       <Ticker coins={byMcap} />
       <section className="mx-auto max-w-[1680px] px-4 py-6">
