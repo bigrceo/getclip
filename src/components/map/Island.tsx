@@ -1,49 +1,49 @@
 "use client";
 /**
- * Leonida as an architect's model: the fan map (Yanis V17, gtadb.org, CC BY 4.0) on a thick island slab displaced out of
- * the water by public/map/landmask.png, lit and shadowed like a tabletop diorama. Cliffs (steep normals) read as sand/rock.
+ * Leonida: the Yanis V17 community map (gtadb.org, CC BY 4.0) on a flat, unlit plane so it stays as crisp and bright as the
+ * source. The 4K version paints first (preloaded by the layout), the 8K swaps in silently once decoded.
  */
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { MODES, type Mode } from "./Atmosphere";
 
-export const LAND_Y = 0.14;          // top of the slab
-const BASE_Y = -0.06;                // water-level vertices sit under the ocean
+export const LAND_Y = 0;
+
+function edgeMask() {
+  const c = document.createElement("canvas"); c.width = 512; c.height = 512; const g = c.getContext("2d")!;
+  g.fillStyle = "#000"; g.fillRect(0, 0, 512, 512);
+  const f = 40;
+  for (const [x0, y0, x1, y1, h] of [[0, 0, 512, f, true], [0, 512 - f, 512, 512, true], [0, 0, f, 512, false], [512 - f, 0, 512, 512, false]] as [number, number, number, number, boolean][]) {
+    const gr = h ? g.createLinearGradient(0, y0, 0, y1) : g.createLinearGradient(x0, 0, x1, 0);
+    const out = h ? y0 === 0 : x0 === 0;
+    gr.addColorStop(0, out ? "#000" : "#fff"); gr.addColorStop(1, out ? "#fff" : "#000");
+    g.fillStyle = gr; g.fillRect(x0, y0, x1 - x0, y1 - y0);
+  }
+  g.fillStyle = "#fff"; g.fillRect(f, f, 512 - 2 * f, 512 - 2 * f);
+  return new THREE.CanvasTexture(c);
+}
 
 export function Island({ mode, planeW, planeH, onReady }: { mode: Mode; planeW: number; planeH: number; onReady: () => void }) {
   const small = typeof window !== "undefined" && window.innerWidth < 900;
-  const [map, height, normal] = useLoader(THREE.TextureLoader, [small ? "/map/yanis-4k.jpg" : "/map/yanis-8k.jpg", "/map/landmask.png", "/map/landnormal.png"]);
+  const map4k = useLoader(THREE.TextureLoader, "/map/yanis-4k.jpg");
   const gl = useThree((s) => s.gl);
-  useMemo(() => {
-    map.colorSpace = THREE.SRGBColorSpace; map.anisotropy = gl.capabilities.getMaxAnisotropy(); map.generateMipmaps = true; map.minFilter = THREE.LinearMipmapLinearFilter;
-    for (const t of [height, normal]) { t.colorSpace = THREE.NoColorSpace; t.minFilter = THREE.LinearFilter; t.magFilter = THREE.LinearFilter; }
-  }, [map, height, normal, gl]);
-  const mat = useRef<THREE.MeshStandardMaterial>(null);
-  const seg = small ? [360, 490] : [720, 980];
+  const mat = useRef<THREE.MeshBasicMaterial>(null);
+  const mask = useMemo(() => edgeMask(), []);
+  const prep = (t: THREE.Texture) => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = gl.capabilities.getMaxAnisotropy(); t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter; return t; };
+  useMemo(() => prep(map4k), [map4k]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { onReady(); }, [onReady]);
-  useFrame(() => {
-    const m = mat.current; if (!m) return;
-    m.color.lerp(new THREE.Color(MODES[mode].tint).multiplyScalar(mode === "day" ? 0.72 : 0.8), 0.05);
-  });
+  useEffect(() => {
+    if (small) return;
+    let alive = true;
+    new THREE.TextureLoader().load("/map/yanis-8k.jpg", (t) => { if (!alive || !mat.current) return; mat.current.map = prep(t); mat.current.needsUpdate = true; });
+    return () => { alive = false; };
+  }, [small]); // eslint-disable-line react-hooks/exhaustive-deps
+  useFrame(() => { mat.current?.color.lerp(new THREE.Color(MODES[mode].tint), 0.05); });
   return (
-    <mesh rotation-x={-Math.PI / 2} receiveShadow castShadow renderOrder={0}>
-      <planeGeometry args={[planeW, planeH, seg[0], seg[1]]} />
-      <meshStandardMaterial ref={mat} map={map} displacementMap={height} displacementScale={LAND_Y - BASE_Y} displacementBias={BASE_Y}
-        normalMap={normal} normalScale={new THREE.Vector2(0.9, 0.9)} alphaMap={height} alphaTest={0.25} roughness={0.95} metalness={0} envMapIntensity={0.12}
-        onUpdate={(m) => {
-          if (m.userData.cliff) return; m.userData.cliff = true;
-          m.onBeforeCompile = (s) => {
-            // Cliffs: where the slab height ramps down to the water, replace the stretched map pixels by sand → rock.
-            s.fragmentShader = s.fragmentShader.replace("#include <common>", "#include <common>\nuniform sampler2D displacementMap;")
-              .replace("#include <map_fragment>", `#include <map_fragment>
-              float hh = texture2D(displacementMap, vMapUv).r;
-              float cl = 1.0 - smoothstep(0.6, 0.97, hh);
-              vec3 cliff = mix(vec3(0.95, 0.89, 0.74), vec3(0.55, 0.44, 0.32), smoothstep(0.15, 0.9, cl));
-              diffuseColor.rgb = mix(diffuseColor.rgb, cliff, smoothstep(0.0, 0.35, cl));`);
-          };
-          m.needsUpdate = true;
-        }} />
+    <mesh rotation-x={-Math.PI / 2} renderOrder={0}>
+      <planeGeometry args={[planeW, planeH]} />
+      <meshBasicMaterial ref={mat} map={map4k} alphaMap={mask} transparent depthWrite={false} toneMapped={false} />
     </mesh>
   );
 }

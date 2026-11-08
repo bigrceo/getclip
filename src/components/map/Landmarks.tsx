@@ -43,5 +43,5 @@ function Tower({ l, planeW, planeH, mode }: { l: Lm; planeW: number; planeH: num
 export function Landmarks({ mode, planeW, planeH }: { mode: Mode; planeW: number; planeH: number }) {
   const [lms, setLms] = useState<Lm[]>([]);
   useEffect(() => { fetch("/map/landmarks.json").then((r) => r.json()).then(setLms).catch(() => setLms([])); }, []);
-  return <group>{lms.map((l) => <Tower key={l.id} l={l} planeW={planeW} planeH={planeH} mode={mode} />)}</group>;
+  return <group>{lms.filter((l) => l.shape !== "pyramid" && l.tex).map((l) => <Tower key={l.id} l={l} planeW={planeW} planeH={planeH} mode={mode} />)}</group>;
 }

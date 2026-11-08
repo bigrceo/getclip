@@ -6,13 +6,12 @@
  */
 import { useRouter } from "next/navigation";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import type { Coin } from "@/lib/types";
 import { pct } from "@/lib/format";
 import { CityNeon, Clouds, DistrictLabels, MODES, Ocean, Sky, Sun, type Mode } from "./map/Atmosphere";
-import { TileLayer } from "./map/TileLayer";
 import { CityLight } from "./map/Buildings";
 import { Island, LAND_Y } from "./map/Island";
 import { ClipBoard } from "./map/ClipBoards";
@@ -24,7 +23,6 @@ import { districtOf } from "./map/districts";
 // ---- Yanis V16 GTA VI community map (gtadb.org, CC BY 4.0), island crop stitched from the z5 tiles: 6118×8192 ----
 const IMG_W = 14848, IMG_H = 20224; // Yanis V17 island crop: tiles x 21..78, y 21..99 (ground textures keep this aspect)
 const PLANE_W = 16, PLANE_H = PLANE_W * IMG_H / IMG_W;
-const OCEAN = "#2c68a6";
 import { uvToWorldMiami } from "./map/georef";
 import { GOOGLE_KEY, MiamiTiles, MiamiCredits } from "./map/MiamiTiles";
 /** Two worlds sharing the same u/v: the Leonida fan map (default, the shape people know) and photoreal Miami (Google 3D
@@ -35,21 +33,6 @@ const CAN_REAL = !!GOOGLE_KEY;
 /** Where to land when switching worlds (set by the dive logic). */
 const pendingFocus: { world: [number, number, number] | null; dist: number } = { world: null, dist: 2.5 };
 const toWorld = (u: number, v: number): [number, number, number] => MIAMI ? uvToWorldMiami(u, v) : [(u - 0.5) * PLANE_W, LAND_Y, (v - 0.5) * PLANE_H];
-/** Feathered rectangle so the map's own water dissolves into the ocean shader. */
-function edgeMask() {
-  const c = document.createElement("canvas"); c.width = 512; c.height = 512; const g = c.getContext("2d")!;
-  g.fillStyle = "#000"; g.fillRect(0, 0, 512, 512);
-  const f = 40;
-  for (const [x0, y0, x1, y1, h] of [[0, 0, 512, f, true], [0, 512 - f, 512, 512, true], [0, 0, f, 512, false], [512 - f, 0, 512, 512, false]] as [number, number, number, number, boolean][]) {
-    const gr = h ? g.createLinearGradient(0, y0, 0, y1) : g.createLinearGradient(x0, 0, x1, 0);
-    const out = h ? y0 === 0 : x0 === 0;
-    gr.addColorStop(0, out ? "#000" : "#fff"); gr.addColorStop(1, out ? "#fff" : "#000");
-    g.fillStyle = gr; g.fillRect(x0, y0, x1 - x0, y1 - y0);
-  }
-  g.fillStyle = "#fff"; g.fillRect(f, f, 512 - 2 * f, 512 - 2 * f);
-  return new THREE.CanvasTexture(c);
-}
-
 export type Plot = { id: string; district: string; u: number; v: number };
 export const PLOTS: Plot[] = [
   { id: "hq", district: "Vice City", u: 0.676, v: 0.552 },
@@ -338,7 +321,6 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
   const takenPlots = useMemo(() => new Set(entities.map((e) => e.plot.id)), [entities]);
   const small = typeof window !== "undefined" && window.innerWidth < 700;
   const api = useRef<Api | null>(null);
-  const tileTarget = useMemo(() => new THREE.Vector3(), []);
   const [ready, setReady] = useState(false);
   const [credits, setCredits] = useState("");
   const [real, setRealState] = useState(false);
@@ -357,7 +339,7 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
         <Sun mode={mode} />
         {MIAMI ? <><MiamiTiles onReady={onReady} onCredits={setCredits} /><Clouds mode={mode} count={5} /></>
           : <><Suspense fallback={null}><Ground onReady={onReady} mode={mode} /></Suspense>
-        {ready && <><Clouds mode={mode} /><DistrictLabels toWorld={toWorld} /><CityLight mode={mode} api={api} /><group position-y={LAND_Y}>{!small && <TileLayer mode={mode} planeW={PLANE_W} planeH={PLANE_H} target={tileTarget} api={api} />}<Landmarks mode={mode} planeW={PLANE_W} planeH={PLANE_H} /></group></>}</>}
+        {ready && <><DistrictLabels toWorld={toWorld} /><CityLight mode={mode} api={api} /><Landmarks mode={mode} planeW={PLANE_W} planeH={PLANE_H} /></>}</>}
         {ready && entities.map((e) => <Beacon key={e.coin.mint} e={e} active={active === e.coin.mint || hovered === e.coin.mint} onHover={setHovered} onSelect={() => select(e.coin.mint)} />)}
         {ready && !MIAMI && entities.map((e) => { const [x, , z] = toWorld(e.plot.u, e.plot.v); return <group key={`b${e.coin.mint}`} position-y={LAND_Y}><ClipBoard coin={e.coin} x={x} z={z} main={e.main} active={active === e.coin.mint || hovered === e.coin.mint} onHover={setHovered} onSelect={() => select(e.coin.mint)} /></group>; })}
         {ready && PLOTS.filter((p) => !takenPlots.has(p.id)).map((p) => <Lot key={p.id} p={p} onSelect={() => router.push("/launch")} onHover={(x, y) => setLotTip(x == null ? null : { plot: p, x, y: y! })} />)}
@@ -365,7 +347,6 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
         <PinLayout entities={entities} slots={slots} hovered={hovered} selected={active} />
       </Canvas>
       <Pins entities={entities} slots={slots} hovered={hovered} selected={active} onHover={setHovered} onSelect={select} />
-      {!MIAMI && <><div className="map-tilt map-tilt-top" aria-hidden="true" /><div className="map-tilt map-tilt-bottom" aria-hidden="true" /></>}
       <div className="map-vignette" aria-hidden="true" />
       <div aria-hidden={ready} className={`pointer-events-none absolute inset-0 z-10 grid place-items-center transition-opacity duration-700 ${ready ? "opacity-0" : "opacity-100"}`} style={{ background: "radial-gradient(circle, #23104a, #0a0618)" }}>
         <div className="text-center"><img src="/brand/pfp-512.png" alt="" width={96} height={96} className="mx-auto mb-4 rounded-[20px]" style={{ filter: "drop-shadow(0 0 24px rgba(255,61,139,.6))" }} /><p className="script">Flying into</p><p className="sec-title sunset-text">Leonida</p><p className="mt-3 text-[12px] font-semibold uppercase tracking-[.1em] text-haze">getclip.fun</p></div>
