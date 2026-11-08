@@ -7,7 +7,7 @@ import { DISTRICTS } from "./districts";
 
 export type Mode = "day" | "dusk" | "night";
 export const MODES: Record<Mode, { sky: string; horizon: string; fog: string; ocean1: string; ocean2: string; tint: string; sun: string; sunY: number; neon: number; label: string }> = {
-  day:   { sky: "#5fc4e8", horizon: "#cfeefb", fog: "#cfeefb", ocean1: "#1e5896", ocean2: "#3f7fc0", tint: "#ffffff", sun: "#fff6d8", sunY: 9, neon: 0.0, label: "Day" },
+  day:   { sky: "#5fc4e8", horizon: "#cfeefb", fog: "#cfeefb", ocean1: "#2c68a6", ocean2: "#5a9ad8", tint: "#ffffff", sun: "#fff6d8", sunY: 9, neon: 0.0, label: "Day" },
   dusk:  { sky: "#3b1b6b", horizon: "#ff8a5c", fog: "#ff8a5c", ocean1: "#2c587b", ocean2: "#7a8ab8", tint: "#ffd7bd", sun: "#ffb36b", sunY: 2.4, neon: 0.7, label: "Dusk" },
   night: { sky: "#070418", horizon: "#2a1150", fog: "#2a1150", ocean1: "#183a8b", ocean2: "#3a5fc0", tint: "#8a8fd6", sun: "#dfe6ff", sunY: 7, neon: 1.0, label: "Night" },
 };
@@ -46,7 +46,7 @@ export function Ocean({ mode, half }: { mode: Mode; half: [number, number] }) {
     uniforms.uCam.value.copy(camera.position); uniforms.uNight.value += (m.neon - uniforms.uNight.value) * 0.05;
   });
   // Same maths as the map plane: water colour × mode tint, multiplied in linear space, so the seam disappears.
-  const WATER = "#1e5896"; // deep water of the painted map
+  const WATER = "#2c68a6"; // V17 open-water colour
   const base = useRef<THREE.MeshBasicMaterial>(null);
   useFrame(() => { base.current?.color.lerp(new THREE.Color(WATER).multiply(new THREE.Color(MODES[mode].tint)), 0.05); });
   return (
