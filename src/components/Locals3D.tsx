@@ -12,9 +12,9 @@ import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.j
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { PalmBackdrop } from "./PalmBackdrop";
 
-export type Local = { id: string; name: string; ticker: string; role: string; bio: string; file: string; credit: string; creditUrl: string; height?: number; view?: "full" | "bust"; fade?: boolean; cam?: number; lift?: number };
+export type Local = { id: string; name: string; ticker: string; role: string; bio: string; file: string; credit: string; creditUrl: string; height?: number; view?: "full" | "bust"; fade?: boolean; cam?: number; lift?: number; dim?: number };
 export const LOCALS: Local[] = [
-  { id: "lucia", name: "Lucia", ticker: "LUCIA", role: "Out on parole", bio: "Did her time, kept her fists taped. Fresh out and done waiting for anyone to hand her a way up.", file: "/models/lucia2.glb", credit: "pariuudit", creditUrl: "https://sketchfab.com/3d-models/lucia-8973f1637b0c44848279895e91a96ea3", view: "full", height: 0.62, fade: true, cam: 2.3, lift: 0.1 },
+  { id: "lucia", name: "Lucia", ticker: "LUCIA", role: "Out on parole", bio: "Did her time, kept her fists taped. Fresh out and done waiting for anyone to hand her a way up.", file: "/models/lucia2.glb", credit: "pariuudit", creditUrl: "https://sketchfab.com/3d-models/lucia-8973f1637b0c44848279895e91a96ea3", view: "full", height: 0.66, fade: true, cam: 2.3, lift: -0.02, dim: 0.82 },
   { id: "jason", name: "Jason", ticker: "JASON", role: "Keys runner", bio: "Ex-army, now moving boats through the Keys for people who pay cash. Wants out of the small jobs.", file: "/models/jason-bust.glb", credit: "Sketchfab community", creditUrl: "https://sketchfab.com/search?q=jason+duval+gta+vi&type=models", view: "full", height: 1.0, fade: true, cam: 2.3 },
 ];
 
@@ -26,7 +26,7 @@ function setupLoader(l: GLTFLoader) {
   l.setDRACOLoader(draco); l.setMeshoptDecoder(MeshoptDecoder);
 }
 
-function Model({ url, height = 1.8, view = "full", lift = 0 }: { url: string; height?: number; view?: "full" | "bust"; lift?: number }) {
+function Model({ url, height = 1.8, view = "full", lift = 0, dim = 1 }: { url: string; height?: number; view?: "full" | "bust"; lift?: number; dim?: number }) {
   const gltf = useLoader(GLTFLoader, url, setupLoader);
   // useLoader caches by URL: two cards showing the same file each need their own copy of the scene graph
   const scene = useMemo(() => gltf.scene.clone(true), [gltf]);
@@ -43,11 +43,11 @@ function Model({ url, height = 1.8, view = "full", lift = 0 }: { url: string; he
       // Skin and hair must not read as metal: converted models often ship metallic 1 / roughness 0 → white hot spots.
       for (const m of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
         const std = m as THREE.MeshStandardMaterial;
-        if (std.isMeshStandardMaterial) { std.metalness = Math.min(std.metalness, 0.05); std.roughness = Math.max(std.roughness, 0.72); std.envMapIntensity = 0.35; std.needsUpdate = true; }
+        if (std.isMeshStandardMaterial) { std.metalness = Math.min(std.metalness, 0.05); std.roughness = Math.max(std.roughness, 0.72); std.envMapIntensity = 0.35 * dim; std.color.setScalar(dim); std.needsUpdate = true; }
       }
     });
     setFit({ s, y: 0 });
-  }, [scene, height]);
+  }, [scene, height, dim]);
   useFrame((_, dt) => { if (g.current) g.current.rotation.y += dt * 0.45; });
   if (!fit) return null;
   // full: whole body centred; bust: the top ~32 % of the model (head and shoulders) centred, the rest fades out below
@@ -66,7 +66,7 @@ function Viewer({ local, active }: { local: Local; active: boolean }) {
       <ambientLight intensity={0.5} />
       <directionalLight position={[2.5, 4, 3]} intensity={2.2} castShadow shadow-mapSize={[1024, 1024]} />
       <directionalLight position={[-3, 2, -2]} intensity={0.8} color="#ff5fa8" />
-      <Suspense fallback={null}><Model url={local.file} height={local.height} view={local.view} lift={local.lift} /></Suspense>
+      <Suspense fallback={null}><Model url={local.file} height={local.height} view={local.view} lift={local.lift} dim={local.dim} /></Suspense>
       {!local.fade && <mesh rotation-x={-Math.PI / 2} position-y={-0.9} receiveShadow><circleGeometry args={[1.1, 48]} /><shadowMaterial transparent opacity={0.35} /></mesh>}
     </Canvas>
   );
