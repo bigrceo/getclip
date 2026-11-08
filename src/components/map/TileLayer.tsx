@@ -1,7 +1,9 @@
 "use client";
 /**
- * Native-resolution detail: the island's 256 px z5 tiles (public/map/tiles/{row}_{col}.jpg) are streamed in around the
- * camera target when the camera gets close, drawn just above the 8K base map with the same tint, and faded in.
+ * Native-resolution detail (1 px = 1 game unit, same as map.stateofleonida.net): the island's 256 px tiles
+ * (public/map/tiles/{row}_{col}.jpg) are prefetched in a wide ring around the camera target as soon as the camera comes
+ * down, and a ring is only revealed once it is (almost) fully decoded, in one shared fade, so the map sharpens as a whole
+ * instead of popping square by square.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
@@ -10,67 +12,79 @@ import { MODES, type Mode } from "./Atmosphere";
 
 const COLS = 58, ROWS = 79;
 const loader = new THREE.TextureLoader();
-let landMask: THREE.Texture | null = null;
-function maskFor(i: number, j: number) {
-  if (!landMask) { landMask = loader.load("/map/landmask.png"); landMask.colorSpace = THREE.NoColorSpace; }
-  const t = landMask.clone(); t.repeat.set(1 / COLS, 1 / ROWS); t.offset.set(i / COLS, 1 - (j + 1) / ROWS); t.needsUpdate = true; return t;
-}
-const cache = new Map<string, THREE.Texture>();
+const cache = new Map<string, { tex: THREE.Texture; ready: boolean }>();
 const order: string[] = [];
-const MAX_CACHE = 700;
+const MAX_CACHE = 900;
 
-function getTexture(key: string, gl: THREE.WebGLRenderer, onLoad: () => void) {
-  const hit = cache.get(key);
-  if (hit) return hit;
-  const t = loader.load(`/map/tiles/${key}.jpg`, () => onLoad());
-  t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = gl.capabilities.getMaxAnisotropy(); t.generateMipmaps = false; t.minFilter = THREE.LinearFilter;
-  cache.set(key, t); order.push(key);
-  if (order.length > MAX_CACHE) { const old = order.shift()!; cache.get(old)?.dispose(); cache.delete(old); }
-  return t;
+function getTile(key: string, gl: THREE.WebGLRenderer) {
+  let e = cache.get(key);
+  if (e) return e;
+  const entry = { tex: null as unknown as THREE.Texture, ready: false };
+  entry.tex = loader.load(`/map/tiles/${key}.jpg`, () => { entry.ready = true; });
+  entry.tex.colorSpace = THREE.SRGBColorSpace; entry.tex.anisotropy = gl.capabilities.getMaxAnisotropy();
+  entry.tex.generateMipmaps = true; entry.tex.minFilter = THREE.LinearMipmapLinearFilter;
+  cache.set(key, entry); order.push(key);
+  if (order.length > MAX_CACHE) { const old = order.shift()!; cache.get(old)?.tex.dispose(); cache.delete(old); }
+  e = entry; return e;
 }
 
-function Tile({ k, i, j, tw, th, w, h, mode, gl }: { k: string; i: number; j: number; tw: number; th: number; w: number; h: number; mode: Mode; gl: THREE.WebGLRenderer }) {
-  const mat = useRef<THREE.MeshBasicMaterial>(null);
-  const [loaded, setLoaded] = useState(cache.has(k) && !!cache.get(k)!.image);
-  const tex = useMemo(() => getTexture(k, gl, () => setLoaded(true)), [k, gl]);
-  const alpha = useMemo(() => maskFor(i, j), [i, j]);
-  useFrame((_, dt) => {
-    const m = mat.current; if (!m) return;
-    m.color.lerp(new THREE.Color(MODES[mode].tint), 0.05);
-    const target = loaded ? 1 : 0; m.opacity += (target - m.opacity) * Math.min(1, dt * 6);
-  });
-  return (
-    <mesh rotation-x={-Math.PI / 2} position={[-w / 2 + (i + 0.5) * tw, 0.004, -h / 2 + (j + 0.5) * th]} renderOrder={1}>
-      <planeGeometry args={[tw, th]} />
-      <meshBasicMaterial ref={mat} map={tex} alphaMap={alpha} alphaTest={0.3} transparent opacity={0} depthWrite={false} toneMapped={false} />
-    </mesh>
-  );
-}
+type T = { k: string; i: number; j: number };
 
-export function TileLayer({ mode, planeW, planeH, target, api }: { mode: Mode; planeW: number; planeH: number; target: THREE.Vector3; api: React.MutableRefObject<{ target: THREE.Vector3 } | null> }) {
+export function TileLayer({ mode, planeW, planeH, api }: { mode: Mode; planeW: number; planeH: number; api: React.MutableRefObject<{ target: THREE.Vector3 } | null> }) {
   const camera = useThree((s) => s.camera), gl = useThree((s) => s.gl);
-  const [keys, setKeys] = useState<{ k: string; i: number; j: number }[]>([]);
+  const [shown, setShown] = useState<T[]>([]);
+  const pending = useRef<{ tiles: T[]; since: number } | null>(null);
   const last = useRef({ at: 0, sig: "" });
   const tw = planeW / COLS, th = planeH / ROWS;
-  useFrame(({ clock }) => {
-    if (clock.elapsedTime - last.current.at < 0.25) return;
+  const target = useMemo(() => new THREE.Vector3(), []);
+  const fade = useRef(0);
+  const mats = useRef(new Map<string, THREE.MeshBasicMaterial>());
+  useFrame(({ clock }, dt) => {
+    // shared fade: 0 while the layer is hidden, 1 once revealed
+    const tint = new THREE.Color(MODES[mode].tint);
+    const want = shown.length ? 1 : 0;
+    fade.current += (want - fade.current) * Math.min(1, dt * 4);
+    for (const m of mats.current.values()) { m.opacity = fade.current; m.color.lerp(tint, 0.1); }
+    if (clock.elapsedTime - last.current.at < 0.2) return;
     last.current.at = clock.elapsedTime;
     if (api.current) target.copy(api.current.target);
     const dist = camera.position.distanceTo(target);
-    const r = dist < 2 ? 5 : dist < 3.2 ? 7 : dist < 5 ? 6 : dist < 7.5 ? 4 : 0;
+    // start fetching far out (the base map still looks fine there), reveal when close
+    const r = dist < 2 ? 7 : dist < 3.5 ? 8 : dist < 6 ? 7 : dist < 9 ? 6 : 0;
     const ci = Math.floor((target.x + planeW / 2) / tw), cj = Math.floor((target.z + planeH / 2) / th);
     const sig = r ? `${r}:${ci}:${cj}` : "";
-    if (sig === last.current.sig) return;
-    last.current.sig = sig;
-    if (!r) { setKeys([]); return; }
-    const next: { k: string; i: number; j: number; d: number }[] = [];
-    for (let j = cj - r; j <= cj + r; j++) for (let i = ci - r - 2; i <= ci + r + 2; i++) {
-      if (i < 0 || j < 0 || i >= COLS || j >= ROWS) continue;
-      next.push({ k: `${j}_${i}`, i, j, d: (i - ci) ** 2 + (j - cj) ** 2 });
+    if (sig !== last.current.sig) {
+      last.current.sig = sig;
+      if (!r) { pending.current = null; if (shown.length) setShown([]); return; }
+      const next: (T & { d: number })[] = [];
+      for (let j = cj - r; j <= cj + r; j++) for (let i = ci - r - 3; i <= ci + r + 3; i++) {
+        if (i < 0 || j < 0 || i >= COLS || j >= ROWS) continue;
+        next.push({ k: `${j}_${i}`, i, j, d: (i - ci) ** 2 + (j - cj) ** 2 });
+      }
+      next.sort((a, b) => a.d - b.d);
+      const tiles = next.slice(0, 260);
+      tiles.forEach((t) => getTile(t.k, gl));
+      pending.current = { tiles, since: clock.elapsedTime };
     }
-    next.sort((a, b) => a.d - b.d);
-    setKeys(next.slice(0, 200));
+    const p = pending.current;
+    if (p && dist < 7.5) {
+      const ready = p.tiles.filter((t) => cache.get(t.k)?.ready).length;
+      // reveal once 92 % decoded, or after 1.2 s whatever is there (then the rest fades in as it lands)
+      if (ready >= p.tiles.length * 0.92 || clock.elapsedTime - p.since > 1.2) { setShown(p.tiles); pending.current = null; }
+    }
   });
-  useEffect(() => () => { /* textures stay in the LRU cache for the session */ }, []);
-  return <group>{keys.map((t) => <Tile key={t.k} k={t.k} i={t.i} j={t.j} tw={tw} th={th} w={planeW} h={planeH} mode={mode} gl={gl} />)}</group>;
+  useEffect(() => () => { mats.current.clear(); }, []);
+  return (
+    <group>
+      {shown.map((t) => {
+        const e = cache.get(t.k) ?? getTile(t.k, gl);
+        return (
+          <mesh key={t.k} rotation-x={-Math.PI / 2} position={[-planeW / 2 + (t.i + 0.5) * tw, 0.004, -planeH / 2 + (t.j + 0.5) * th]} renderOrder={1}>
+            <planeGeometry args={[tw, th]} />
+            <meshBasicMaterial ref={(m) => { if (m) mats.current.set(t.k, m); else mats.current.delete(t.k); }} map={e.tex} transparent opacity={0} depthWrite={false} toneMapped={false} />
+          </mesh>
+        );
+      })}
+    </group>
+  );
 }
