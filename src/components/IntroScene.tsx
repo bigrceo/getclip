@@ -46,7 +46,7 @@ function Rig({ progress }: { progress: React.MutableRefObject<number> }) {
   useEffect(() => { const p = new THREE.PMREMGenerator(gl); scene.environment = p.fromScene(new RoomEnvironment(), 0.04).texture; p.dispose(); }, [scene, gl]);
   useFrame(() => {
     const q = progress.current, e = q * q * (3 - 2 * q);
-    camera.position.set(0, THREE.MathUtils.lerp(0.12, 0.1, e), THREE.MathUtils.lerp(2.6, 3.2, e));
+    camera.position.set(0, THREE.MathUtils.lerp(0.22, 0.16, e), THREE.MathUtils.lerp(3.3, 3.9, e));
     camera.lookAt(0, THREE.MathUtils.lerp(0.1, 0.0, e), 0);
   });
   return null;
