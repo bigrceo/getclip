@@ -13,3 +13,5 @@ mints.json
 .vercel
 .env*
 .screens/
+public/intro/*.webp
+public/intro/*.mp4

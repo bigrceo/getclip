@@ -178,3 +178,10 @@ body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
 .intro3d .intro-title { opacity: calc(1 - var(--q) * 2.5); transform: translate3d(0, calc(var(--q) * 40px), 0); }
 /* the map hero rises over the pinned opening, rounded like Rockstar's card */
 .hero-over { position: relative; z-index: 2; margin-top: -22svh; border-radius: 28px 28px 0 0; overflow: hidden; box-shadow: 0 -30px 80px rgba(0,0,0,.45); }
+
+/* Opening (JS Mastery GTA VI mechanics): logo mask closes over the zooming background, then the hero fades; the video stage fades in and is scrubbed by scroll */
+.opening-hero { --scale: 1.25; --mask: 3500%; --fade: 1; --heroOpacity: 1; opacity: var(--heroOpacity); }
+.opening-mask { -webkit-mask-image: url("/brand/logo-mask.png"); mask-image: url("/brand/logo-mask.png"); -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: 50% 22%; mask-position: 50% 22%; -webkit-mask-size: var(--mask) var(--mask); mask-size: var(--mask) var(--mask); }
+.opening-bg { transform: scale(var(--scale)); transform-origin: 50% 50%; will-change: transform; }
+.opening-logo { opacity: var(--fade); filter: drop-shadow(0 8px 30px rgba(255,61,139,.5)); }
+.opening-video { --vidOpacity: 0; opacity: var(--vidOpacity); background: #0d0720; }
