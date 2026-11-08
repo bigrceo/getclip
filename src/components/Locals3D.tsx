@@ -10,14 +10,14 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+import { PalmBackdrop } from "./PalmBackdrop";
 
 export type Local = { id: string; name: string; ticker: string; role: string; bio: string; file: string; credit: string; creditUrl: string; height?: number; view?: "full" | "bust"; fade?: boolean; cam?: number };
 export const LOCALS: Local[] = [
-  { id: "lucia", name: "Lucia", ticker: "LUCIA", role: "Out on parole", bio: "Did her time, kept her fists taped. Fresh out and done waiting for anyone to hand her a way up.", file: "/models/lucia.glb", credit: "BakhtiarSource", creditUrl: "https://sketchfab.com/3d-models/lucia-caminos-gta-vi-17902730e81b48f4a70cbc53e5387526" },
-  { id: "jason", name: "Jason", ticker: "JASON", role: "Keys runner", bio: "Ex-army, now moving boats through the Keys for people who pay cash. Wants out of the small jobs.", file: "/models/jason.glb", credit: "BakhtiarSource", creditUrl: "https://sketchfab.com/3d-models/jason-duval-gta-vi-e6eefc3185fb4bcda7cdf9753924e162" },
-  { id: "lucia-bust", name: "Lucia, up close", ticker: "LUCIA", role: "Portrait", bio: "Gold chain, taped knuckles, a look that already knows how the night ends.", file: "/models/lucia.glb", credit: "BakhtiarSource", creditUrl: "https://sketchfab.com/3d-models/lucia-caminos-gta-vi-17902730e81b48f4a70cbc53e5387526", view: "bust", fade: true, cam: 1.25 },
-  { id: "jason-bust", name: "Jason, up close", ticker: "JASON", role: "Portrait", bio: "The face that sells the Keys. Cap on backwards, eyes on the money.", file: "/models/jason-bust.glb", credit: "Sketchfab community", creditUrl: "https://sketchfab.com/search?q=jason+duval+gta+vi&type=models", view: "full", height: 1.0, fade: true, cam: 2.3 },
+  { id: "lucia", name: "Lucia", ticker: "LUCIA", role: "Out on parole", bio: "Did her time, kept her fists taped. Fresh out and done waiting for anyone to hand her a way up.", file: "/models/lucia.glb", credit: "BakhtiarSource", creditUrl: "https://sketchfab.com/3d-models/lucia-caminos-gta-vi-17902730e81b48f4a70cbc53e5387526", view: "bust", fade: true, cam: 2.1 },
+  { id: "jason", name: "Jason", ticker: "JASON", role: "Keys runner", bio: "Ex-army, now moving boats through the Keys for people who pay cash. Wants out of the small jobs.", file: "/models/jason-bust.glb", credit: "Sketchfab community", creditUrl: "https://sketchfab.com/search?q=jason+duval+gta+vi&type=models", view: "full", height: 1.0, fade: true, cam: 2.3 },
 ];
+
 
 
 
@@ -43,7 +43,7 @@ function Model({ url, height = 1.8, view = "full" }: { url: string; height?: num
   useFrame((_, dt) => { if (g.current) g.current.rotation.y += dt * 0.45; });
   if (!fit) return null;
   // full: whole body centred; bust: the top ~32 % of the model (head and shoulders) centred, the rest fades out below
-  return <group ref={g} scale={fit.s} position-y={view === "bust" ? -height * 0.9 : -height / 2}><primitive object={scene} /></group>;
+  return <group ref={g} scale={fit.s} position-y={view === "bust" ? -height * 0.78 : -height / 2}><primitive object={scene} /></group>;
 }
 
 function Env() {
@@ -76,9 +76,8 @@ function Card({ local }: { local: Local }) {
   }, []);
   return (
     <div ref={ref} className="glass overflow-hidden">
-      <div className="locals-bg relative aspect-[4/5] overflow-hidden">
-        <div className="locals-sun" aria-hidden="true" />
-        <div className="locals-palms" aria-hidden="true" />
+      <div className="relative aspect-[4/5] overflow-hidden">
+        <PalmBackdrop />
         {exists && visible ? <Viewer local={local} active={visible} /> : (
           <div className="absolute inset-0 grid place-items-center">
             <div className="h-[62%] w-[34%] rounded-t-full bg-black/45" style={{ clipPath: "polygon(30% 0, 70% 0, 72% 18%, 95% 28%, 100% 100%, 0 100%, 5% 28%, 28% 18%)" }} />
@@ -99,7 +98,7 @@ function Card({ local }: { local: Local }) {
 
 export function Locals3D() {
   return (
-    <div className="grid gap-[18px] md:grid-cols-2 xl:grid-cols-4">
+    <div className="mx-auto grid max-w-[760px] gap-[18px] md:grid-cols-2">
       {LOCALS.map((l) => <Card key={l.id} local={l} />)}
     </div>
   );

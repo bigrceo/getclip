@@ -234,7 +234,7 @@ function Controls({ entities, selected, api, onWorld }: { entities: Entity[]; se
       void dist; void onWorld; // worlds switch only from the toggle
     }
     // Keep the whole view on the map: the farther the camera, the smaller the area the target may roam.
-    const vis = MIAMI ? 0 : dist * 0.62;
+    const vis = MIAMI ? 0 : dist * 0.26; // loose enough to reach the Keys and the north shore
     const LX = MIAMI ? 220 : Math.max(0.2, PLANE_W / 2 - vis), LZ = MIAMI ? 220 : Math.max(0.2, PLANE_H / 2 - vis * 0.9);
     const dx = THREE.MathUtils.clamp(t.x, -LX, LX) - t.x, dz = THREE.MathUtils.clamp(t.z, -LZ, LZ) - t.z;
     if (dx || dz) { t.x += dx; t.z += dz; camera.position.x += dx; camera.position.z += dz; }
