@@ -15,7 +15,10 @@ export type Local = { id: string; name: string; ticker: string; role: string; bi
 export const LOCALS: Local[] = [
   { id: "lucia", name: "Lucia", ticker: "LUCIA", role: "Out on parole", bio: "Did her time, kept her fists taped. Fresh out and done waiting for anyone to hand her a way up.", file: "/models/lucia.glb", credit: "BakhtiarSource", creditUrl: "https://sketchfab.com/3d-models/lucia-caminos-gta-vi-17902730e81b48f4a70cbc53e5387526" },
   { id: "jason", name: "Jason", ticker: "JASON", role: "Keys runner", bio: "Ex-army, now moving boats through the Keys for people who pay cash. Wants out of the small jobs.", file: "/models/jason.glb", credit: "BakhtiarSource", creditUrl: "https://sketchfab.com/3d-models/jason-duval-gta-vi-e6eefc3185fb4bcda7cdf9753924e162" },
+  { id: "jason-bust", name: "Jason, up close", ticker: "JASON", role: "Portrait", bio: "The face that sells the Keys. Cap on backwards, eyes on the money.", file: "/models/jason-bust.glb", credit: "Sketchfab community", creditUrl: "https://sketchfab.com/search?q=jason+duval+gta+vi&type=models" },
+  { id: "duo", name: "Lucia & Jason", ticker: "BONNIE", role: "Partners in crime", bio: "Two people who should never have met, in the one state where it was always going to happen.", file: "/models/duo.glb", credit: "BakhtiarSource", creditUrl: "https://sketchfab.com/3d-models/lucia-caminos-jason-duval-3adea72a5e6f41849c60a282fbac196e", height: 1.8 },
 ];
+
 
 function setupLoader(l: GLTFLoader) {
   const draco = new DRACOLoader(); draco.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.5.7/");
@@ -45,7 +48,7 @@ function Env() {
 
 function Viewer({ local, active }: { local: Local; active: boolean }) {
   return (
-    <Canvas dpr={[1, 1.5]} camera={{ position: [0, 0.25, 3.4], fov: 32 }} frameloop={active ? "always" : "never"} gl={{ antialias: true, alpha: true }} shadows style={{ background: "transparent" }}>
+    <Canvas dpr={[1, 1.5]} camera={{ position: [0, 0.1, 4.5], fov: 30 }} frameloop={active ? "always" : "never"} gl={{ antialias: true, alpha: true }} shadows style={{ background: "transparent" }}>
       <Env />
       <ambientLight intensity={0.5} />
       <directionalLight position={[2.5, 4, 3]} intensity={2.2} castShadow shadow-mapSize={[1024, 1024]} />
@@ -88,7 +91,7 @@ function Card({ local }: { local: Local }) {
 
 export function Locals3D() {
   return (
-    <div className="grid gap-[18px] md:grid-cols-2 xl:grid-cols-3">
+    <div className="grid gap-[18px] md:grid-cols-2 xl:grid-cols-4">
       {LOCALS.map((l) => <Card key={l.id} local={l} />)}
     </div>
   );
