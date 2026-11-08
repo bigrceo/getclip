@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BRAND, OFFICIAL_MINT } from "@/lib/brand";
 import type { Coin } from "@/lib/types";
 import { pct, usd } from "@/lib/format";
@@ -15,8 +15,27 @@ import { CoinDrawer } from "./CoinDrawer";
 export function MapHero({ coins, volumeSol }: { coins: Coin[]; volumeSol: number }) {
   const [active, setActive] = useState<string | null>(null);
   const [lead, tail] = BRAND.tagline.split(". ");
+  // Rockstar-style intro (desktop): the map opens full-bleed and pinned; the first ~60 vh of scroll shrink it a little
+  // into a rounded frame while the welcome card and the rail slide in. Then the page scrolls as usual.
+  const stage = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = stage.current; if (!el) return;
+    const mq = window.matchMedia("(min-width: 768px)");
+    let raf = 0;
+    const apply = () => {
+      raf = 0;
+      const span = Math.max(240, window.innerHeight * 0.6);
+      const p = mq.matches ? Math.min(1, Math.max(0, window.scrollY / span)) : 1;
+      el.style.setProperty("--p", p.toFixed(4));
+      document.documentElement.dataset.introDone = p >= 0.999 ? "1" : "0";
+    };
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(apply); };
+    apply();
+    window.addEventListener("scroll", onScroll, { passive: true }); window.addEventListener("resize", onScroll);
+    return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); if (raf) cancelAnimationFrame(raf); document.documentElement.dataset.introDone = "1"; };
+  }, []);
   const card = (
-        <div data-pin-obstacle className="glass z-20 w-[min(440px,100%-48px)] p-5 pb-4 md:absolute md:left-6 md:top-6 max-md:mx-4 max-md:mt-3 max-md:w-auto">
+        <div data-pin-obstacle className="glass intro-card z-20 w-[min(440px,100%-48px)] p-5 pb-4 md:absolute md:left-6 md:top-6 max-md:mx-4 max-md:mt-3 max-md:w-auto">
           <p className="script">Welcome to the</p>
           <h1 className="font-sign text-[64px] uppercase leading-[.92] max-md:text-[50px]">
             <span className="sunset-text block" style={{ filter: "drop-shadow(0 4px 22px rgba(255,61,139,.45))" }}>{BRAND.state}</span>
@@ -41,7 +60,7 @@ export function MapHero({ coins, volumeSol }: { coins: Coin[]; volumeSol: number
         </div>
   );
   const rail = (
-        <aside data-pin-obstacle className="glass z-20 flex w-[290px] flex-col px-2.5 pb-2 pt-3.5 md:absolute md:bottom-[70px] md:right-6 md:top-6 max-md:mx-4 max-md:mt-3 max-md:max-h-[360px] max-md:w-auto">
+        <aside data-pin-obstacle className="glass intro-rail z-20 flex w-[290px] flex-col px-2.5 pb-2 pt-3.5 md:absolute md:bottom-[70px] md:right-6 md:top-6 max-md:mx-4 max-md:mt-3 max-md:max-h-[360px] max-md:w-auto">
           <div className="flex items-baseline justify-between px-2 pb-2.5">
             <b className="font-sign text-[20px] font-normal uppercase tracking-wide">On the map</b>
             <i className="text-[12px] not-italic text-haze">{coins.length} {coins.length === 1 ? "clip" : "clips"}</i>
@@ -68,8 +87,8 @@ export function MapHero({ coins, volumeSol }: { coins: Coin[]; volumeSol: number
         </aside>
   );
   return (
-    <section className="relative md:h-[calc(100svh-4rem)] md:min-h-[620px] md:overflow-hidden max-md:flex max-md:flex-col max-md:pb-4">
-      <div className="md:absolute md:inset-0 max-md:relative max-md:h-[64svh] max-md:min-h-[420px]">
+    <section className="relative md:h-[calc(160svh-4rem)] md:min-h-[620px] max-md:flex max-md:flex-col max-md:pb-4">
+      <div ref={stage} className="intro-stage md:sticky md:top-16 md:h-[calc(100svh-4rem)] md:min-h-[620px] md:overflow-hidden max-md:relative max-md:h-[64svh] max-md:min-h-[420px]">
       <StateMap coins={coins} active={active} onActive={setActive}>
         <div className="hidden md:contents">{card}{rail}</div>
         {active && coins.some((c) => c.mint === active) && <CoinDrawer coin={coins.find((c) => c.mint === active)!} district={plotFor(coins.find((c) => c.mint === active)!, coins.findIndex((c) => c.mint === active)).district} onClose={() => setActive(null)} />}

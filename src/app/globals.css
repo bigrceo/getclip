@@ -163,3 +163,11 @@ body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
 .locals-bg { background: linear-gradient(170deg, #2a0f4e 0%, #6a1d8f 38%, #d6298b 68%, #ff8c46 100%); }
 .locals-sun { position: absolute; left: 50%; top: 58%; width: 62%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; background: radial-gradient(circle, rgba(255,214,120,.95), rgba(255,140,70,.55) 45%, transparent 70%); filter: blur(6px); }
 .locals-palms { position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 16px, rgba(255,255,255,.035) 16px 17px); mix-blend-mode: overlay; }
+
+/* Pinned intro: --p goes 0 → 1 over the first 60 vh of scroll (desktop only) */
+.intro-stage { --p: 1; }
+@media (min-width: 768px) {
+  .intro-stage { transform: scale(calc(1 - 0.06 * var(--p))); border-radius: calc(28px * var(--p)); transform-origin: 50% 40%; will-change: transform; }
+  .intro-card { transform: translate3d(0, calc((1 - var(--p)) * 140%), 0); opacity: var(--p); will-change: transform, opacity; }
+  .intro-rail { transform: translate3d(calc((1 - var(--p)) * 140%), 0, 0); opacity: var(--p); will-change: transform, opacity; }
+}
