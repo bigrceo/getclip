@@ -172,8 +172,9 @@ body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
   .intro-rail { transform: translate3d(calc((1 - var(--p)) * 140%), 0, 0); opacity: var(--p); will-change: transform, opacity; }
 }
 
-/* Opening scene: --q 0 → 1 while pinned. Title fades early, palms push in, the veil closes at the end of the zoom. */
+/* Opening scene, Rockstar mechanics: pinned 350 px; the visual scales 1.2 → 1.0 while --q runs; title fades early. */
 .intro3d { --q: 0; }
-.intro3d .intro-title { opacity: calc(1 - var(--q) * 2.2); transform: translate3d(0, calc(var(--q) * 60px), 0); }
-.intro3d .intro-veil { opacity: clamp(0, calc((var(--q) - 0.78) / 0.22), 1); }
-.intro3d > div:first-child { transform: scale(calc(1 + var(--q) * 0.35)); transform-origin: 50% 62%; }
+.intro3d .intro-zoom { transform: scale(calc(1.2 - 0.2 * var(--q))); transform-origin: 50% 35%; will-change: transform; }
+.intro3d .intro-title { opacity: calc(1 - var(--q) * 2.5); transform: translate3d(0, calc(var(--q) * 40px), 0); }
+/* the map hero rises over the pinned opening, rounded like Rockstar's card */
+.hero-over { position: relative; z-index: 2; margin-top: -22svh; border-radius: 28px 28px 0 0; overflow: hidden; box-shadow: 0 -30px 80px rgba(0,0,0,.45); }

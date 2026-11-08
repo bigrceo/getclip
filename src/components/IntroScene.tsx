@@ -46,8 +46,8 @@ function Rig({ progress }: { progress: React.MutableRefObject<number> }) {
   useEffect(() => { const p = new THREE.PMREMGenerator(gl); scene.environment = p.fromScene(new RoomEnvironment(), 0.04).texture; p.dispose(); }, [scene, gl]);
   useFrame(() => {
     const q = progress.current, e = q * q * (3 - 2 * q);
-    camera.position.set(THREE.MathUtils.lerp(0, -0.12, e), THREE.MathUtils.lerp(0.1, 0.16, e), THREE.MathUtils.lerp(4.4, 1.75, e));
-    camera.lookAt(THREE.MathUtils.lerp(0, -0.1, e), THREE.MathUtils.lerp(0.0, 0.12, e), 0);
+    camera.position.set(0, THREE.MathUtils.lerp(0.12, 0.1, e), THREE.MathUtils.lerp(2.6, 3.2, e));
+    camera.lookAt(0, THREE.MathUtils.lerp(0.1, 0.0, e), 0);
   });
   return null;
 }
@@ -57,6 +57,8 @@ export function IntroScene() {
   const stage = useRef<HTMLDivElement>(null);
   const progress = useRef(0);
   const [live, setLive] = useState(true);
+  const [keyart, setKeyart] = useState<boolean | null>(null);
+  useEffect(() => { fetch("/brand/keyart.jpg", { method: "HEAD" }).then((r) => setKeyart(r.ok)).catch(() => setKeyart(false)); }, []);
   useEffect(() => {
     const sec = section.current, st = stage.current; if (!sec || !st) return;
     let raf = 0;
@@ -73,10 +75,11 @@ export function IntroScene() {
     return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); if (raf) cancelAnimationFrame(raf); };
   }, []);
   return (
-    <section ref={section} className="relative h-[220svh]" aria-label="Intro">
+    <section ref={section} className="relative h-[calc(100svh+350px)]" aria-label="Intro">
       <div ref={stage} className="intro3d sticky top-0 h-[100svh] overflow-hidden">
-        <PalmBackdrop />
-        <div className="absolute inset-0">
+        <div className="intro-zoom absolute inset-0">
+        {keyart ? <img src="/brand/keyart.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: "50% 30%" }} /> : <PalmBackdrop />}
+        {keyart !== true && <div className="absolute inset-0">
           <Canvas dpr={[1, 1.5]} camera={{ position: [0, 0.15, 4.4], fov: 30 }} frameloop={live ? "always" : "never"} gl={{ antialias: true, alpha: true }} shadows style={{ background: "transparent" }}>
             <Rig progress={progress} />
             <ambientLight intensity={0.5} />
@@ -87,6 +90,7 @@ export function IntroScene() {
               <Head url="/models/jason-bust.glb" height={1.0} x={0.38} y={-0.12} z={-0.15} yaw={-0.3} />
             </Suspense>
           </Canvas>
+        </div>}
         </div>
         <div className="intro-fade pointer-events-none absolute inset-x-0 bottom-0 h-[38%]" style={{ background: "linear-gradient(to bottom, transparent, rgba(13,7,32,.9) 70%, #0d0720)" }} />
         <div className="intro-title pointer-events-none absolute inset-x-0 bottom-[9%] z-10 text-center">
@@ -95,8 +99,7 @@ export function IntroScene() {
           <p className="mt-2 text-[14px] font-semibold uppercase tracking-[.14em] text-ink/85">{BRAND.tagline}</p>
           <p className="mt-6 text-[11px] font-semibold uppercase tracking-[.2em] text-haze">Scroll</p>
         </div>
-        <div className="intro-veil pointer-events-none absolute inset-0 bg-[#0d0720]" />
-      </div>
+              </div>
     </section>
   );
 }
