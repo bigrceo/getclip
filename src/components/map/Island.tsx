@@ -26,7 +26,7 @@ function edgeMask() {
 
 export function Island({ mode, planeW, planeH, onReady }: { mode: Mode; planeW: number; planeH: number; onReady: () => void }) {
   const small = typeof window !== "undefined" && window.innerWidth < 900;
-  const map4k = useLoader(THREE.TextureLoader, "/map/yanis-4k.jpg");
+  const map4k = useLoader(THREE.TextureLoader, small ? "/map/yanis-2k.jpg" : "/map/yanis-4k.jpg"); // phones: 2K first paint, no 8K swap
   const gl = useThree((s) => s.gl);
   const mat = useRef<THREE.MeshBasicMaterial>(null);
   const mask = useMemo(() => edgeMask(), []);

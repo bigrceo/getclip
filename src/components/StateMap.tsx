@@ -216,7 +216,7 @@ function Controls({ entities, selected, api, onWorld }: { entities: Entity[]; se
   }, [selected, entities]);
   useFrame((_, dt) => {
     if (intro.current) {
-      const i = intro.current; i.t = Math.min(1, i.t + dt / 2.2);
+      const i = intro.current; i.t = Math.min(1, i.t + dt / (window.innerWidth < 700 ? 1.2 : 2.2));
       const e = 1 - Math.pow(1 - i.t, 3);
       camera.position.lerpVectors(i.from, i.to, e);
       if (i.t >= 1) { intro.current = null; controls.enabled = true; }
@@ -361,7 +361,7 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
       {CAN_REAL && <div className="absolute bottom-[18px] left-[214px] z-20 flex rounded-full border border-line bg-black/40 p-[3px] max-md:bottom-14 max-md:left-3">
         {([["leonida", "Leonida"], ["real", "Real Miami"]] as const).map(([k, l]) => <button key={k} type="button" onClick={() => { pendingFocus.world = null; setReal(k === "real"); }} className={`rounded-full px-3 py-1.5 text-[12px] font-bold transition-colors ${(k === "real") === real ? "text-[#1a0b26]" : "text-ink/75 hover:text-ink"}`} style={(k === "real") === real ? { background: "var(--sunset)" } : undefined}>{l}</button>)}
       </div>}
-      <div className="absolute bottom-[18px] left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 max-md:bottom-3">
+      <div className="absolute bottom-[18px] left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 max-md:bottom-3 max-md:left-auto max-md:right-3 max-md:translate-x-0">
         <button type="button" onClick={() => api.current?.zoom(1.35)} className="grid size-9 place-items-center rounded-full border border-line bg-night/70 text-lg font-bold text-ink hover:bg-night/90" aria-label="Zoom out">−</button>
         <span className="whitespace-nowrap rounded-full border border-line bg-night/70 px-3 py-1.5 text-[12px] font-semibold uppercase tracking-[.06em] text-haze max-xl:hidden">Drag to pan · scroll to zoom · click a beacon</span>
         <button type="button" onClick={() => api.current?.zoom(0.74)} className="grid size-9 place-items-center rounded-full border border-line bg-night/70 text-lg font-bold text-ink hover:bg-night/90" aria-label="Zoom in">+</button>
