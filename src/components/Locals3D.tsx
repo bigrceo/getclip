@@ -43,7 +43,7 @@ function Model({ url, height = 1.8, view = "full", lift = 0, dim = 1 }: { url: s
       // Skin and hair must not read as metal: converted models often ship metallic 1 / roughness 0 → white hot spots.
       for (const m of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
         const std = m as THREE.MeshStandardMaterial;
-        if (std.isMeshStandardMaterial) { std.metalness = 0; std.roughness = 0.68; std.envMapIntensity = 0.45 * dim; std.color.setScalar(dim); if (std.normalMap) std.normalScale.set(1.2, 1.2); std.needsUpdate = true; }
+        if (std.isMeshStandardMaterial) { std.metalness = 0; std.roughness = 0.72; std.envMapIntensity = 0.4 * dim; std.color.setScalar(dim); if (std.normalMap) std.normalScale.set(0.55, 0.55); std.needsUpdate = true; }
       }
     });
     setFit({ s, y: 0 });
