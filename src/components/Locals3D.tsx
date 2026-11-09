@@ -10,8 +10,8 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { PalmBackdrop } from "./PalmBackdrop";
-import { EffectComposer, N8AO, Noise, Vignette } from "@react-three/postprocessing";
-import { BlendFunction } from "postprocessing";
+import { ChromaticAberration, EffectComposer, N8AO, Noise, Vignette } from "@react-three/postprocessing";
+import { BlendFunction, type ChromaticAberrationEffect, type NoiseEffect, type VignetteEffect } from "postprocessing";
 
 export type Local = { id: string; name: string; ticker: string; role: string; bio: string; file: string; credit: string; creditUrl: string; height?: number; view?: "full" | "bust"; fade?: boolean; cam?: number; lift?: number; dim?: number; bg?: string; sun?: [number, number]; sunColor?: string };
 export const LOCALS: Local[] = [
@@ -25,6 +25,36 @@ export const LOCALS: Local[] = [
 if (typeof window !== "undefined") {
   for (const l of LOCALS) useLoader.preload(GLTFLoader, l.file, setupLoader);
 }
+
+/** Backdrop shader: two mirrored copies around the cylinder, plus horizontal motion streaks during slow-mo
+ *  (bright lights smear further than the rest, like the trails in GTA's slow-motion shots). */
+const STREAK_VS = `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
+const STREAK_FS = `
+  uniform sampler2D map; uniform float uStreak; varying vec2 vUv;
+  vec3 tap(float u, float v) { u = mod(u * 2.0, 2.0); u = u > 1.0 ? 2.0 - u : u; return texture2D(map, vec2(u, v)).rgb; }
+  void main() {
+    vec3 c = tap(vUv.x, vUv.y);
+    if (uStreak > 0.0005) {
+      vec3 acc = c; float w = 1.0;
+      for (int i = 1; i <= 14; i++) {
+        float o = float(i) / 14.0 * uStreak; float k = 1.0 - float(i) / 15.0;
+        vec3 a = tap(vUv.x + o, vUv.y), b = tap(vUv.x - o * 0.35, vUv.y);
+        float la = dot(a, vec3(0.3, 0.59, 0.11)), lb = dot(b, vec3(0.3, 0.59, 0.11));
+        acc += a * k * (1.0 + la * 1.5) + b * k * 0.5 * (1.0 + lb * 1.5); w += k * (1.0 + la * 1.5) + k * 0.5 * (1.0 + lb * 1.5);
+      }
+      c = acc / w;
+    }
+    gl_FragColor = vec4(c, 1.0);
+    #include <colorspace_fragment>
+  }`;
+
+/** GTA-style slow motion: 5 s at normal speed, ease into 2 s of slow-mo, ease out. 0 = normal, 1 = full slow-mo. */
+const CYCLE = 9.5;
+function slowmo(t: number) {
+  const x = t % CYCLE, e = (v: number) => v * v * (3 - 2 * v);
+  if (x < 5) return 0; if (x < 6) return e(x - 5); if (x < 8.2) return 1; if (x < 9.5) return 1 - e((x - 8.2) / 1.3); return 0;
+}
+const speed = (t: number) => 1 - 0.88 * slowmo(t);
 
 const SUN = new THREE.Vector3(-2.2, 1.1, 2.8);
 
@@ -140,7 +170,7 @@ function Model({ url, height = 1.8, view = "full", lift = 0, dim = 1 }: { url: s
     });
     setFit({ s, y: 0 });
   }, [scene, height, dim]);
-  useFrame((_, dt) => { if (g.current) g.current.rotation.y += dt * 0.45; });
+  useFrame((st, dt) => { if (g.current) g.current.rotation.y += dt * 0.45 * speed(st.clock.elapsedTime); });
   if (!fit) return null;
   // full: whole body centred; bust: the top ~32 % of the model (head and shoulders) centred, the rest fades out below
   return <group ref={g} scale={fit.s} position-y={(view === "bust" ? -height * 0.72 : -height / 2) + lift}><primitive object={scene} /></group>;
@@ -225,14 +255,16 @@ function Panorama({ src, sun, sunColor }: { src: string; sun: [number, number]; 
   const th = Math.PI * sun[0], sy = Math.max(0.5, 0.6 + 4.7 - sun[1] * 9.4);
   const key: [number, number, number] = [Math.sin(th) * 4, sy * 0.6, Math.cos(th) * 4];
   const fill: [number, number, number] = [-key[0], 0.8, -key[2]];
-  useFrame((_, dt) => {
-    if (!g.current) return; g.current.rotation.y += dt * 0.45;
+  const streak = useMemo(() => ({ value: 0 }), []);
+  useFrame((st, dt) => {
+    if (!g.current) return; g.current.rotation.y += dt * 0.45 * speed(st.clock.elapsedTime);
+    streak.value = slowmo(st.clock.elapsedTime) * 0.034;
     scene.environmentRotation.y = g.current.rotation.y;
     keyRef.current?.getWorldPosition(SUN);
   });
   return (
     <group ref={g}>
-      <mesh position-y={0.6} renderOrder={-2}><cylinderGeometry args={[7, 7, 9.4, 128, 1, true]} /><meshBasicMaterial map={tex} side={THREE.BackSide} depthWrite={false} toneMapped={false} /></mesh>
+      <mesh position-y={0.6} renderOrder={-2}><cylinderGeometry args={[7, 7, 9.4, 128, 1, true]} /><shaderMaterial side={THREE.BackSide} depthWrite={false} toneMapped={false} uniforms={{ map: { value: tex }, uStreak: streak }} vertexShader={STREAK_VS} fragmentShader={STREAK_FS} /></mesh>
       <directionalLight ref={keyRef} position={key} intensity={5.6} color={sunColor} castShadow shadow-mapSize={[2048, 2048]} shadow-bias={-0.0002} shadow-normalBias={0.01}
         shadow-camera-left={-1.2} shadow-camera-right={1.2} shadow-camera-top={1.2} shadow-camera-bottom={-1.2} />
       <directionalLight position={fill} intensity={1.1} color="#c8c4ff" />
@@ -248,7 +280,19 @@ function Env() {
   return null;
 }
 
+const CA_OFFSET = new THREE.Vector2(0, 0);
+function SlowmoFX({ ca, noise, vig }: { ca: React.RefObject<ChromaticAberrationEffect | null>; noise: React.RefObject<NoiseEffect | null>; vig: React.RefObject<VignetteEffect | null> }) {
+  useFrame((st) => {
+    const k = slowmo(st.clock.elapsedTime);
+    ca.current?.offset.set(0.0035 * k, 0.0012 * k);
+    if (noise.current) noise.current.blendMode.opacity.value = 0.2 + 0.25 * k;
+    if (vig.current) vig.current.darkness = 0.4 + 0.25 * k;
+  });
+  return null;
+}
+
 function Viewer({ local, active }: { local: Local; active: boolean }) {
+  const caRef = useRef<ChromaticAberrationEffect>(null), noiseRef = useRef<NoiseEffect>(null), vigRef = useRef<VignetteEffect>(null);
   return (
     <Canvas dpr={[1, 1.5]} camera={{ position: [0, local.view === "bust" ? 0.02 : 0.1, local.cam ?? 4.5], fov: 30 }} frameloop={active ? "always" : "demand"}
       gl={{ antialias: true, alpha: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.2 }} shadows="soft" style={{ background: "transparent" }}>
@@ -258,10 +302,12 @@ function Viewer({ local, active }: { local: Local; active: boolean }) {
       <ambientLight intensity={0.34} color="#d8d2e6" />
       <Suspense fallback={null}><Model url={local.file} height={local.height} view={local.view} lift={local.lift} dim={local.dim} /></Suspense>
       {!local.fade && <mesh rotation-x={-Math.PI / 2} position-y={-0.9} receiveShadow><circleGeometry args={[1.1, 48]} /><shadowMaterial transparent opacity={0.35} /></mesh>}
+      <SlowmoFX ca={caRef} noise={noiseRef} vig={vigRef} />
       <EffectComposer multisampling={4}>
         <N8AO aoRadius={0.3} intensity={0.9} distanceFalloff={0.6} quality="performance" />
-        <Noise premultiply blendFunction={BlendFunction.SOFT_LIGHT} opacity={0.2} />
-        <Vignette eskil={false} offset={0.3} darkness={0.4} />
+        <ChromaticAberration ref={caRef} offset={CA_OFFSET} radialModulation modulationOffset={0.35} />
+        <Noise ref={noiseRef} premultiply blendFunction={BlendFunction.SOFT_LIGHT} opacity={0.2} />
+        <Vignette ref={vigRef} eskil={false} offset={0.3} darkness={0.4} />
       </EffectComposer>
     </Canvas>
   );
