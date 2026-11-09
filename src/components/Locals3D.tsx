@@ -43,7 +43,7 @@ function Model({ url, height = 1.8, view = "full", lift = 0, dim = 1 }: { url: s
       // Skin and hair must not read as metal: converted models often ship metallic 1 / roughness 0 → white hot spots.
       for (const m of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
         const std = m as THREE.MeshStandardMaterial;
-        if (std.isMeshStandardMaterial) { std.metalness = Math.min(std.metalness, 0.05); std.roughness = Math.max(std.roughness, 0.72); std.envMapIntensity = 0.35 * dim; std.color.setScalar(dim); std.needsUpdate = true; }
+        if (std.isMeshStandardMaterial) { std.metalness = 0; std.roughness = 0.68; std.envMapIntensity = 0.45 * dim; std.color.setScalar(dim); if (std.normalMap) std.normalScale.set(1.2, 1.2); std.needsUpdate = true; }
       }
     });
     setFit({ s, y: 0 });
@@ -55,7 +55,7 @@ function Model({ url, height = 1.8, view = "full", lift = 0, dim = 1 }: { url: s
 }
 
 function Env() {
-  useFrame(({ gl, scene }) => { if (!scene.environment) { const p = new THREE.PMREMGenerator(gl); scene.environment = p.fromScene(new RoomEnvironment(), 0.04).texture; p.dispose(); } });
+  useFrame(({ gl, scene }) => { if (!scene.environment) { const p = new THREE.PMREMGenerator(gl); scene.environment = p.fromScene(new RoomEnvironment(), 0.08).texture; scene.environmentIntensity = 0.45; p.dispose(); } });
   return null;
 }
 
@@ -100,11 +100,15 @@ function LuciaBust({ dim = 0.82 }: { dim?: number }) {
 
 function Viewer({ local, active }: { local: Local; active: boolean }) {
   return (
-    <Canvas dpr={[1, 1.5]} camera={{ position: [0, local.view === "bust" ? 0.02 : 0.1, local.cam ?? 4.5], fov: 30 }} frameloop={active ? "always" : "never"} gl={{ antialias: true, alpha: true }} shadows style={{ background: "transparent" }}>
+    <Canvas dpr={[1, 2]} camera={{ position: [0, local.view === "bust" ? 0.02 : 0.1, local.cam ?? 4.5], fov: 30 }} frameloop={active ? "always" : "never"}
+      gl={{ antialias: true, alpha: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.05 }} shadows="soft" style={{ background: "transparent" }}>
       <Env />
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[2.5, 4, 3]} intensity={2.2} castShadow shadow-mapSize={[1024, 1024]} />
-      <directionalLight position={[-3, 2, -2]} intensity={0.8} color="#ff5fa8" />
+      {/* portrait lighting: warm key from the front-left, cool fill from the right, sunset rim from behind */}
+      <ambientLight intensity={0.18} color="#c9b8ff" />
+      <spotLight position={[-1.6, 2.2, 2.6]} angle={0.6} penumbra={0.9} intensity={30} color="#fff1dc" castShadow shadow-mapSize={[2048, 2048]} shadow-bias={-0.0002} shadow-normalBias={0.01} />
+      <spotLight position={[2.4, 1.2, 2.0]} angle={0.7} penumbra={1} intensity={9} color="#9fb8ff" />
+      <spotLight position={[0.8, 1.8, -2.4]} angle={0.7} penumbra={1} intensity={14} color="#ff7a5c" />
+      <spotLight position={[-1.4, 1.4, -2.2]} angle={0.7} penumbra={1} intensity={7} color="#ff5fa8" />
       <Suspense fallback={null}><Model url={local.file} height={local.height} view={local.view} lift={local.lift} dim={local.dim} /></Suspense>
       {!local.fade && <mesh rotation-x={-Math.PI / 2} position-y={-0.9} receiveShadow><circleGeometry args={[1.1, 48]} /><shadowMaterial transparent opacity={0.35} /></mesh>}
     </Canvas>
