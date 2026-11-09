@@ -353,10 +353,13 @@ function Card({ local }: { local: Local }) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   const [exists, setExists] = useState<boolean | null>(null);
+  // the map comes first: the 3D portraits warm up once it is on screen (or as soon as the section nears the viewport)
+  const [warm, setWarm] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setWarm(true), 3500); return () => clearTimeout(t); }, []);
   useEffect(() => { fetch(local.file, { method: "HEAD", cache: "no-store" }).then((r) => setExists(r.ok)).catch(() => setExists(false)); }, [local.file]);
   useEffect(() => {
     const el = ref.current; if (!el) return;
-    const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) setVisible(true); }, { rootMargin: "300px", threshold: 0 });
+    const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) setVisible(true); }, { rootMargin: "900px", threshold: 0 });
     const t = setTimeout(() => { const r = el.getBoundingClientRect(); if (r.bottom > -300 && r.top < innerHeight + 300) setVisible(true); }, 800);
     io.observe(el); return () => { io.disconnect(); clearTimeout(t); };
   }, []);
@@ -364,7 +367,7 @@ function Card({ local }: { local: Local }) {
     <div ref={ref} className="glass overflow-hidden">
       <div className="relative aspect-[4/5] overflow-hidden">
         <PalmBackdrop />
-        {exists !== false ? <Viewer local={local} active={visible} /> : (
+        {exists !== false && (visible || warm) ? <Viewer local={local} active={visible} /> : (
           <div className="absolute inset-0 grid place-items-center">
             <div className="h-[62%] w-[34%] rounded-t-full bg-black/45" style={{ clipPath: "polygon(30% 0, 70% 0, 72% 18%, 95% 28%, 100% 100%, 0 100%, 5% 28%, 28% 18%)" }} />
             {exists === false && <span className="absolute bottom-3 text-[11px] font-semibold uppercase tracking-[.1em] text-haze">3D model coming</span>}
