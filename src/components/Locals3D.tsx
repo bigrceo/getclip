@@ -31,21 +31,64 @@ function setupLoader(l: GLTFLoader) {
  *  clearcoat on the highlights and a soft sheen. Applied to the whole bust (one material per generated model). */
 function skinMaterial(src: THREE.MeshStandardMaterial, dim: number) {
   if (!src.isMeshStandardMaterial) return src;
-  const m = new THREE.MeshPhysicalMaterial({ map: src.map, color: new THREE.Color("#ffffff"), roughness: 0.6, metalness: 0, envMapIntensity: 0.5,
+  const m = new THREE.MeshPhysicalMaterial({ map: src.map, bumpMap: src.map, bumpScale: 0.0035, color: new THREE.Color("#ffffff"), roughness: 0.6, metalness: 0, envMapIntensity: 0.5,
     sheen: 0.18, sheenRoughness: 0.85, sheenColor: new THREE.Color("#ffb79e"), clearcoat: 0.22, clearcoatRoughness: 0.42, specularIntensity: 0.8, side: THREE.DoubleSide }); // double-sided: thin hair shells no longer open onto the backdrop
   void dim;
   m.onBeforeCompile = (sh) => {
+    // world position for the hair mask (hair = dark, brownish, upper part of the bust)
+    sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nvarying vec3 vWPos;")
+      .replace("#include <begin_vertex>", "#include <begin_vertex>\nvWPos = (modelMatrix * vec4(transformed, 1.0)).xyz;");
+    sh.fragmentShader = sh.fragmentShader.replace("#include <common>", `#include <common>
+      varying vec3 vWPos;
+      float hairMask = 0.0;
+      uniform vec3 uKeyPos;`);
+    sh.uniforms.uKeyPos = { value: new THREE.Vector3(-1.6, 2.2, 2.6) };
     sh.fragmentShader = sh.fragmentShader.replace("#include <lights_physical_pars_fragment>", `#include <lights_physical_pars_fragment>
       vec3 sssBleed(vec3 base, float dotNLraw) {
         float t = pow(saturate(1.0 - abs(dotNLraw)), 2.5);          // strongest where light grazes the skin
         return base * vec3(1.0, 0.28, 0.18) * t * 0.5;
+      }
+      // Kajiya-Kay: hair strands run downwards; two shifted highlights slide along the strands as the head turns
+      float hairSpec(vec3 T, vec3 H, float shift, float power) {
+        vec3 Ts = normalize(T + shift * normalize(cross(cross(T, H), T)));
+        float dotTH = dot(Ts, H);
+        float sinTH = sqrt(max(0.0, 1.0 - dotTH * dotTH));
+        return pow(sinTH, power) * smoothstep(-1.0, 0.0, dotTH);
       }`);
+    // hair mask from the albedo, computed right after the texture lookup; darker roots toward the crown
+    sh.fragmentShader = sh.fragmentShader.replace("#include <map_fragment>", `#include <map_fragment>
+      {
+        float lum = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
+        float brown = step(diffuseColor.b * 1.08, diffuseColor.r) * step(diffuseColor.b, diffuseColor.g + 0.06);
+        float high = smoothstep(-0.05, 0.12, vWPos.y);
+        hairMask = (1.0 - smoothstep(0.16, 0.34, lum)) * brown * high;
+        diffuseColor.rgb *= 1.0 - hairMask * 0.22 * smoothstep(0.1, 0.45, vWPos.y);   // roots a touch darker near the crown
+      }`);
+    // bump (strand micro-relief) only on hair
+    sh.fragmentShader = sh.fragmentShader.replace("dHdxy_fwd()", "dHdxy_fwd() * hairMask");
+    // hair: rougher base, no clearcoat
+    sh.fragmentShader = sh.fragmentShader.replace("material.roughness = max( roughnessFactor, 0.045 );", "material.roughness = mix( max( roughnessFactor, 0.045 ), 0.62, hairMask );");
+    sh.fragmentShader = sh.fragmentShader.replace("material.clearcoat = clearcoat;", "material.clearcoat = clearcoat * ( 1.0 - hairMask );");
     // wrap the diffuse term and add the bleed (RE_Direct_Physical is reached through lights_fragment_begin)
     sh.fragmentShader = sh.fragmentShader.replace(
       "float dotNL = saturate( dot( geometryNormal, directLight.direction ) );\n\tvec3 irradiance = dotNL * directLight.color;",
-      "float dotNLraw = dot( geometryNormal, directLight.direction );\n\tfloat dotNL = saturate( ( dotNLraw + 0.3 ) / 1.3 );\n\tvec3 irradiance = dotNL * directLight.color;\n\treflectedLight.directDiffuse += sssBleed( material.diffuseColor, dotNLraw ) * directLight.color * 0.6;");
+      "float dotNLraw = dot( geometryNormal, directLight.direction );\n\tfloat dotNL = saturate( ( dotNLraw + 0.3 ) / 1.3 );\n\tvec3 irradiance = dotNL * directLight.color;\n\treflectedLight.directDiffuse += sssBleed( material.diffuseColor, dotNLraw ) * directLight.color * 0.6 * ( 1.0 - hairMask );");
+    // anisotropic hair highlights from the key light, added at the end of lighting
+    sh.fragmentShader = sh.fragmentShader.replace("#include <lights_fragment_end>", `#include <lights_fragment_end>
+      if (hairMask > 0.001) {
+        vec3 nW = normalize(transpose(mat3(viewMatrix)) * normal);
+        vec3 vW = normalize(cameraPosition - vWPos);
+        vec3 lW = normalize(uKeyPos - vWPos);
+        vec3 up = vec3(0.0, -1.0, 0.0);
+        vec3 T = normalize(up - nW * dot(up, nW));
+        vec3 H = normalize(lW + vW);
+        float s1 = hairSpec(T, H, -0.08, 110.0);
+        float s2 = hairSpec(T, H,  0.12, 40.0);
+        vec3 tint = mix(vec3(1.0, 0.92, 0.82), diffuseColor.rgb * 2.2, 0.6);
+        reflectedLight.directSpecular += hairMask * (s1 * 0.32 + s2 * 0.16 * diffuseColor.rgb * 3.0) * tint;
+      }`);
   };
-  m.customProgramCacheKey = () => "skin";
+  m.customProgramCacheKey = () => "skin-hair";
   return m;
 }
 
