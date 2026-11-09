@@ -5,7 +5,7 @@ import { BRAND, OFFICIAL_MINT } from "@/lib/brand";
 import type { Coin } from "@/lib/types";
 import { pct, usd } from "@/lib/format";
 import dynamic from "next/dynamic";
-import { plotFor } from "./StateMap";
+import { plotFor, PLOTS } from "./StateMap";
 const StateMap = dynamic(() => import("./StateMap").then((m) => m.StateMap), { ssr: false, loading: () => <div className="absolute inset-0 grid place-items-center font-sign text-[28px] tracking-wide" style={{ background: "radial-gradient(circle, #23104a, #0a0618)" }}>Loading Leonida…</div> });
 import { HeroLaunch } from "./HeroLaunch";
 import { Countdown } from "./Countdown";
@@ -13,6 +13,7 @@ import { CoinDrawer } from "./CoinDrawer";
 
 /** Leonida-style hero: the state map full-bleed, a glass card on the left, the "on the map" rail on the right. */
 export function MapHero({ coins, volumeSol }: { coins: Coin[]; volumeSol: number }) {
+  void volumeSol;
   const [active, setActive] = useState<string | null>(null);
   const [lead, tail] = BRAND.tagline.split(". ");
   const card = (
@@ -25,7 +26,7 @@ export function MapHero({ coins, volumeSol }: { coins: Coin[]; volumeSol: number
           <p className="mb-3.5 mt-2.5 text-[16px] text-haze">{lead}. <span className="text-ink">{tail}</span></p>
           <div className="grid grid-cols-2 gap-2.5">
             <div className="stat"><i>Clips on the map</i><b>{coins.length}</b></div>
-            <div className="stat"><i>24h volume</i><b>{volumeSol.toFixed(1)} SOL</b></div>
+            <div className="stat"><i>Open plots</i><b>{Math.max(0, PLOTS.length - coins.length)}</b></div>
           </div>
           <HeroLaunch compact />
           <div className="mt-2.5 flex gap-2.5">

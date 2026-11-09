@@ -29,7 +29,8 @@ import { GOOGLE_KEY, MiamiTiles, MiamiCredits } from "./map/MiamiTiles";
  * Tiles) that the camera dives into when it gets close to a district, or on the "Real" toggle. MIAMI is flipped right before
  * the Canvas remounts (key), so every helper below reads the current world. */
 let MIAMI = false;
-const CAN_REAL = !!GOOGLE_KEY;
+const CAN_REAL = false; // photoreal Miami kept in code, off in the UI
+void GOOGLE_KEY;
 /** Where to land when switching worlds (set by the dive logic). */
 const pendingFocus: { world: [number, number, number] | null; dist: number } = { world: null, dist: 2.5 };
 const toWorld = (u: number, v: number): [number, number, number] => MIAMI ? uvToWorldMiami(u, v) : [(u - 0.5) * PLANE_W, LAND_Y, (v - 0.5) * PLANE_H];
@@ -142,15 +143,25 @@ function Beacon({ e, active, onHover, onSelect }: { e: Entity; active: boolean; 
 /** Open plot: a small gold dot on the ground, click → launch. */
 function Lot({ p, onSelect, onHover }: { p: Plot; onSelect: () => void; onHover: (x: number | null, y?: number) => void }) {
   const [x, , z] = toWorld(p.u, p.v);
+  const g = useRef<THREE.Group>(null); const ring = useRef<THREE.Mesh>(null);
+  const camera = useThree((s) => s.camera);
+  // Open plots are quiet: a small pink marker that only shows once the camera is close, breathing slowly.
+  useFrame(({ clock }) => {
+    const vis = THREE.MathUtils.smoothstep(7.5 - camera.position.y, 0, 2.5);
+    const t = clock.elapsedTime;
+    if (g.current) { g.current.visible = vis > 0.01; const sc = 1 + Math.sin(t * 2 + x * 3) * 0.06; g.current.scale.set(sc, 1, sc); }
+    if (ring.current) (ring.current.material as THREE.MeshBasicMaterial).opacity = vis * (0.55 + Math.sin(t * 2 + x * 3) * 0.2);
+    g.current?.children.forEach((c, i) => { if (i === 0) ((c as THREE.Mesh).material as THREE.MeshBasicMaterial).opacity = vis * 0.95; });
+  });
   return (
-    <group position={[x, LAND_Y, z]}>
+    <group ref={g} position={[x, LAND_Y, z]}>
       <mesh rotation-x={-Math.PI / 2} position-y={0.012} onClick={(e) => { e.stopPropagation(); onSelect(); }}
         onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = "pointer"; const r = (e.nativeEvent.target as HTMLElement).getBoundingClientRect(); onHover(e.nativeEvent.clientX - r.left, e.nativeEvent.clientY - r.top); }}
         onPointerMove={(e) => { const r = (e.nativeEvent.target as HTMLElement).getBoundingClientRect(); onHover(e.nativeEvent.clientX - r.left, e.nativeEvent.clientY - r.top); }}
         onPointerOut={() => { document.body.style.cursor = ""; onHover(null); }}>
-        <circleGeometry args={[0.11, 32]} /><meshBasicMaterial color="#ffe17a" transparent opacity={0.9} depthWrite={false} toneMapped={false} />
+        <circleGeometry args={[0.035, 24]} /><meshBasicMaterial color="#ff5fa8" transparent opacity={0} depthWrite={false} toneMapped={false} />
       </mesh>
-      <mesh rotation-x={-Math.PI / 2} position-y={0.011}><ringGeometry args={[0.16, 0.19, 40]} /><meshBasicMaterial color="#ffe17a" transparent opacity={0.35} depthWrite={false} /></mesh>
+      <mesh ref={ring} rotation-x={-Math.PI / 2} position-y={0.011}><ringGeometry args={[0.065, 0.075, 40]} /><meshBasicMaterial color="#ff5fa8" transparent opacity={0} depthWrite={false} toneMapped={false} /></mesh>
     </group>
   );
 }
@@ -358,13 +369,7 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
         <div className="text-center"><img src="/brand/pfp-512.png" alt="" width={96} height={96} className="mx-auto mb-4 rounded-[20px]" style={{ filter: "drop-shadow(0 0 24px rgba(255,61,139,.6))" }} /><p className="script">Flying into</p><p className="sec-title sunset-text">Leonida</p><p className="mt-3 text-[12px] font-semibold uppercase tracking-[.1em] text-haze">getclip.fun</p></div>
       </div>
       {MIAMI && <MiamiCredits credits={credits} />}
-      {lotTip && <div className="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-[calc(100%+14px)] rounded-[10px] bg-[#ffe17a] px-2.5 py-1.5 text-center text-[12px] font-bold text-[#1a0b26] shadow-lg" style={{ left: lotTip.x, top: lotTip.y }}>Open plot · {lotTip.plot.district}<br /><span className="font-semibold opacity-80">Launch a clip to claim it</span></div>}
-      <div className="absolute bottom-[18px] left-6 z-20 flex rounded-full border border-line bg-black/40 p-[3px] max-md:bottom-3 max-md:left-3">
-        {(Object.keys(MODES) as Mode[]).map((k) => <button key={k} type="button" onClick={() => setMode(k)} className={`rounded-full px-3 py-1.5 text-[12px] font-bold transition-colors ${mode === k ? "text-[#1a0b26]" : "text-ink/75 hover:text-ink"}`} style={mode === k ? { background: "var(--sunset)" } : undefined}>{MODES[k].label}</button>)}
-      </div>
-      {CAN_REAL && <div className="absolute bottom-[18px] left-[214px] z-20 flex rounded-full border border-line bg-black/40 p-[3px] max-md:bottom-14 max-md:left-3">
-        {([["leonida", "Leonida"], ["real", "Real Miami"]] as const).map(([k, l]) => <button key={k} type="button" onClick={() => { pendingFocus.world = null; setReal(k === "real"); }} className={`rounded-full px-3 py-1.5 text-[12px] font-bold transition-colors ${(k === "real") === real ? "text-[#1a0b26]" : "text-ink/75 hover:text-ink"}`} style={(k === "real") === real ? { background: "var(--sunset)" } : undefined}>{l}</button>)}
-      </div>}
+      {lotTip && <div className="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-[calc(100%+14px)] rounded-[10px] bg-white px-2.5 py-1.5 text-center text-[12px] font-bold text-[#1a0b26] shadow-lg" style={{ left: lotTip.x, top: lotTip.y }}>Open plot · {lotTip.plot.district}<br /><span className="font-semibold opacity-80">Launch a clip to claim it</span></div>}
       <div className="absolute bottom-[18px] left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 max-md:bottom-3 max-md:left-auto max-md:right-3 max-md:translate-x-0">
         <button type="button" onClick={() => api.current?.zoom(1.35)} className="grid size-9 place-items-center rounded-full border border-line bg-night/70 text-lg font-bold text-ink hover:bg-night/90" aria-label="Zoom out">−</button>
         <span className="whitespace-nowrap rounded-full border border-line bg-night/70 px-3 py-1.5 text-[12px] font-semibold uppercase tracking-[.06em] text-haze max-xl:hidden">Drag to pan · scroll to zoom · click a beacon</span>

@@ -146,7 +146,7 @@ export function DistrictLabels({ toWorld }: { toWorld: (u: number, v: number) =>
   useFrame(() => {
     const g = group.current; if (!g) return;
     // Zoom fade: camera height stands in for zoom (the tilt is bounded). Gone below ~3.2, full above ~6.
-    const zoomFade = THREE.MathUtils.smoothstep(camera.position.y, 3.2, 6.2);
+    const zoomFade = THREE.MathUtils.smoothstep(camera.position.y, 5.0, 8.0);
     // Panel fade: the hero card (left) and the rail (right) sit over the canvas; a label sliding under them fades instead of being cut.
     const wide = size.width >= 1200;
     const leftEdge = wide ? 680 : 0, rightEdge = wide ? size.width - 440 : size.width;

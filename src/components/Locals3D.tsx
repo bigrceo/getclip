@@ -14,8 +14,8 @@ import { PalmBackdrop } from "./PalmBackdrop";
 
 export type Local = { id: string; name: string; ticker: string; role: string; bio: string; file: string; credit: string; creditUrl: string; height?: number; view?: "full" | "bust"; fade?: boolean; cam?: number; lift?: number; dim?: number };
 export const LOCALS: Local[] = [
-  { id: "lucia", name: "Lucia", ticker: "LUCIA", role: "Out on parole", bio: "Did her time, kept her fists taped. Fresh out and done waiting for anyone to hand her a way up.", file: "/models/lucia2.glb", credit: "pariuudit", creditUrl: "https://sketchfab.com/3d-models/lucia-8973f1637b0c44848279895e91a96ea3", view: "full", height: 0.66, fade: true, cam: 2.3, lift: -0.02, dim: 0.82 },
-  { id: "jason", name: "Jason", ticker: "JASON", role: "Keys runner", bio: "Ex-army, now moving boats through the Keys for people who pay cash. Wants out of the small jobs.", file: "/models/jason-bust.glb", credit: "Sketchfab community", creditUrl: "https://sketchfab.com/search?q=jason+duval+gta+vi&type=models", view: "full", height: 1.0, fade: true, cam: 2.3 },
+  { id: "lucia", name: "Lucia", ticker: "LUCIA", role: "Out on parole", bio: "Did her time, kept her fists taped. Fresh out and done waiting for anyone to hand her a way up.", file: "/models/lucia2.glb", credit: "pariuudit", creditUrl: "https://sketchfab.com/3d-models/lucia-8973f1637b0c44848279895e91a96ea3", view: "full", height: 0.62, fade: true, cam: 1.75, lift: 0.0, dim: 0.82 },
+  { id: "jason", name: "Jason", ticker: "JASON", role: "Keys runner", bio: "Ex-army, now moving boats through the Keys for people who pay cash. Wants out of the small jobs.", file: "/models/jason-bust.glb", credit: "Sketchfab community", creditUrl: "https://sketchfab.com/search?q=jason+duval+gta+vi&type=models", view: "bust", height: 1.0, fade: true, cam: 1.75 },
 ];
 
 
@@ -51,7 +51,7 @@ function Model({ url, height = 1.8, view = "full", lift = 0, dim = 1 }: { url: s
   useFrame((_, dt) => { if (g.current) g.current.rotation.y += dt * 0.45; });
   if (!fit) return null;
   // full: whole body centred; bust: the top ~32 % of the model (head and shoulders) centred, the rest fades out below
-  return <group ref={g} scale={fit.s} position-y={(view === "bust" ? -height * 0.78 : -height / 2) + lift}><primitive object={scene} /></group>;
+  return <group ref={g} scale={fit.s} position-y={(view === "bust" ? -height * 0.72 : -height / 2) + lift}><primitive object={scene} /></group>;
 }
 
 function Env() {

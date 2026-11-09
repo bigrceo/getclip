@@ -144,9 +144,9 @@ body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
 .pin-text { flex-direction: column; line-height: 1.1; display: flex; }
 .pin-text b { font-family: var(--font-sign); letter-spacing: .4px; font-size: 13px; font-weight: 400; }
 .pin-text i { font-style: normal; font-size: 10px; }
-.cd span { flex: 1; text-align: center; padding: 8px 0 6px; border-radius: 10px; border: 1px solid rgba(255,61,139,.4); background: linear-gradient(rgba(255,61,139,.22), rgba(255,138,61,.1)); }
-.cd b { display: block; font-family: var(--font-sign); font-weight: 400; font-size: 30px; line-height: 1; }
-.cd i { font-style: normal; font-size: 11px; color: var(--color-haze); }
+.cd span { flex: 1; text-align: center; padding: 6px 0 4px; }
+.cd b { display: block; font-family: var(--font-sign); font-weight: 400; font-size: 44px; line-height: .95; background: var(--sunset); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 4px 18px rgba(255,61,139,.35)); }
+.cd i { font-style: normal; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--color-haze); }
 .stat { border: 1px solid var(--color-line); background: rgba(255,255,255,.05); border-radius: 12px; padding: 10px 12px; }
 .stat i { display: block; font-style: normal; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--color-haze); }
 .stat b { font-size: 20px; font-weight: 700; }
