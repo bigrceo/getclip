@@ -74,7 +74,7 @@ export function Header() {
   const hover = () => matchMedia("(hover: hover)").matches;
 
   return (
-    <nav id="nav" className={[glass && "glass", slim && !menu && !mobile && "slim", menu && "open", mobile && "mopen"].filter(Boolean).join(" ")}
+    <nav id="nav" className={[glass && "frost", slim && !menu && !mobile && "slim", menu && "open", mobile && "mopen"].filter(Boolean).join(" ")}
       onMouseLeave={() => (shut.current = setTimeout(() => setMenu(null), 180))}>
       <div className="nwrap">
         <div className="bar">
