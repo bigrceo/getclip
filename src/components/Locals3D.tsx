@@ -145,30 +145,75 @@ function studioHDR() {
   box(0, h * 0.5, w, h * 0.2, "rgba(255,110,90,0.25)", 40);   // horizon glow all around
   const t = new THREE.CanvasTexture(c); t.mapping = THREE.EquirectangularReflectionMapping; t.colorSpace = THREE.SRGBColorSpace; return t;
 }
-/** The palm sunset backdrop, drawn into a texture used as the scene background so the post stack (DoF, grain, vignette)
- *  covers it too; the HTML PalmBackdrop stays underneath for the silhouette fallback. */
-function backdropTexture() {
-  const w = 800, h = 1000, c = document.createElement("canvas"); c.width = w; c.height = h; const g = c.getContext("2d")!;
-  const sky = g.createLinearGradient(0, 0, w * 0.1, h); sky.addColorStop(0, "#2b0f55"); sky.addColorStop(0.34, "#6a1d8f"); sky.addColorStop(0.62, "#d6298b"); sky.addColorStop(0.88, "#ff8c46"); sky.addColorStop(1, "#ffc46b");
+/** Sky only (sun and everything else live on the rotating cylinders). */
+function skyTexture() {
+  const w = 16, h = 512, c = document.createElement("canvas"); c.width = w; c.height = h; const g = c.getContext("2d")!;
+  const sky = g.createLinearGradient(0, 0, 0, h); sky.addColorStop(0, "#2b0f55"); sky.addColorStop(0.34, "#6a1d8f"); sky.addColorStop(0.6, "#d6298b"); sky.addColorStop(0.86, "#ff8c46"); sky.addColorStop(1, "#ffc46b");
   g.fillStyle = sky; g.fillRect(0, 0, w, h);
-  const sun = g.createRadialGradient(w / 2, h * 0.62, 0, w / 2, h * 0.62, w * 0.35); sun.addColorStop(0, "rgba(255,230,150,.95)"); sun.addColorStop(0.42, "rgba(255,150,80,.6)"); sun.addColorStop(0.7, "rgba(255,150,80,0)");
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+function rng(seed: number) { let x = seed; return () => { x = (x * 1664525 + 1013904223) % 4294967296; return x / 4294967296; }; }
+/** Far ring: the sun, the ocean and an art-deco skyline with neon. 4096 px wrap around the subject. */
+function farRingTexture() {
+  const w = 4096, h = 1024, c = document.createElement("canvas"); c.width = w; c.height = h; const g = c.getContext("2d")!;
+  const hz = h * 0.56, r = rng(7);
+  // sun
+  const sx = w * 0.3; const sun = g.createRadialGradient(sx, hz - 40, 0, sx, hz - 40, 420);
+  sun.addColorStop(0, "rgba(255,236,170,1)"); sun.addColorStop(0.18, "rgba(255,190,110,0.9)"); sun.addColorStop(0.45, "rgba(255,140,80,0.35)"); sun.addColorStop(1, "rgba(255,140,80,0)");
   g.fillStyle = sun; g.fillRect(0, 0, w, h);
-  g.fillStyle = "rgba(255,255,255,.25)"; g.fillRect(0, h * 0.66, w, 1);
+  // ocean
+  const sea = g.createLinearGradient(0, hz, 0, h); sea.addColorStop(0, "#ff9a5a"); sea.addColorStop(0.08, "#c2407e"); sea.addColorStop(0.35, "#3a1660"); sea.addColorStop(1, "#140a26");
+  g.fillStyle = sea; g.fillRect(0, hz, w, h - hz);
+  for (let i = 0; i < 260; i++) { const y = hz + 4 + Math.pow(r(), 1.6) * (h - hz) * 0.7; const len = 20 + r() * 160; const x = sx - 500 + r() * 1000 + (y - hz) * (r() - 0.5) * 2; g.fillStyle = `rgba(255,${180 + r() * 60 | 0},${120 + r() * 60 | 0},${0.08 + r() * 0.25})`; g.fillRect(x, y, len, 1.5); }
+  g.fillStyle = "rgba(255,255,255,.35)"; g.fillRect(0, hz, w, 1.2);
+  // skyline (art deco: stepped towers, spires, lit windows), leaving the sun side open
+  const towers: { x: number; bw: number; th: number }[] = []; let x = w * 0.5;
+  while (x < w * 1.0) { const bw = 40 + r() * 110, th = 40 + r() * 170; towers.push({ x, bw, th }); x += bw + r() * 40; }
+  x = 0; while (x < w * 0.12) { const bw = 40 + r() * 90, th = 40 + r() * 120; towers.push({ x, bw, th }); x += bw + r() * 60; }
+  for (const t of towers) {
+    g.fillStyle = "#1b0c33"; let y = hz - t.th; g.fillRect(t.x, y, t.bw, t.th + 4);
+    let bw = t.bw, bx = t.x; for (let k = 0; k < 3 && r() > 0.3; k++) { bw *= 0.7; bx += (t.bw - bw) / 2 * (k === 0 ? 1 : 0.5); y -= 18 + r() * 40; g.fillRect(bx, y, bw, 60); }
+    if (r() > 0.5) g.fillRect(t.x + t.bw / 2 - 2, y - 40 - r() * 60, 4, 100);
+    for (let wy = hz - t.th + 10; wy < hz - 8; wy += 9) for (let wx = t.x + 6; wx < t.x + t.bw - 6; wx += 8) if (r() > 0.7) { g.fillStyle = r() > 0.8 ? "rgba(255,120,170,.9)" : "rgba(255,200,140,.75)"; g.fillRect(wx, wy, 3, 4); }
+    if (r() > 0.45) { const col = r() > 0.5 ? "#ff3fa4" : "#39e6ff"; g.save(); g.shadowColor = col; g.shadowBlur = 18; g.fillStyle = col; const ny = hz - t.th + 20 + r() * 40; if (r() > 0.5) g.fillRect(t.x + 4, ny, t.bw - 8, 3); else g.fillRect(t.x + t.bw * 0.5 - 2, ny, 3, 40 + r() * 60); g.restore(); }
+    g.save(); g.globalAlpha = 0.35; g.scale(1, -1); g.translate(0, -2 * hz); g.fillStyle = "#1b0c33"; g.fillRect(t.x, hz - t.th * 0.45, t.bw, t.th * 0.45); g.restore();   // reflection
+  }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping; t.anisotropy = 8; return t;
+}
+/** Near ring: palm silhouettes and the dark shore, transparent elsewhere. */
+function nearRingTexture() {
+  const w = 4096, h = 1024, c = document.createElement("canvas"); c.width = w; c.height = h; const g = c.getContext("2d")!;
+  const r = rng(23);
+  const shore = g.createLinearGradient(0, h * 0.78, 0, h); shore.addColorStop(0, "rgba(22,10,46,0)"); shore.addColorStop(0.3, "rgba(22,10,46,0.9)"); shore.addColorStop(1, "#0e0620");
+  g.fillStyle = shore; g.fillRect(0, 0, w, h);
   const palm = (x: number, y: number, sc: number, flip: boolean, lean: number) => {
     g.save(); g.translate(x, y); g.scale(flip ? -sc : sc, sc); g.rotate(lean * Math.PI / 180); g.fillStyle = "#160a2e";
     g.fill(new Path2D("M-9 0 C -14 -120, 4 -240, 2 -360 L 14 -360 C 22 -240, 8 -120, 11 0 Z"));
-    g.translate(8, -358);
-    for (let i = 0; i < 9; i++) { const a = (-170 + i * 20 + (i % 2 ? 6 : -4)) * Math.PI / 180, L = 150 + (i % 3) * 22; g.save(); g.rotate(a); g.fill(new Path2D(`M0 0 C ${L * 0.25} ${-L * 0.35}, ${L * 0.6} ${-L * 0.5}, ${L} ${-L * 0.42} C ${L * 0.65} ${-L * 0.28}, ${L * 0.35} ${-L * 0.1}, 0 0 Z`)); g.restore(); }
-    g.beginPath(); g.arc(0, 0, 14, 0, Math.PI * 2); g.fill(); g.restore();
+    g.translate(8, -360);
+    for (let i = 0; i < 9; i++) { g.save(); g.rotate((i / 9) * Math.PI * 2 + 0.3); g.fill(new Path2D("M0 0 C 30 -22, 80 -30, 125 -8 C 80 -10, 45 -3, 0 10 Z")); g.restore(); }
+    g.restore();
   };
-  const k = w / 400; palm(48 * k, 1040, 0.72 * k, false, -8); palm(372 * k, 1050, 0.86 * k, true, 6); palm(330 * k, 1080, 0.5 * k, true, -14);
-  g.fillStyle = "#160a2e"; g.fillRect(0, h * 0.94, w, h * 0.06);
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  for (let i = 0; i < 14; i++) { const x = (i / 14) * w + (r() - 0.5) * 220; const sc = 0.5 + r() * 0.5; palm(x, h * 0.9 + r() * 50, sc, r() > 0.5, (r() - 0.5) * 24); }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping; t.anisotropy = 8; return t;
 }
+/** Two rings around the bust that turn with it, so orbiting the character feels like orbiting the place. */
+function Panorama() {
+  const far = useMemo(() => farRingTexture(), []);
+  const near = useMemo(() => nearRingTexture(), []);
+  const a = useRef<THREE.Mesh>(null), b = useRef<THREE.Mesh>(null);
+  useFrame((_, dt) => { if (a.current) a.current.rotation.y += dt * 0.45; if (b.current) b.current.rotation.y += dt * 0.52; });
+  return (
+    <>
+      <mesh ref={a} position-y={0.1} renderOrder={-2}><cylinderGeometry args={[7, 7, 7.5, 96, 1, true]} /><meshBasicMaterial map={far} side={THREE.BackSide} transparent depthWrite={false} toneMapped={false} /></mesh>
+      <mesh ref={b} position-y={0.1} renderOrder={-1}><cylinderGeometry args={[5, 5, 6, 96, 1, true]} /><meshBasicMaterial map={near} side={THREE.BackSide} transparent depthWrite={false} toneMapped={false} /></mesh>
+    </>
+  );
+}
+
 function Env() {
   useFrame(({ gl, scene }) => {
     if (!scene.environment) { const p = new THREE.PMREMGenerator(gl); scene.environment = p.fromEquirectangular(studioHDR()).texture; scene.environmentIntensity = 0.9; p.dispose(); }
-    if (!scene.background) scene.background = backdropTexture();
+    if (!scene.background) scene.background = skyTexture();
   });
   return null;
 }
@@ -178,9 +223,10 @@ function Viewer({ local, active }: { local: Local; active: boolean }) {
     <Canvas dpr={[1, 1.5]} camera={{ position: [0, local.view === "bust" ? 0.02 : 0.1, local.cam ?? 4.5], fov: 30 }} frameloop={active ? "always" : "demand"}
       gl={{ antialias: true, alpha: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.3 }} shadows="soft" style={{ background: "transparent" }}>
       <Env />
+      <Panorama />
       {/* portrait lighting: warm key from the front-left, cool fill from the right, sunset rim from behind */}
-      <ambientLight intensity={0.3} color="#8a5ab0" />
-      <spotLight position={[-2.2, 1.1, 2.8]} angle={0.7} penumbra={1} intensity={17} color="#ffb366" castShadow shadow-mapSize={[2048, 2048]} shadow-bias={-0.0002} shadow-normalBias={0.01} />
+      <ambientLight intensity={0.34} color="#8c78b8" />
+      <spotLight position={[-2.2, 1.1, 2.8]} angle={0.7} penumbra={1} intensity={15} color="#ffd6a8" castShadow shadow-mapSize={[2048, 2048]} shadow-bias={-0.0002} shadow-normalBias={0.01} />
       <spotLight position={[2.4, 1.2, 2.0]} angle={0.7} penumbra={1} intensity={3} color="#b07ad8" />
       <spotLight position={[0.8, 1.0, -2.4]} angle={0.7} penumbra={1} intensity={2.5} color="#ff6e4a" />
       <Suspense fallback={null}><Model url={local.file} height={local.height} view={local.view} lift={local.lift} dim={local.dim} /></Suspense>
