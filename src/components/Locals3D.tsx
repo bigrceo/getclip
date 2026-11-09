@@ -15,8 +15,8 @@ import { BlendFunction } from "postprocessing";
 
 export type Local = { id: string; name: string; ticker: string; role: string; bio: string; file: string; credit: string; creditUrl: string; height?: number; view?: "full" | "bust"; fade?: boolean; cam?: number; lift?: number; dim?: number; bg?: string; sun?: [number, number]; sunColor?: string };
 export const LOCALS: Local[] = [
-  { id: "lucia", name: "Lucia", ticker: "LUCIA", role: "Out on parole", bio: "Did her time, kept her fists taped. Fresh out and done waiting for anyone to hand her a way up.", file: "/models/lucia-bust.glb", bg: "/locals/ocean-drive.jpg", sun: [0.03, 0.59], sunColor: "#ffc08a", credit: "getclip.fun", creditUrl: "https://getclip.fun", view: "full", height: 1.0, fade: true, cam: 2.3 },
-  { id: "jason", name: "Jason", ticker: "JASON", role: "Keys runner", bio: "Ex-army, now moving boats through the Keys for people who pay cash. Wants out of the small jobs.", file: "/models/jason-bust.glb", bg: "/locals/keys-marina.jpg", sun: [0.078, 0.38], sunColor: "#ffcf9a", credit: "getclip.fun", creditUrl: "https://getclip.fun", view: "full", height: 1.0, fade: true, cam: 2.3 },
+  { id: "lucia", name: "Lucia", ticker: "LUCIA", role: "Out on parole", bio: "Did her time, kept her fists taped. Fresh out and done waiting for anyone to hand her a way up.", file: "/models/lucia-bust.glb", bg: "/locals/ocean-drive.jpg", sun: [0.03, 0.59], sunColor: "#ffe6cf", credit: "getclip.fun", creditUrl: "https://getclip.fun", view: "full", height: 1.0, fade: true, cam: 2.3 },
+  { id: "jason", name: "Jason", ticker: "JASON", role: "Keys runner", bio: "Ex-army, now moving boats through the Keys for people who pay cash. Wants out of the small jobs.", file: "/models/jason-bust.glb", bg: "/locals/keys-marina.jpg", sun: [0.078, 0.38], sunColor: "#ffecd8", credit: "getclip.fun", creditUrl: "https://getclip.fun", view: "full", height: 1.0, fade: true, cam: 2.3 },
 ];
 
 
@@ -38,7 +38,7 @@ function setupLoader(l: GLTFLoader) {
 function skinMaterial(src: THREE.MeshStandardMaterial, dim: number) {
   if (!src.isMeshStandardMaterial) return src;
   const m = new THREE.MeshPhysicalMaterial({ map: src.map, bumpMap: src.map, bumpScale: 0.0035, color: new THREE.Color("#ffffff"), roughness: 0.74, metalness: 0, envMapIntensity: 0.35,
-    sheen: 0.18, sheenRoughness: 0.85, sheenColor: new THREE.Color("#ffb79e"), clearcoat: 0.06, clearcoatRoughness: 0.6, specularIntensity: 0.45, side: THREE.DoubleSide }); // double-sided: thin hair shells no longer open onto the backdrop
+    sheen: 0.12, sheenRoughness: 0.85, sheenColor: new THREE.Color("#f2d6cc"), clearcoat: 0.06, clearcoatRoughness: 0.6, specularIntensity: 0.45, side: THREE.DoubleSide }); // double-sided: thin hair shells no longer open onto the backdrop
   void dim;
   m.onBeforeCompile = (sh) => {
     // world position for the hair mask (hair = dark, brownish, upper part of the bust)
@@ -54,7 +54,7 @@ function skinMaterial(src: THREE.MeshStandardMaterial, dim: number) {
     sh.fragmentShader = sh.fragmentShader.replace("#include <lights_physical_pars_fragment>", `#include <lights_physical_pars_fragment>
       vec3 sssBleed(vec3 base, float dotNLraw) {
         float t = pow(saturate(1.0 - abs(dotNLraw)), 2.5);          // strongest where light grazes the skin
-        return base * vec3(1.0, 0.28, 0.18) * t * 0.5;
+        return base * vec3(1.0, 0.45, 0.35) * t * 0.3;
       }
       // Kajiya-Kay: hair strands run downwards; two shifted highlights slide along the strands as the head turns
       float hairSpec(vec3 T, vec3 H, float shift, float power) {
@@ -165,10 +165,27 @@ function Panorama({ src, sun, sunColor }: { src: string; sun: [number, number]; 
   const gl = useThree((st) => st.gl);
   const scene = useThree((st) => st.scene);
   const tex = useMemo(() => {
-    const c = document.createElement("canvas"); c.width = img.width; c.height = img.height; const g = c.getContext("2d")!;
-    g.filter = "blur(9px) saturate(0.92) brightness(0.86)"; g.drawImage(img, 0, 0);
-    g.filter = "none"; const haze = g.createLinearGradient(0, 0, 0, c.height); haze.addColorStop(0, "rgba(40,10,60,0.25)"); haze.addColorStop(0.55, "rgba(255,150,90,0.06)"); haze.addColorStop(1, "rgba(15,5,30,0.45)");
-    g.fillStyle = haze; g.fillRect(0, 0, c.width, c.height);   // atmospheric depth: the place sits back, the bust pops
+    const W = img.width, H = img.height;
+    const c = document.createElement("canvas"); c.width = W; c.height = H; const g = c.getContext("2d")!;
+    // lens blur: a soft base (two passes so edges stay creamy, not smeared)…
+    g.filter = "blur(6px)"; g.drawImage(img, 0, 0); g.filter = "blur(10px)"; g.globalAlpha = 0.6; g.drawImage(c, 0, 0); g.globalAlpha = 1; g.filter = "none";
+    // …then bokeh: every bright point of the photo becomes a disc of light, like an f/1.8 portrait lens
+    const sw = 256, sh = Math.round(256 * H / W), sm = document.createElement("canvas"); sm.width = sw; sm.height = sh;
+    const sg = sm.getContext("2d", { willReadFrequently: true })!; sg.drawImage(img, 0, 0, sw, sh); const px = sg.getImageData(0, 0, sw, sh).data;
+    g.globalCompositeOperation = "lighter";
+    for (let y = 0; y < sh; y += 2) for (let x = 0; x < sw; x += 2) {
+      const i = (y * sw + x) * 4, r = px[i], gg = px[i + 1], b = px[i + 2], l = 0.299 * r + 0.587 * gg + 0.114 * b;
+      if (l < 185) continue;
+      const k = (l - 185) / 70, rad = (W / sw) * (2.2 + k * 2.4);
+      const cx = x * W / sw, cy = y * H / sh;
+      const d = g.createRadialGradient(cx, cy, rad * 0.55, cx, cy, rad);
+      d.addColorStop(0, `rgba(${r},${gg},${b},${0.10 + k * 0.12})`); d.addColorStop(0.85, `rgba(${r},${gg},${b},${0.13 + k * 0.14})`); d.addColorStop(1, `rgba(${r},${gg},${b},0)`);   // brighter rim, like real lens bokeh
+      g.fillStyle = d; g.beginPath(); g.arc(cx, cy, rad, 0, Math.PI * 2); g.fill();
+    }
+    g.globalCompositeOperation = "source-over";
+    g.filter = "blur(1.5px) saturate(0.9) brightness(0.88)"; g.drawImage(c, 0, 0); g.filter = "none";
+    const haze = g.createLinearGradient(0, 0, 0, H); haze.addColorStop(0, "rgba(40,10,60,0.18)"); haze.addColorStop(1, "rgba(15,5,30,0.4)");
+    g.fillStyle = haze; g.fillRect(0, 0, W, H);   // atmospheric depth
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.MirroredRepeatWrapping; t.repeat.x = 2; return t;
   }, [img]);
   useEffect(() => {
@@ -190,9 +207,9 @@ function Panorama({ src, sun, sunColor }: { src: string; sun: [number, number]; 
   return (
     <group ref={g}>
       <mesh position-y={0.6} renderOrder={-2}><cylinderGeometry args={[7, 7, 9.4, 128, 1, true]} /><meshBasicMaterial map={tex} side={THREE.BackSide} depthWrite={false} toneMapped={false} /></mesh>
-      <directionalLight ref={keyRef} position={key} intensity={6.5} color={sunColor} castShadow shadow-mapSize={[2048, 2048]} shadow-bias={-0.0002} shadow-normalBias={0.01}
+      <directionalLight ref={keyRef} position={key} intensity={5.6} color={sunColor} castShadow shadow-mapSize={[2048, 2048]} shadow-bias={-0.0002} shadow-normalBias={0.01}
         shadow-camera-left={-1.2} shadow-camera-right={1.2} shadow-camera-top={1.2} shadow-camera-bottom={-1.2} />
-      <directionalLight position={fill} intensity={1.2} color="#a99cff" />
+      <directionalLight position={fill} intensity={1.1} color="#c8c4ff" />
     </group>
   );
 }
@@ -208,11 +225,11 @@ function Env() {
 function Viewer({ local, active }: { local: Local; active: boolean }) {
   return (
     <Canvas dpr={[1, 1.5]} camera={{ position: [0, local.view === "bust" ? 0.02 : 0.1, local.cam ?? 4.5], fov: 30 }} frameloop={active ? "always" : "demand"}
-      gl={{ antialias: true, alpha: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.3 }} shadows="soft" style={{ background: "transparent" }}>
+      gl={{ antialias: true, alpha: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.2 }} shadows="soft" style={{ background: "transparent" }}>
       <Env />
       <Suspense fallback={null}><Panorama src={local.bg ?? "/locals/ocean-drive.jpg"} sun={local.sun ?? [0.05, 0.5]} sunColor={local.sunColor ?? "#ffc48a"} /></Suspense>
       {/* portrait lighting: warm key from the front-left, cool fill from the right, sunset rim from behind */}
-      <ambientLight intensity={0.3} color="#b8a8d8" />
+      <ambientLight intensity={0.34} color="#d8d2e6" />
       <Suspense fallback={null}><Model url={local.file} height={local.height} view={local.view} lift={local.lift} dim={local.dim} /></Suspense>
       {!local.fade && <mesh rotation-x={-Math.PI / 2} position-y={-0.9} receiveShadow><circleGeometry args={[1.1, 48]} /><shadowMaterial transparent opacity={0.35} /></mesh>}
       <EffectComposer multisampling={4}>
