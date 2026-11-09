@@ -14,8 +14,8 @@ import { PalmBackdrop } from "./PalmBackdrop";
 
 export type Local = { id: string; name: string; ticker: string; role: string; bio: string; file: string; credit: string; creditUrl: string; height?: number; view?: "full" | "bust"; fade?: boolean; cam?: number; lift?: number; dim?: number };
 export const LOCALS: Local[] = [
-  { id: "lucia", name: "Lucia", ticker: "LUCIA", role: "Out on parole", bio: "Did her time, kept her fists taped. Fresh out and done waiting for anyone to hand her a way up.", file: "/models/lucia2.glb", credit: "pariuudit", creditUrl: "https://sketchfab.com/3d-models/lucia-8973f1637b0c44848279895e91a96ea3", view: "full", height: 0.62, fade: true, cam: 1.75, lift: 0.0, dim: 0.82 },
-  { id: "jason", name: "Jason", ticker: "JASON", role: "Keys runner", bio: "Ex-army, now moving boats through the Keys for people who pay cash. Wants out of the small jobs.", file: "/models/jason-bust.glb", credit: "Sketchfab community", creditUrl: "https://sketchfab.com/search?q=jason+duval+gta+vi&type=models", view: "bust", height: 1.0, fade: true, cam: 1.75 },
+  { id: "lucia", name: "Lucia", ticker: "LUCIA", role: "Out on parole", bio: "Did her time, kept her fists taped. Fresh out and done waiting for anyone to hand her a way up.", file: "/models/lucia-bust.glb", credit: "getclip.fun", creditUrl: "https://getclip.fun", view: "full", height: 1.0, fade: true, cam: 2.3 },
+  { id: "jason", name: "Jason", ticker: "JASON", role: "Keys runner", bio: "Ex-army, now moving boats through the Keys for people who pay cash. Wants out of the small jobs.", file: "/models/jason-bust.glb", credit: "Sketchfab community", creditUrl: "https://sketchfab.com/search?q=jason+duval+gta+vi&type=models", view: "full", height: 1.0, fade: true, cam: 2.3 },
 ];
 
 
@@ -105,7 +105,7 @@ function Viewer({ local, active }: { local: Local; active: boolean }) {
       <ambientLight intensity={0.5} />
       <directionalLight position={[2.5, 4, 3]} intensity={2.2} castShadow shadow-mapSize={[1024, 1024]} />
       <directionalLight position={[-3, 2, -2]} intensity={0.8} color="#ff5fa8" />
-      <Suspense fallback={null}>{local.id === "lucia" ? <LuciaBust dim={local.dim} /> : <Model url={local.file} height={local.height} view={local.view} lift={local.lift} dim={local.dim} />}</Suspense>
+      <Suspense fallback={null}><Model url={local.file} height={local.height} view={local.view} lift={local.lift} dim={local.dim} /></Suspense>
       {!local.fade && <mesh rotation-x={-Math.PI / 2} position-y={-0.9} receiveShadow><circleGeometry args={[1.1, 48]} /><shadowMaterial transparent opacity={0.35} /></mesh>}
     </Canvas>
   );
@@ -137,7 +137,7 @@ function Card({ local }: { local: Local }) {
         <p className="label text-sun">${local.ticker} · {local.role}</p>
         <h3 className="sec-title mt-1 !text-[42px]">{local.name}</h3>
         <p className="mt-2 leading-[1.55] text-haze">{local.bio}</p>
-        <p className="mt-3 text-[11px] text-haze/70">3D model: <a href={local.creditUrl} target="_blank" rel="noopener noreferrer" className="underline">{local.credit}</a> (CC BY 4.0)</p>
+        {local.credit !== "getclip.fun" && <p className="mt-3 text-[11px] text-haze/70">3D model: <a href={local.creditUrl} target="_blank" rel="noopener noreferrer" className="underline">{local.credit}</a> (CC BY 4.0)</p>}
       </div>
     </div>
   );
