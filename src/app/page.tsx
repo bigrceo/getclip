@@ -6,6 +6,20 @@ import { LiveTrades } from "@/components/LiveTrades";
 import { CoinGrid } from "@/components/CoinGrid";
 import { MapHero } from "@/components/MapHero";
 import { LocalsSection } from "@/components/LocalsSection";
+
+/** pump.fun mark: the tilted two-tone pill. */
+function PumpLogo() {
+  return (
+    <svg width="26" height="26" viewBox="0 0 32 32" aria-label="pump.fun" role="img">
+      <g transform="rotate(-45 16 16)">
+        <rect x="4.5" y="10" width="23" height="12" rx="6" fill="#ffffff" stroke="#14281d" strokeWidth="1.6" />
+        <path d="M16 10.8h5.5a5.2 5.2 0 0 1 0 10.4H16z" fill="#5fd38d" />
+        <line x1="16" y1="10.4" x2="16" y2="21.6" stroke="#14281d" strokeWidth="1.6" />
+        <rect x="4.5" y="10" width="23" height="12" rx="6" fill="none" stroke="#14281d" strokeWidth="1.6" />
+      </g>
+    </svg>
+  );
+}
 import { Countdown } from "@/components/Countdown";
 import { CopyCA } from "@/components/CopyCA";
 
@@ -28,10 +42,16 @@ export default async function Home() {
       </section>
       <CoinGrid initial={hot} />
 
+      <section id="locals" className="mx-auto max-w-[1160px] px-6 pt-[90px] max-md:px-4 max-md:pt-16">
+        <H2 script="Meet the">Locals</H2>
+        <p className="mb-6 mt-2.5 max-w-[720px] leading-[1.55] text-haze">A sunburnt peninsula of neon nights, swamp kings and bad decisions. Every face of {BRAND.state} is in 3D here, and every clip of them can become a coin.</p>
+        <LocalsSection />
+      </section>
+
       <section id="how" className="mx-auto max-w-[1160px] px-6 pt-[90px] max-md:px-4 max-md:pt-16">
         <H2 script="How it">Works</H2>
         <div className="route mb-6 mt-2.5 flex flex-wrap items-center gap-2.5">
-          <span>GTA VI clip</span><i /><span className="hot">pump.fun coin</span><i /><span>Plot on the map</span>
+          <span>GTA VI clip</span><i /><span className="hot inline-flex items-center gap-2"><PumpLogo /> pump.fun coin</span><i /><span>Plot on the map</span>
         </div>
         <div className="grid gap-[18px] md:grid-cols-3">
           <div className="step"><b>01</b><h3 className="my-1.5 text-[20px] font-bold">Paste a clip from {BRAND.state}</h3><p className="leading-[1.55] text-haze">A TikTok, X or YouTube link of any GTA VI moment, or your own capture. Pick the square and the seconds that loop. That clip becomes the coin&apos;s face.</p></div>
@@ -42,12 +62,6 @@ export default async function Home() {
           <p className="leading-[1.55] text-haze">Downtown never sleeps. The Keys never ask questions. Out in the swamp something with a gold chain runs the water, and up in the hills a hunter swears he saw it take a selfie.</p>
           <p className="leading-[1.55] text-haze">Fifty million players, a phone in every pocket, a fake brand on every corner. The first clip of each of them is a coin. {BRAND.state} is the map it all lands on.</p>
         </div>
-      </section>
-
-      <section id="locals" className="mx-auto max-w-[1160px] px-6 pt-[90px] max-md:px-4 max-md:pt-16">
-        <H2 script="Meet the">Locals</H2>
-        <p className="mb-6 mt-2.5 max-w-[720px] leading-[1.55] text-haze">A sunburnt peninsula of neon nights, swamp kings and bad decisions. Every face of {BRAND.state} is in 3D here, and every clip of them can become a coin.</p>
-        <LocalsSection />
       </section>
 
       <section id="launch" className="mx-auto max-w-[1160px] px-6 pt-[90px] max-md:px-4 max-md:pt-16">

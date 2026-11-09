@@ -1,6 +1,6 @@
 "use client";
 /** Atmosphere for the Leonida map: animated ocean, sky dome with a sun, drifting clouds with shadows, district labels, city neon. */
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { DISTRICTS } from "./districts";
@@ -54,10 +54,6 @@ export function Ocean({ mode, half }: { mode: Mode; half: [number, number] }) {
       <mesh rotation-x={-Math.PI / 2} position-y={-0.03}>
         <planeGeometry args={[260, 260]} />
         <meshBasicMaterial ref={base} color={WATER} toneMapped={false} />
-      </mesh>
-      <mesh rotation-x={-Math.PI / 2} position-y={-0.025}>
-        <planeGeometry args={[260, 260]} />
-        <shaderMaterial ref={mat} vertexShader={oceanVert} fragmentShader={oceanFrag} uniforms={uniforms} transparent blending={THREE.AdditiveBlending} depthWrite={false} />
       </mesh>
     </>
   );
@@ -126,43 +122,87 @@ export function Clouds({ mode, count = 9 }: { mode: Mode; count?: number }) {
   );
 }
 
-function labelTexture(text: string, sub?: string) {
-  const c = document.createElement("canvas"); c.width = 512; c.height = 160;
+/** Big GTA-style region titles for the overview. They sit exactly where the map's own big titles were printed (erased from
+ *  the overview images), and fade out with a growing blur as you zoom in, handing over to the map's detailed names. */
+const TITLES: { name: string; sub?: string; u: number; v: number; s?: number }[] = [
+  { name: "Vice City", u: 0.75, v: 0.53, s: 0.95 },
+  { name: "Vice Beach", u: 0.885, v: 0.455, s: 0.62 },
+  { name: "Grassrivers", u: 0.483, v: 0.75 },
+  { name: "Leonida Keys", u: 0.458, v: 0.868 },
+  { name: "Mount Kalaga", u: 0.478, v: 0.241, s: 0.95 },
+  { name: "Port Gellhorn", u: 0.297, v: 0.364, s: 0.8 },
+  { name: "Ambrosia", u: 0.554, v: 0.349, s: 0.8 },
+];
+function pricedownFamily() {
+  if (typeof document === "undefined") return "Impact";
+  const v = getComputedStyle(document.documentElement).getPropertyValue("--font-pricedown").trim();
+  return v || "Impact";
+}
+function labelTexture(text: string, family: string) {
+  const c = document.createElement("canvas"); c.width = 1024; c.height = 256;
   const g = c.getContext("2d")!;
   g.textAlign = "center"; g.textBaseline = "middle";
-  g.font = "700 64px Anton, Impact, 'Arial Narrow', sans-serif";
-  g.shadowColor = "rgba(0,0,0,.8)"; g.shadowBlur = 14;
-  g.lineWidth = 8; g.strokeStyle = "rgba(10,6,24,.85)"; g.strokeText(text, 256, sub ? 62 : 80);
-  g.fillStyle = "#fff4ec"; g.fillText(text, 256, sub ? 62 : 80);
-  if (sub) { g.font = "600 26px Inter, system-ui, sans-serif"; g.letterSpacing = "4px"; g.fillStyle = "#ffc38a"; g.shadowBlur = 8; g.fillText(sub.toUpperCase(), 256, 122); }
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
+  g.font = `400 168px ${family}, Impact, sans-serif`;
+  let size = 168; while (g.measureText(text).width > 960 && size > 60) { size -= 8; g.font = `400 ${size}px ${family}, Impact, sans-serif`; }
+  g.lineJoin = "round";
+  g.shadowColor = "rgba(0,0,0,.55)"; g.shadowBlur = 18; g.shadowOffsetY = 6;
+  g.lineWidth = 16; g.strokeStyle = "#0b0718"; g.strokeText(text, 512, 132);
+  g.shadowColor = "transparent";
+  const grad = g.createLinearGradient(0, 132 - size * 0.45, 0, 132 + size * 0.45);
+  grad.addColorStop(0, "#ffffff"); grad.addColorStop(1, "#ffe1c4");
+  g.fillStyle = grad; g.fillText(text, 512, 132);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter; t.anisotropy = 4; return t;
+}
+/** Sprite material that can blur its texture: sampling a coarser mip level as the title fades. */
+function blurSprite(map: THREE.Texture) {
+  const m = new THREE.SpriteMaterial({ map, transparent: true, opacity: 0, depthWrite: false, depthTest: false, fog: false, toneMapped: false });
+  const blur = { value: 0 };
+  m.onBeforeCompile = (sh) => {
+    sh.uniforms.uBlur = blur;
+    sh.fragmentShader = "uniform float uBlur;\n" + sh.fragmentShader.replace("#include <map_fragment>",
+      "vec4 sampledDiffuseColor = texture2D( map, vMapUv, uBlur );\n\tdiffuseColor *= sampledDiffuseColor;");
+  };
+  m.userData.blur = blur;
+  return m;
 }
 
 export function DistrictLabels({ toWorld }: { toWorld: (u: number, v: number) => [number, number, number] }) {
-  const texs = useMemo(() => DISTRICTS.filter((d) => d.big).map((d) => labelTexture(d.name.toUpperCase(), d.sub)), []);
+  const [family, setFamily] = useState<string | null>(null);
+  useEffect(() => {
+    const f = pricedownFamily(); let done = false;
+    const go = () => { if (!done) { done = true; setFamily(f); } };
+    document.fonts.load(`400 80px ${f.split(",")[0]}`).then(go, go);
+    const t = setTimeout(go, 1500);
+    return () => clearTimeout(t);
+  }, []);
+  const mats = useMemo(() => family ? TITLES.map((d) => blurSprite(labelTexture(d.name.toUpperCase(), family))) : [], [family]);
   const group = useRef<THREE.Group>(null);
   const camera = useThree((s) => s.camera), size = useThree((s) => s.size);
   const v = useMemo(() => new THREE.Vector3(), []);
-  useFrame(() => {
+  const home = useRef(0);
+  useFrame((_, dt) => {
     const g = group.current; if (!g) return;
-    // Zoom fade: camera height stands in for zoom (the tilt is bounded). Gone below ~3.2, full above ~6.
-    const zoomFade = THREE.MathUtils.smoothstep(camera.position.y, 5.0, 8.0);
-    // Panel fade: the hero card (left) and the rail (right) sit over the canvas; a label sliding under them fades instead of being cut.
+    // zoom, relative to the opening framing: sharp at the overview, blurred and gone once you are ~40 % closer
+    if (!home.current) home.current = camera.position.length();
+    const z = THREE.MathUtils.smoothstep(camera.position.length() / home.current, 0.55, 0.85);
     const wide = size.width >= 1200;
-    const leftEdge = wide ? 680 : 0, rightEdge = wide ? size.width - 440 : size.width;
-    g.children.forEach((c) => {
-      const m = (c as THREE.Sprite).material as THREE.SpriteMaterial;
+    const leftEdge = wide ? 560 : 0, rightEdge = wide ? size.width - 400 : size.width;
+    g.children.forEach((c, i) => {
+      const m = mats[i]; if (!m) return;
       v.copy(c.position).project(camera);
       const sx = (v.x + 1) / 2 * size.width;
       const edge = Math.min(THREE.MathUtils.smoothstep(sx - leftEdge, -40, 160), THREE.MathUtils.smoothstep(rightEdge - sx, -40, 160));
-      const o = zoomFade * edge * 0.95;
-      m.opacity += (o - m.opacity) * 0.12;
+      const target = z * edge;
+      m.opacity += (target - m.opacity) * Math.min(1, dt * 10);
+      const b = m.userData.blur as { value: number };
+      b.value += ((1 - z) * 6 - b.value) * Math.min(1, dt * 10);   // blur follows the zoom only: sharp at the overview, softer every frame as you zoom in
     });
   });
+  if (!family) return null;
   return (
     <group ref={group}>
-      {DISTRICTS.filter((d) => d.big).map((d, i) => { const [x, , z] = toWorld(d.u, d.v); return (
-        <sprite key={d.name} position={[x, 0.55, z]} scale={[3.2, 1, 1]}><spriteMaterial map={texs[i]} transparent opacity={0} depthWrite={false} depthTest={false} /></sprite>
+      {TITLES.map((d, i) => { const [x, , z] = toWorld(d.u, d.v); const k = d.s ?? 1; return (
+        <sprite key={d.name} position={[x, 0.55, z]} scale={[4.2 * k, 1.05 * k, 1]} material={mats[i]} />
       ); })}
     </group>
   );

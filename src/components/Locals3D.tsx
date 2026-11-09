@@ -56,6 +56,8 @@ function slowmo(t: number) {
 }
 const speed = (t: number) => 1 - 0.88 * slowmo(t);
 
+const BREATH = { value: 0 };
+
 const SUN = new THREE.Vector3(-2.2, 1.1, 2.8);
 
 function setupLoader(l: GLTFLoader) {
@@ -65,21 +67,38 @@ function setupLoader(l: GLTFLoader) {
 
 /** Skin shading: wrap lighting (soft terminator), red subsurface bleed where light grazes, matte base with a faint oily
  *  clearcoat on the highlights and a soft sheen. Applied to the whole bust (one material per generated model). */
-function skinMaterial(src: THREE.MeshStandardMaterial, dim: number) {
+function skinMaterial(src: THREE.MeshStandardMaterial, dim: number, objScale = 1, phase = 0) {
   if (!src.isMeshStandardMaterial) return src;
   const m = new THREE.MeshPhysicalMaterial({ map: src.map, bumpMap: src.map, bumpScale: 0.0035, color: new THREE.Color("#ffffff"), roughness: 0.74, metalness: 0, envMapIntensity: 0.35,
     sheen: 0.12, sheenRoughness: 0.85, sheenColor: new THREE.Color("#f2d6cc"), clearcoat: 0.06, clearcoatRoughness: 0.6, specularIntensity: 0.45, side: THREE.DoubleSide }); // double-sided: thin hair shells no longer open onto the backdrop
   void dim;
   m.onBeforeCompile = (sh) => {
     // world position for the hair mask (hair = dark, brownish, upper part of the bust)
-    sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nvarying vec3 vWPos;")
-      .replace("#include <begin_vertex>", "#include <begin_vertex>\nvWPos = (modelMatrix * vec4(transformed, 1.0)).xyz;");
+    sh.uniforms.uBreath = BREATH; sh.uniforms.uPhase = { value: phase }; sh.uniforms.uObjScale = { value: objScale };
+    sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nvarying vec3 vWPos;\nvarying vec3 vOPos;\nuniform float uBreath; uniform float uPhase; uniform float uObjScale;")
+      .replace("#include <begin_vertex>", `#include <begin_vertex>
+        vOPos = position;
+        {
+          // breathing: ~15 breaths a minute, chest swells outward, shoulders and head rise a few millimetres
+          float wy = (modelMatrix * vec4(position, 1.0)).y;
+          float b = sin((uBreath + uPhase) * 6.2832 / 4.2); b = b * 0.5 + 0.5; b = b * b * (3.0 - 2.0 * b);
+          float chest = smoothstep(-0.5, -0.3, wy) * (1.0 - smoothstep(-0.12, 0.05, wy));
+          float lift = smoothstep(-0.42, -0.05, wy);
+          transformed += objectNormal * (0.0045 * chest * b) / uObjScale;
+          transformed.y += (0.0028 * lift * b) / uObjScale;
+        }
+        vWPos = (modelMatrix * vec4(transformed, 1.0)).xyz;`);
     sh.fragmentShader = sh.fragmentShader.replace("#include <common>", `#include <common>
       varying vec3 vWPos;
       float hairMask = 0.0;
       float clothMask = 0.0;
       float metalMask = 0.0;
       float thinMask = 0.0;
+      varying vec3 vOPos; uniform float uObjScale;
+      float h3(vec3 p) { p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
+      float vnoise(vec3 x) { vec3 i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(mix(h3(i), h3(i + vec3(1,0,0)), f.x), mix(h3(i + vec3(0,1,0)), h3(i + vec3(1,1,0)), f.x), f.y),
+                   mix(mix(h3(i + vec3(0,0,1)), h3(i + vec3(1,0,1)), f.x), mix(h3(i + vec3(0,1,1)), h3(i + vec3(1,1,1)), f.x), f.y), f.z); }
       vec3 transl(vec3 base, vec3 L, vec3 V, float thin) {
         float back = pow(saturate(dot(V, -L)), 3.0);                 // light coming through toward the camera
         return base * vec3(1.0, 0.42, 0.26) * back * thin * 1.6;      // blood-red glow, like ears against the sun
@@ -114,6 +133,18 @@ function skinMaterial(src: THREE.MeshStandardMaterial, dim: number) {
         float curv = length(fwidth(normalize(vNormal))) / max(length(fwidth(vWPos)), 1e-5);
         thinMask = smoothstep(18.0, 45.0, curv) * (1.0 - hairMask) * (1.0 - clothMask) * (1.0 - metalMask) * smoothstep(-0.05, 0.1, vWPos.y);
       }`);
+    // micro relief: pores on skin, ribbed knit on the tank top (object space, so it sticks to the surface as it turns)
+    sh.fragmentShader = sh.fragmentShader.replace("#include <normal_fragment_maps>", `#include <normal_fragment_maps>
+      {
+        vec3 p = vOPos * uObjScale;
+        float sk = (1.0 - hairMask) * (1.0 - clothMask) * (1.0 - metalMask);
+        float h = sk * (vnoise(p * 520.0) * 0.65 + vnoise(p * 1500.0) * 0.35) * 0.00022
+                + clothMask * ((sin((p.x + p.z) * 950.0) * 0.5 + 0.5) * 0.0003 + vnoise(p * 2400.0) * 0.00012);
+        vec3 sx = dFdx(-vViewPosition), sy = dFdy(-vViewPosition);
+        vec3 r1 = cross(sy, normal), r2 = cross(normal, sx); float det = dot(sx, r1);
+        vec3 grad = sign(det) * (dFdx(h) * r1 + dFdy(h) * r2);
+        normal = normalize(abs(det) * normal - grad);
+      }`);
     // bump (strand micro-relief) only on hair
     sh.fragmentShader = sh.fragmentShader.replace("dHdxy_fwd()", "dHdxy_fwd() * hairMask");
     // hair: rougher base, no clearcoat
@@ -146,7 +177,7 @@ function skinMaterial(src: THREE.MeshStandardMaterial, dim: number) {
         reflectedLight.directSpecular += hairMask * (s1 * 0.05 + s2 * 0.05 * diffuseColor.rgb * 3.0) * tint;
       }`);
   };
-  m.customProgramCacheKey = () => "skin-hair-cloth-metal-thin";
+  m.customProgramCacheKey = () => "skin-hair-cloth-metal-thin-micro-breath";
   return m;
 }
 
@@ -166,11 +197,16 @@ function Model({ url, height = 1.8, view = "full", lift = 0, dim = 1 }: { url: s
       mesh.castShadow = true; mesh.receiveShadow = true;
       // Skin and hair must not read as metal: converted models often ship metallic 1 / roughness 0 → white hot spots.
       const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-      mesh.material = mats.length === 1 ? skinMaterial(mats[0] as THREE.MeshStandardMaterial, dim) : mats.map((m) => skinMaterial(m as THREE.MeshStandardMaterial, dim));
+      mesh.material = mats.length === 1 ? skinMaterial(mats[0] as THREE.MeshStandardMaterial, dim, s, url.includes("jason") ? 1.9 : 0) : mats.map((m) => skinMaterial(m as THREE.MeshStandardMaterial, dim, s, url.includes("jason") ? 1.9 : 0));
     });
     setFit({ s, y: 0 });
-  }, [scene, height, dim]);
-  useFrame((st, dt) => { if (g.current) g.current.rotation.y += dt * 0.45 * speed(st.clock.elapsedTime); });
+  }, [scene, height, dim, url]);
+  useFrame((st, dt) => {
+    const t = st.clock.elapsedTime; BREATH.value = t;
+    if (!g.current) return; g.current.rotation.y += dt * 0.45 * speed(t);
+    g.current.rotation.x = 0.008 * Math.sin(t * 0.61) + 0.004 * Math.sin(t * 1.7);   // the body is never perfectly still
+    g.current.rotation.z = 0.006 * Math.sin(t * 0.47 + 1.3);
+  });
   if (!fit) return null;
   // full: whole body centred; bust: the top ~32 % of the model (head and shoulders) centred, the rest fades out below
   return <group ref={g} scale={fit.s} position-y={(view === "bust" ? -height * 0.72 : -height / 2) + lift}><primitive object={scene} /></group>;
