@@ -32,7 +32,7 @@ function setupLoader(l: GLTFLoader) {
 function skinMaterial(src: THREE.MeshStandardMaterial, dim: number) {
   if (!src.isMeshStandardMaterial) return src;
   const m = new THREE.MeshPhysicalMaterial({ map: src.map, color: new THREE.Color("#ffffff"), roughness: 0.6, metalness: 0, envMapIntensity: 0.5,
-    sheen: 0.18, sheenRoughness: 0.85, sheenColor: new THREE.Color("#ffb79e"), clearcoat: 0.22, clearcoatRoughness: 0.42, specularIntensity: 0.8 });
+    sheen: 0.18, sheenRoughness: 0.85, sheenColor: new THREE.Color("#ffb79e"), clearcoat: 0.22, clearcoatRoughness: 0.42, specularIntensity: 0.8, side: THREE.DoubleSide }); // double-sided: thin hair shells no longer open onto the backdrop
   void dim;
   m.onBeforeCompile = (sh) => {
     sh.fragmentShader = sh.fragmentShader.replace("#include <lights_physical_pars_fragment>", `#include <lights_physical_pars_fragment>
