@@ -31,8 +31,8 @@ function setupLoader(l: GLTFLoader) {
  *  clearcoat on the highlights and a soft sheen. Applied to the whole bust (one material per generated model). */
 function skinMaterial(src: THREE.MeshStandardMaterial, dim: number) {
   if (!src.isMeshStandardMaterial) return src;
-  const m = new THREE.MeshPhysicalMaterial({ map: src.map, bumpMap: src.map, bumpScale: 0.0035, color: new THREE.Color("#ffffff"), roughness: 0.6, metalness: 0, envMapIntensity: 0.5,
-    sheen: 0.18, sheenRoughness: 0.85, sheenColor: new THREE.Color("#ffb79e"), clearcoat: 0.22, clearcoatRoughness: 0.42, specularIntensity: 0.8, side: THREE.DoubleSide }); // double-sided: thin hair shells no longer open onto the backdrop
+  const m = new THREE.MeshPhysicalMaterial({ map: src.map, bumpMap: src.map, bumpScale: 0.0035, color: new THREE.Color("#ffffff"), roughness: 0.74, metalness: 0, envMapIntensity: 0.3,
+    sheen: 0.18, sheenRoughness: 0.85, sheenColor: new THREE.Color("#ffb79e"), clearcoat: 0.06, clearcoatRoughness: 0.6, specularIntensity: 0.45, side: THREE.DoubleSide }); // double-sided: thin hair shells no longer open onto the backdrop
   void dim;
   m.onBeforeCompile = (sh) => {
     // world position for the hair mask (hair = dark, brownish, upper part of the bust)
@@ -41,6 +41,8 @@ function skinMaterial(src: THREE.MeshStandardMaterial, dim: number) {
     sh.fragmentShader = sh.fragmentShader.replace("#include <common>", `#include <common>
       varying vec3 vWPos;
       float hairMask = 0.0;
+      float clothMask = 0.0;
+      float metalMask = 0.0;
       uniform vec3 uKeyPos;`);
     sh.uniforms.uKeyPos = { value: new THREE.Vector3(-1.6, 2.2, 2.6) };
     sh.fragmentShader = sh.fragmentShader.replace("#include <lights_physical_pars_fragment>", `#include <lights_physical_pars_fragment>
@@ -62,17 +64,27 @@ function skinMaterial(src: THREE.MeshStandardMaterial, dim: number) {
         float brown = step(diffuseColor.b * 1.08, diffuseColor.r) * step(diffuseColor.b, diffuseColor.g + 0.06);
         float high = smoothstep(-0.05, 0.12, vWPos.y);
         hairMask = (1.0 - smoothstep(0.16, 0.34, lum)) * brown * high;
+        float sat = max(diffuseColor.r, max(diffuseColor.g, diffuseColor.b)) - min(diffuseColor.r, min(diffuseColor.g, diffuseColor.b));
+        float low = 1.0 - smoothstep(-0.18, -0.02, vWPos.y);                       // below the collarbones
+        clothMask = (1.0 - smoothstep(0.10, 0.22, lum)) * (1.0 - smoothstep(0.04, 0.10, sat)) * low * (1.0 - hairMask);   // dark neutral = tank top
+        metalMask = smoothstep(0.40, 0.60, lum) * (1.0 - smoothstep(0.04, 0.09, sat)) * low;                               // bright neutral = chain
         diffuseColor.rgb *= 1.0 - hairMask * 0.22 * smoothstep(0.1, 0.45, vWPos.y);   // roots a touch darker near the crown
       }`);
     // bump (strand micro-relief) only on hair
     sh.fragmentShader = sh.fragmentShader.replace("dHdxy_fwd()", "dHdxy_fwd() * hairMask");
     // hair: rougher base, no clearcoat
-    sh.fragmentShader = sh.fragmentShader.replace("material.roughness = max( roughnessFactor, 0.045 );", "material.roughness = mix( max( roughnessFactor, 0.045 ), 0.62, hairMask );");
-    sh.fragmentShader = sh.fragmentShader.replace("material.clearcoat = clearcoat;", "material.clearcoat = clearcoat * ( 1.0 - hairMask );");
+    sh.fragmentShader = sh.fragmentShader.replace("material.roughness = max( roughnessFactor, 0.045 );", "material.roughness = max( roughnessFactor, 0.045 ); material.roughness = mix( material.roughness, 0.85, hairMask ); material.roughness = mix( material.roughness, 0.97, clothMask ); material.roughness = mix( material.roughness, 0.28, metalMask );");
+    sh.fragmentShader = sh.fragmentShader.replace("material.clearcoat = clearcoat;", "material.clearcoat = clearcoat * ( 1.0 - hairMask ) * ( 1.0 - clothMask ) * ( 1.0 - metalMask );");
+    // chain: metallic; tank top: no specular, strong fabric sheen; skin keeps its sheen
+    sh.fragmentShader = sh.fragmentShader.replace("#include <metalnessmap_fragment>", "#include <metalnessmap_fragment>\n\tmetalnessFactor = mix( metalnessFactor, 0.9, metalMask );");
+    sh.fragmentShader = sh.fragmentShader.replace("material.specularF90 = mix( specularIntensityFactor, 1.0, metalnessFactor );",
+      "material.specularF90 = mix( specularIntensityFactor, 1.0, metalnessFactor );\n\tmaterial.specularColor *= ( 1.0 - clothMask * 0.85 );");
+    sh.fragmentShader = sh.fragmentShader.replace("material.sheenRoughness = clamp( sheenRoughness, 0.0001, 1.0 );",
+      "material.sheenRoughness = clamp( sheenRoughness, 0.0001, 1.0 );\n\tmaterial.sheenColor = mix( material.sheenColor, vec3( 0.35 ), clothMask ) * ( 1.0 - metalMask ) * ( 1.0 - hairMask );\n\tmaterial.sheenRoughness = mix( material.sheenRoughness, 1.0, clothMask );");
     // wrap the diffuse term and add the bleed (RE_Direct_Physical is reached through lights_fragment_begin)
     sh.fragmentShader = sh.fragmentShader.replace(
       "float dotNL = saturate( dot( geometryNormal, directLight.direction ) );\n\tvec3 irradiance = dotNL * directLight.color;",
-      "float dotNLraw = dot( geometryNormal, directLight.direction );\n\tfloat dotNL = saturate( ( dotNLraw + 0.3 ) / 1.3 );\n\tvec3 irradiance = dotNL * directLight.color;\n\treflectedLight.directDiffuse += sssBleed( material.diffuseColor, dotNLraw ) * directLight.color * 0.6 * ( 1.0 - hairMask );");
+      "float dotNLraw = dot( geometryNormal, directLight.direction );\n\tfloat dotNL = saturate( ( dotNLraw + 0.3 ) / 1.3 );\n\tvec3 irradiance = dotNL * directLight.color;\n\treflectedLight.directDiffuse += sssBleed( material.diffuseColor, dotNLraw ) * directLight.color * 0.6 * ( 1.0 - hairMask ) * ( 1.0 - clothMask ) * ( 1.0 - metalMask );");
     // anisotropic hair highlights from the key light, added at the end of lighting
     sh.fragmentShader = sh.fragmentShader.replace("#include <lights_fragment_end>", `#include <lights_fragment_end>
       if (hairMask > 0.001) {
@@ -85,10 +97,10 @@ function skinMaterial(src: THREE.MeshStandardMaterial, dim: number) {
         float s1 = hairSpec(T, H, -0.08, 110.0);
         float s2 = hairSpec(T, H,  0.12, 40.0);
         vec3 tint = mix(vec3(1.0, 0.92, 0.82), diffuseColor.rgb * 2.2, 0.6);
-        reflectedLight.directSpecular += hairMask * (s1 * 0.32 + s2 * 0.16 * diffuseColor.rgb * 3.0) * tint;
+        reflectedLight.directSpecular += hairMask * (s1 * 0.10 + s2 * 0.06 * diffuseColor.rgb * 3.0) * tint;
       }`);
   };
-  m.customProgramCacheKey = () => "skin-hair";
+  m.customProgramCacheKey = () => "skin-hair-cloth-metal";
   return m;
 }
 
@@ -186,8 +198,9 @@ function Card({ local }: { local: Local }) {
   useEffect(() => { fetch(local.file, { method: "HEAD", cache: "no-store" }).then((r) => setExists(r.ok)).catch(() => setExists(false)); }, [local.file]);
   useEffect(() => {
     const el = ref.current; if (!el) return;
-    const io = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { rootMargin: "200px" });
-    io.observe(el); return () => io.disconnect();
+    const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) setVisible(true); }, { rootMargin: "300px", threshold: 0 });
+    const t = setTimeout(() => { const r = el.getBoundingClientRect(); if (r.bottom > -300 && r.top < innerHeight + 300) setVisible(true); }, 800);
+    io.observe(el); return () => { io.disconnect(); clearTimeout(t); };
   }, []);
   return (
     <div ref={ref} className="glass overflow-hidden">
