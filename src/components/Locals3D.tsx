@@ -31,8 +31,9 @@ function setupLoader(l: GLTFLoader) {
  *  clearcoat on the highlights and a soft sheen. Applied to the whole bust (one material per generated model). */
 function skinMaterial(src: THREE.MeshStandardMaterial, dim: number) {
   if (!src.isMeshStandardMaterial) return src;
-  const m = new THREE.MeshPhysicalMaterial({ map: src.map, color: new THREE.Color().setScalar(dim), roughness: 0.74, metalness: 0, envMapIntensity: 0.22 * dim,
-    sheen: 0.35, sheenRoughness: 0.9, sheenColor: new THREE.Color("#ffb79e"), clearcoat: 0.07, clearcoatRoughness: 0.6, specularIntensity: 0.45 });
+  const m = new THREE.MeshPhysicalMaterial({ map: src.map, color: new THREE.Color("#ffffff"), roughness: 0.6, metalness: 0, envMapIntensity: 0.5,
+    sheen: 0.18, sheenRoughness: 0.85, sheenColor: new THREE.Color("#ffb79e"), clearcoat: 0.22, clearcoatRoughness: 0.42, specularIntensity: 0.8 });
+  void dim;
   m.onBeforeCompile = (sh) => {
     sh.fragmentShader = sh.fragmentShader.replace("#include <lights_physical_pars_fragment>", `#include <lights_physical_pars_fragment>
       vec3 sssBleed(vec3 base, float dotNLraw) {
@@ -116,7 +117,7 @@ function Env() {
 function Viewer({ local, active }: { local: Local; active: boolean }) {
   return (
     <Canvas dpr={[1, 2]} camera={{ position: [0, local.view === "bust" ? 0.02 : 0.1, local.cam ?? 4.5], fov: 30 }} frameloop={active ? "always" : "never"}
-      gl={{ antialias: true, alpha: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.4 }} shadows="soft" style={{ background: "transparent" }}>
+      gl={{ antialias: true, alpha: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.3 }} shadows="soft" style={{ background: "transparent" }}>
       <Env />
       {/* portrait lighting: warm key from the front-left, cool fill from the right, sunset rim from behind */}
       <ambientLight intensity={0.22} color="#c9b8ff" />
@@ -126,10 +127,10 @@ function Viewer({ local, active }: { local: Local; active: boolean }) {
       <Suspense fallback={null}><Model url={local.file} height={local.height} view={local.view} lift={local.lift} dim={local.dim} /></Suspense>
       {!local.fade && <mesh rotation-x={-Math.PI / 2} position-y={-0.9} receiveShadow><circleGeometry args={[1.1, 48]} /><shadowMaterial transparent opacity={0.35} /></mesh>}
       <EffectComposer multisampling={4}>
-        <N8AO aoRadius={0.35} intensity={1.6} distanceFalloff={0.6} quality="performance" />
+        <N8AO aoRadius={0.3} intensity={0.9} distanceFalloff={0.6} quality="performance" />
         <DepthOfField focusDistance={0.02} focalLength={0.08} bokehScale={1.6} />
-        <Noise premultiply blendFunction={BlendFunction.SOFT_LIGHT} opacity={0.35} />
-        <Vignette eskil={false} offset={0.25} darkness={0.55} />
+        <Noise premultiply blendFunction={BlendFunction.SOFT_LIGHT} opacity={0.2} />
+        <Vignette eskil={false} offset={0.3} darkness={0.4} />
       </EffectComposer>
     </Canvas>
   );
