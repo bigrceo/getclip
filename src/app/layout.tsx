@@ -28,8 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${inter.variable} ${pricedown.variable} ${anton.variable} ${yellowtail.variable}`}>
       <head>
-        <link rel="preload" as="image" href="/map/yanis-4k.jpg" media="(min-width: 900px)" crossOrigin="anonymous" />
-        <link rel="preload" as="image" href="/map/yanis-2k.jpg" media="(max-width: 899px)" crossOrigin="anonymous" />
+                <link rel="preload" as="image" href="/map/yanis-2k.jpg" crossOrigin="anonymous" fetchPriority="high" />
         <link rel="preload" as="image" href="/locals/ocean-drive-bokeh.jpg" />
         <link rel="preload" as="image" href="/locals/keys-marina-bokeh.jpg" />
         <link rel="preload" as="fetch" href="/models/lucia-v2.glb" crossOrigin="anonymous" fetchPriority="low" />

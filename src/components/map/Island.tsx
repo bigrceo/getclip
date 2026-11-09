@@ -26,7 +26,7 @@ function edgeMask() {
 
 export function Island({ mode, planeW, planeH, onReady }: { mode: Mode; planeW: number; planeH: number; onReady: () => void }) {
   const small = typeof window !== "undefined" && window.innerWidth < 900;
-  const map4k = useLoader(THREE.TextureLoader, small ? "/map/yanis-2k.jpg" : "/map/yanis-4k.jpg"); // phones: 2K first paint, no 8K swap
+  const map4k = useLoader(THREE.TextureLoader, "/map/yanis-2k.jpg"); // first paint: the 2K (≈430 KB), sharper layers fade in over it
   const gl = useThree((s) => s.gl);
   const mat = useRef<THREE.MeshBasicMaterial>(null);
   const hi = useRef<THREE.MeshBasicMaterial>(null);
@@ -36,9 +36,12 @@ export function Island({ mode, planeW, planeH, onReady }: { mode: Mode; planeW: 
   useMemo(() => prep(map4k), [map4k]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { onReady(); }, [onReady]);
   useEffect(() => {
-    if (small) return;
     let alive = true;
-    new THREE.TextureLoader().load("/map/yanis-8k.jpg", (t) => { if (!alive) return; setMap8k(prep(t)); });
+    // 4K next (desktop and phones), then 8K on desktop; each one replaces the overlay once decoded
+    new THREE.TextureLoader().load("/map/yanis-4k.jpg", (t4) => {
+      if (!alive) return; setMap8k(prep(t4));
+      if (!small) new THREE.TextureLoader().load("/map/yanis-8k.jpg", (t8) => { if (alive) setMap8k(prep(t8)); });
+    });
     return () => { alive = false; };
   }, [small]); // eslint-disable-line react-hooks/exhaustive-deps
   useFrame((_, dt) => {
