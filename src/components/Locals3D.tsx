@@ -116,12 +116,12 @@ function Env() {
 function Viewer({ local, active }: { local: Local; active: boolean }) {
   return (
     <Canvas dpr={[1, 2]} camera={{ position: [0, local.view === "bust" ? 0.02 : 0.1, local.cam ?? 4.5], fov: 30 }} frameloop={active ? "always" : "never"}
-      gl={{ antialias: true, alpha: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.18 }} shadows="soft" style={{ background: "transparent" }}>
+      gl={{ antialias: true, alpha: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.4 }} shadows="soft" style={{ background: "transparent" }}>
       <Env />
       {/* portrait lighting: warm key from the front-left, cool fill from the right, sunset rim from behind */}
-      <ambientLight intensity={0.12} color="#c9b8ff" />
+      <ambientLight intensity={0.22} color="#c9b8ff" />
       <spotLight position={[-1.6, 2.2, 2.6]} angle={0.6} penumbra={0.9} intensity={20} color="#fff1dc" castShadow shadow-mapSize={[2048, 2048]} shadow-bias={-0.0002} shadow-normalBias={0.01} />
-      <spotLight position={[2.4, 1.2, 2.0]} angle={0.7} penumbra={1} intensity={3} color="#9fb8ff" />
+      <spotLight position={[2.4, 1.2, 2.0]} angle={0.7} penumbra={1} intensity={7} color="#9fb8ff" />
       <spotLight position={[0.8, 1.8, -2.4]} angle={0.7} penumbra={1} intensity={6} color="#ff7a5c" />
       <Suspense fallback={null}><Model url={local.file} height={local.height} view={local.view} lift={local.lift} dim={local.dim} /></Suspense>
       {!local.fade && <mesh rotation-x={-Math.PI / 2} position-y={-0.9} receiveShadow><circleGeometry args={[1.1, 48]} /><shadowMaterial transparent opacity={0.35} /></mesh>}
