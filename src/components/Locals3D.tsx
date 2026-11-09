@@ -4,7 +4,7 @@
  * card. Each model only loads when its card scrolls into view; a card whose file is missing shows a silhouette.
  */
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { Canvas, useFrame, useLoader } from "@react-three/fiber";
+import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
@@ -13,10 +13,10 @@ import { PalmBackdrop } from "./PalmBackdrop";
 import { EffectComposer, N8AO, Noise, Vignette } from "@react-three/postprocessing";
 import { BlendFunction } from "postprocessing";
 
-export type Local = { id: string; name: string; ticker: string; role: string; bio: string; file: string; credit: string; creditUrl: string; height?: number; view?: "full" | "bust"; fade?: boolean; cam?: number; lift?: number; dim?: number; bg?: string };
+export type Local = { id: string; name: string; ticker: string; role: string; bio: string; file: string; credit: string; creditUrl: string; height?: number; view?: "full" | "bust"; fade?: boolean; cam?: number; lift?: number; dim?: number; bg?: string; sun?: [number, number]; sunColor?: string };
 export const LOCALS: Local[] = [
-  { id: "lucia", name: "Lucia", ticker: "LUCIA", role: "Out on parole", bio: "Did her time, kept her fists taped. Fresh out and done waiting for anyone to hand her a way up.", file: "/models/lucia-bust.glb", bg: "/locals/ocean-drive.jpg", credit: "getclip.fun", creditUrl: "https://getclip.fun", view: "full", height: 1.0, fade: true, cam: 2.3 },
-  { id: "jason", name: "Jason", ticker: "JASON", role: "Keys runner", bio: "Ex-army, now moving boats through the Keys for people who pay cash. Wants out of the small jobs.", file: "/models/jason-bust.glb", bg: "/locals/keys-marina.jpg", credit: "getclip.fun", creditUrl: "https://getclip.fun", view: "full", height: 1.0, fade: true, cam: 2.3 },
+  { id: "lucia", name: "Lucia", ticker: "LUCIA", role: "Out on parole", bio: "Did her time, kept her fists taped. Fresh out and done waiting for anyone to hand her a way up.", file: "/models/lucia-bust.glb", bg: "/locals/ocean-drive.jpg", sun: [0.03, 0.59], sunColor: "#ffc08a", credit: "getclip.fun", creditUrl: "https://getclip.fun", view: "full", height: 1.0, fade: true, cam: 2.3 },
+  { id: "jason", name: "Jason", ticker: "JASON", role: "Keys runner", bio: "Ex-army, now moving boats through the Keys for people who pay cash. Wants out of the small jobs.", file: "/models/jason-bust.glb", bg: "/locals/keys-marina.jpg", sun: [0.078, 0.38], sunColor: "#ffcf9a", credit: "getclip.fun", creditUrl: "https://getclip.fun", view: "full", height: 1.0, fade: true, cam: 2.3 },
 ];
 
 
@@ -25,6 +25,8 @@ export const LOCALS: Local[] = [
 if (typeof window !== "undefined") {
   for (const l of LOCALS) useLoader.preload(GLTFLoader, l.file, setupLoader);
 }
+
+const SUN = new THREE.Vector3(-2.2, 1.1, 2.8);
 
 function setupLoader(l: GLTFLoader) {
   const draco = new DRACOLoader(); draco.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.5.7/");
@@ -48,7 +50,7 @@ function skinMaterial(src: THREE.MeshStandardMaterial, dim: number) {
       float clothMask = 0.0;
       float metalMask = 0.0;
       uniform vec3 uKeyPos;`);
-    sh.uniforms.uKeyPos = { value: new THREE.Vector3(-2.2, 1.1, 2.8) };
+    sh.uniforms.uKeyPos = { value: SUN };
     sh.fragmentShader = sh.fragmentShader.replace("#include <lights_physical_pars_fragment>", `#include <lights_physical_pars_fragment>
       vec3 sssBleed(vec3 base, float dotNLraw) {
         float t = pow(saturate(1.0 - abs(dotNLraw)), 2.5);          // strongest where light grazes the skin
@@ -154,14 +156,44 @@ function skyTexture() {
 }
 /** A real photo panorama of the shore wrapped around the bust, turning with it so orbiting the character orbits the place.
  *  The photo is mirrored once around the cylinder so the loop has no seam. */
-function Panorama({ src }: { src: string }) {
-  const tex = useLoader(THREE.TextureLoader, src);
-  useMemo(() => { tex.colorSpace = THREE.SRGBColorSpace; tex.wrapS = THREE.MirroredRepeatWrapping; tex.repeat.x = 2; tex.anisotropy = 8; tex.needsUpdate = true; }, [tex]);
-  const a = useRef<THREE.Mesh>(null);
-  useFrame((_, dt) => { if (a.current) a.current.rotation.y += dt * 0.45; });
-  // circumference 2π·7 ≈ 44 → two 21:9 copies of 22 each → height 22·9/21 ≈ 9.4
+/** Real photo wrapped around the bust. It is blurred like a portrait lens (shallow depth of field), it lights the bust
+ *  (reflections and ambient come from the same photo) and it carries the sun: the key light sits where the sun is in the
+ *  picture and turns with it, so the lit side of the face always matches the sky behind. */
+function Panorama({ src, sun, sunColor }: { src: string; sun: [number, number]; sunColor: string }) {
+  const photo = useLoader(THREE.TextureLoader, src);
+  const img = photo.image as HTMLImageElement;
+  const gl = useThree((st) => st.gl);
+  const scene = useThree((st) => st.scene);
+  const tex = useMemo(() => {
+    const c = document.createElement("canvas"); c.width = img.width; c.height = img.height; const g = c.getContext("2d")!;
+    g.filter = "blur(9px) saturate(0.92) brightness(0.86)"; g.drawImage(img, 0, 0);
+    g.filter = "none"; const haze = g.createLinearGradient(0, 0, 0, c.height); haze.addColorStop(0, "rgba(40,10,60,0.25)"); haze.addColorStop(0.55, "rgba(255,150,90,0.06)"); haze.addColorStop(1, "rgba(15,5,30,0.45)");
+    g.fillStyle = haze; g.fillRect(0, 0, c.width, c.height);   // atmospheric depth: the place sits back, the bust pops
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.MirroredRepeatWrapping; t.repeat.x = 2; return t;
+  }, [img]);
+  useEffect(() => {
+    const p = new THREE.PMREMGenerator(gl); const e = tex.clone(); e.mapping = THREE.EquirectangularReflectionMapping; e.repeat.x = 1;
+    const env = p.fromEquirectangular(e).texture; scene.environment = env; scene.environmentIntensity = 1.1; p.dispose();
+    return () => { env.dispose(); };
+  }, [tex, gl, scene]);
+  const g = useRef<THREE.Group>(null);
+  const keyRef = useRef<THREE.DirectionalLight>(null);
+  // cylinder: radius 7, height 9.4 centred at y 0.6, image u = f / 2 (two mirrored copies) → angle π·f
+  const th = Math.PI * sun[0], sy = Math.max(0.5, 0.6 + 4.7 - sun[1] * 9.4);
+  const key: [number, number, number] = [Math.sin(th) * 4, sy * 0.6, Math.cos(th) * 4];
+  const fill: [number, number, number] = [-key[0], 0.8, -key[2]];
+  useFrame((_, dt) => {
+    if (!g.current) return; g.current.rotation.y += dt * 0.45;
+    scene.environmentRotation.y = g.current.rotation.y;
+    keyRef.current?.getWorldPosition(SUN);
+  });
   return (
-    <mesh ref={a} position-y={0.6} renderOrder={-2}><cylinderGeometry args={[7, 7, 9.4, 128, 1, true]} /><meshBasicMaterial map={tex} side={THREE.BackSide} depthWrite={false} toneMapped={false} /></mesh>
+    <group ref={g}>
+      <mesh position-y={0.6} renderOrder={-2}><cylinderGeometry args={[7, 7, 9.4, 128, 1, true]} /><meshBasicMaterial map={tex} side={THREE.BackSide} depthWrite={false} toneMapped={false} /></mesh>
+      <directionalLight ref={keyRef} position={key} intensity={6.5} color={sunColor} castShadow shadow-mapSize={[2048, 2048]} shadow-bias={-0.0002} shadow-normalBias={0.01}
+        shadow-camera-left={-1.2} shadow-camera-right={1.2} shadow-camera-top={1.2} shadow-camera-bottom={-1.2} />
+      <directionalLight position={fill} intensity={1.2} color="#a99cff" />
+    </group>
   );
 }
 
@@ -178,12 +210,9 @@ function Viewer({ local, active }: { local: Local; active: boolean }) {
     <Canvas dpr={[1, 1.5]} camera={{ position: [0, local.view === "bust" ? 0.02 : 0.1, local.cam ?? 4.5], fov: 30 }} frameloop={active ? "always" : "demand"}
       gl={{ antialias: true, alpha: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.3 }} shadows="soft" style={{ background: "transparent" }}>
       <Env />
-      <Suspense fallback={null}><Panorama src={local.bg ?? "/locals/ocean-drive.jpg"} /></Suspense>
+      <Suspense fallback={null}><Panorama src={local.bg ?? "/locals/ocean-drive.jpg"} sun={local.sun ?? [0.05, 0.5]} sunColor={local.sunColor ?? "#ffc48a"} /></Suspense>
       {/* portrait lighting: warm key from the front-left, cool fill from the right, sunset rim from behind */}
-      <ambientLight intensity={0.34} color="#8c78b8" />
-      <spotLight position={[-2.2, 1.1, 2.8]} angle={0.7} penumbra={1} intensity={15} color="#ffd6a8" castShadow shadow-mapSize={[2048, 2048]} shadow-bias={-0.0002} shadow-normalBias={0.01} />
-      <spotLight position={[2.4, 1.2, 2.0]} angle={0.7} penumbra={1} intensity={3} color="#b07ad8" />
-      <spotLight position={[0.8, 1.0, -2.4]} angle={0.7} penumbra={1} intensity={2.5} color="#ff6e4a" />
+      <ambientLight intensity={0.3} color="#b8a8d8" />
       <Suspense fallback={null}><Model url={local.file} height={local.height} view={local.view} lift={local.lift} dim={local.dim} /></Suspense>
       {!local.fade && <mesh rotation-x={-Math.PI / 2} position-y={-0.9} receiveShadow><circleGeometry args={[1.1, 48]} /><shadowMaterial transparent opacity={0.35} /></mesh>}
       <EffectComposer multisampling={4}>
