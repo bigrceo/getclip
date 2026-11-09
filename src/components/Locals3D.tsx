@@ -67,15 +67,15 @@ function setupLoader(l: GLTFLoader) {
 
 /** Skin shading: wrap lighting (soft terminator), red subsurface bleed where light grazes, matte base with a faint oily
  *  clearcoat on the highlights and a soft sheen. Applied to the whole bust (one material per generated model). */
-function skinMaterial(src: THREE.MeshStandardMaterial, dim: number, objScale = 1, phase = 0) {
+function skinMaterial(src: THREE.MeshStandardMaterial, dim: number, objScale = 1, phase = 0, shell = 0) {
   if (!src.isMeshStandardMaterial) return src;
   const m = new THREE.MeshPhysicalMaterial({ map: src.map, bumpMap: src.map, bumpScale: 0.0035, color: new THREE.Color("#ffffff"), roughness: 0.74, metalness: 0, envMapIntensity: 0.35,
     sheen: 0.12, sheenRoughness: 0.85, sheenColor: new THREE.Color("#f2d6cc"), clearcoat: 0.06, clearcoatRoughness: 0.6, specularIntensity: 0.45, side: THREE.DoubleSide }); // double-sided: thin hair shells no longer open onto the backdrop
   void dim;
   m.onBeforeCompile = (sh) => {
     // world position for the hair mask (hair = dark, brownish, upper part of the bust)
-    sh.uniforms.uBreath = BREATH; sh.uniforms.uPhase = { value: phase }; sh.uniforms.uObjScale = { value: objScale };
-    sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nvarying vec3 vWPos;\nvarying vec3 vOPos;\nuniform float uBreath; uniform float uPhase; uniform float uObjScale;")
+    sh.uniforms.uBreath = BREATH; sh.uniforms.uPhase = { value: phase }; sh.uniforms.uObjScale = { value: objScale }; sh.uniforms.uShell = { value: shell };
+    sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nvarying vec3 vWPos;\nvarying vec3 vOPos;\nuniform float uBreath; uniform float uPhase; uniform float uObjScale; uniform float uShell;")
       .replace("#include <begin_vertex>", `#include <begin_vertex>
         vOPos = position;
         {
@@ -86,6 +86,7 @@ function skinMaterial(src: THREE.MeshStandardMaterial, dim: number, objScale = 1
           float lift = smoothstep(-0.42, -0.05, wy);
           transformed += objectNormal * (0.0045 * chest * b) / uObjScale;
           transformed.y += (0.0028 * lift * b) / uObjScale;
+          transformed -= objectNormal * uShell / uObjScale;   // inner hair layers that plug gaps in the generated mesh
         }
         vWPos = (modelMatrix * vec4(transformed, 1.0)).xyz;`);
     sh.fragmentShader = sh.fragmentShader.replace("#include <common>", `#include <common>
@@ -94,7 +95,8 @@ function skinMaterial(src: THREE.MeshStandardMaterial, dim: number, objScale = 1
       float clothMask = 0.0;
       float metalMask = 0.0;
       float thinMask = 0.0;
-      varying vec3 vOPos; uniform float uObjScale;
+      varying vec3 vOPos; uniform float uObjScale; uniform float uShell;
+      #define uShellF uShell
       float h3(vec3 p) { p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
       float vnoise(vec3 x) { vec3 i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f);
         return mix(mix(mix(h3(i), h3(i + vec3(1,0,0)), f.x), mix(h3(i + vec3(0,1,0)), h3(i + vec3(1,1,0)), f.x), f.y),
@@ -129,6 +131,7 @@ function skinMaterial(src: THREE.MeshStandardMaterial, dim: number, objScale = 1
         clothMask = (1.0 - smoothstep(0.10, 0.22, lum)) * (1.0 - smoothstep(0.04, 0.10, sat)) * low * (1.0 - hairMask);   // dark neutral = tank top
         metalMask = smoothstep(0.40, 0.60, lum) * (1.0 - smoothstep(0.04, 0.09, sat)) * low;                               // bright neutral = chain
         diffuseColor.rgb *= 1.0 - hairMask * 0.22 * smoothstep(0.1, 0.45, vWPos.y);   // roots a touch darker near the crown
+        if (uShellF > 0.0) { if (hairMask < 0.3 && smoothstep(-0.05, 0.12, vWPos.y) < 0.5) discard; diffuseColor.rgb *= 0.72; }
         // thin skin (ears, nostrils, eyelids) = where the surface curves fast relative to its size on screen
         float curv = length(fwidth(normalize(vNormal))) / max(length(fwidth(vWPos)), 1e-5);
         thinMask = smoothstep(18.0, 45.0, curv) * (1.0 - hairMask) * (1.0 - clothMask) * (1.0 - metalMask) * smoothstep(-0.05, 0.1, vWPos.y);
@@ -177,7 +180,7 @@ function skinMaterial(src: THREE.MeshStandardMaterial, dim: number, objScale = 1
         reflectedLight.directSpecular += hairMask * (s1 * 0.05 + s2 * 0.05 * diffuseColor.rgb * 3.0) * tint;
       }`);
   };
-  m.customProgramCacheKey = () => "skin-hair-cloth-metal-thin-micro-breath";
+  m.customProgramCacheKey = () => "skin-hair-cloth-metal-thin-micro-breath-shell" + (shell > 0 ? "1" : "0");
   return m;
 }
 
@@ -199,6 +202,18 @@ function Model({ url, height = 1.8, view = "full", lift = 0, dim = 1 }: { url: s
       const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
       mesh.material = mats.length === 1 ? skinMaterial(mats[0] as THREE.MeshStandardMaterial, dim, s, url.includes("jason") ? 1.9 : 0) : mats.map((m) => skinMaterial(m as THREE.MeshStandardMaterial, dim, s, url.includes("jason") ? 1.9 : 0));
     });
+    if (url.includes("lucia")) {
+      // the generated ponytail is full of small open gaps: two inner layers of the same hair, a few millimetres in, fill them
+      const meshes: THREE.Mesh[] = []; scene.traverse((o) => { if ((o as THREE.Mesh).isMesh && !o.userData.shell) meshes.push(o as THREE.Mesh); });
+      for (const mesh of meshes) for (const off of [0.0035, 0.008]) {
+        const src = (Array.isArray(mesh.material) ? mesh.material[0] : mesh.material) as THREE.MeshPhysicalMaterial;
+        const base = new THREE.MeshStandardMaterial({ map: src.map });
+        const sm = skinMaterial(base, dim, s, 0, off) as THREE.Material;
+        const shellMesh = new THREE.Mesh(mesh.geometry, sm); shellMesh.userData.shell = true; shellMesh.castShadow = false; shellMesh.receiveShadow = true;
+        shellMesh.position.copy(mesh.position); shellMesh.quaternion.copy(mesh.quaternion); shellMesh.scale.copy(mesh.scale);
+        mesh.parent?.add(shellMesh);
+      }
+    }
     setFit({ s, y: 0 });
   }, [scene, height, dim, url]);
   useFrame((st, dt) => {
@@ -349,7 +364,7 @@ function Viewer({ local, active }: { local: Local; active: boolean }) {
   );
 }
 
-function Card({ local }: { local: Local }) {
+function Card({ local, compact = false }: { local: Local; compact?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   const [exists, setExists] = useState<boolean | null>(null);
@@ -364,10 +379,10 @@ function Card({ local }: { local: Local }) {
     io.observe(el); return () => { io.disconnect(); clearTimeout(t); };
   }, []);
   return (
-    <div ref={ref} className="glass overflow-hidden">
-      <div className="relative aspect-[4/5] overflow-hidden">
+    <div ref={ref} className={compact ? "relative min-h-0 flex-1 overflow-hidden rounded-[14px] border border-white/10" : "glass overflow-hidden"}>
+      <div className={compact ? "absolute inset-0 overflow-hidden" : "relative aspect-[4/5] overflow-hidden"}>
         <PalmBackdrop />
-        {exists !== false && (visible || warm) ? <Viewer local={local} active={visible} /> : (
+        {exists !== false && (compact ? warm : visible || warm) ? <Viewer local={local} active={visible} /> : (
           <div className="absolute inset-0 grid place-items-center">
             <div className="h-[62%] w-[34%] rounded-t-full bg-black/45" style={{ clipPath: "polygon(30% 0, 70% 0, 72% 18%, 95% 28%, 100% 100%, 0 100%, 5% 28%, 28% 18%)" }} />
             {exists === false && <span className="absolute bottom-3 text-[11px] font-semibold uppercase tracking-[.1em] text-haze">3D model coming</span>}
@@ -375,17 +390,29 @@ function Card({ local }: { local: Local }) {
         )}
         {local.fade && <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[42%]" style={{ background: "linear-gradient(to bottom, transparent, rgba(13,7,32,.92) 70%, #0d0720)" }} aria-hidden="true" />}
       </div>
+      {compact ? (
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 p-3">
+          <p className="label !text-[10px] text-sun">${local.ticker} · {local.role}</p>
+          <h3 className="font-sign text-[30px] uppercase leading-none">{local.name}</h3>
+        </div>
+      ) : (
       <div className="p-[18px]">
         <p className="label text-sun">${local.ticker} · {local.role}</p>
         <h3 className="sec-title mt-1 !text-[42px]">{local.name}</h3>
         <p className="mt-2 leading-[1.55] text-haze">{local.bio}</p>
         {local.credit !== "getclip.fun" && <p className="mt-3 text-[11px] text-haze/70">3D model: <a href={local.creditUrl} target="_blank" rel="noopener noreferrer" className="underline">{local.credit}</a> (CC BY 4.0)</p>}
       </div>
+      )}
     </div>
   );
 }
 
-export function Locals3D() {
+export function Locals3D({ compact = false }: { compact?: boolean }) {
+  if (compact) return (
+    <div className="flex h-full flex-col gap-2.5">
+      {LOCALS.map((l) => <Card key={l.id} local={l} compact />)}
+    </div>
+  );
   return (
     <div className="mx-auto grid max-w-[760px] gap-[18px] md:grid-cols-2">
       {LOCALS.map((l) => <Card key={l.id} local={l} />)}

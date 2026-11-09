@@ -1,5 +1,9 @@
 "use client";
+/** Navbar on the Kerb pattern: fixed and floating, transparent over the map at the top of the page, frosted glass once
+ *  the page scrolls, a mega menu that unfolds from the bar, and a two-line burger on phones. */
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { BRAND, OFFICIAL_MINT } from "@/lib/brand";
 import { Logo } from "./Logo";
 import { RockstarIcon, XIcon } from "./icons";
@@ -7,29 +11,120 @@ import { short, useWallet } from "./wallet";
 
 export const GTA_VI_URL = "https://www.rockstargames.com/VI";
 
+const ICON = {
+  plus: <path d="M12 5v14M5 12h14" />,
+  map: <path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Zm0 0v14m6-12v14" />,
+  book: <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15ZM6.5 17A2.5 2.5 0 0 0 4 19.5 2.5 2.5 0 0 0 6.5 22H20v-5" />,
+  user: <path d="M17 20a5 5 0 1 0-10 0M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />,
+};
+type Row = [keyof typeof ICON, string, string, string];
+type Card = [string, string, string, string];
+
+const MENUS: Record<"clips", { label: string; rows: Row[]; cards: Card[] }> = {
+  clips: {
+    label: "Clips",
+    rows: [
+      ["plus", "Launch a clip", "Paste a TikTok, X or YouTube link. The clip becomes a pump.fun coin.", "/launch"],
+      ["map", "The map", "Every clip coin takes a plot somewhere in Leonida.", "/#top"],
+      ["user", "Meet the Locals", "Lucia and Jason in 3D, on Ocean Drive and in the Keys.", "/#top"],
+      ["book", "How it works", "Three steps, free, no wallet needed.", "/how"],
+    ],
+    cards: [
+      ["Ocean Drive", "Where Lucia stands. Neon, art deco, a pink sunset.", "/#top", "/locals/ocean-drive.jpg"],
+      ["The Keys", "Jason's dock. Boats, a tiki bar, cash jobs.", "/#top", "/locals/keys-marina.jpg"],
+    ],
+  },
+};
+const Ico = ({ k }: { k: keyof typeof ICON }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">{ICON[k]}</svg>
+);
+const Chev = () => (
+  <svg className="chev" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="m3 4.5 3 3 3-3" /></svg>
+);
+
 export function Header() {
+  const path = usePathname();
   const w = useWallet();
+  const [menu, setMenu] = useState<keyof typeof MENUS | null>(null);
+  const [mobile, setMobile] = useState(false);
+  const [glass, setGlass] = useState(false);
+  const shut = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  useEffect(() => {
+    const on = () => setGlass(scrollY > 12);
+    on();
+    addEventListener("scroll", on, { passive: true });
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && setMenu(null);
+    addEventListener("keydown", esc);
+    return () => (removeEventListener("scroll", on), removeEventListener("keydown", esc));
+  }, []);
+  useEffect(() => (setMenu(null), setMobile(false)), [path]);
+
+  const open = (k: keyof typeof MENUS | null) => (clearTimeout(shut.current), setMenu(k));
+  const hover = () => matchMedia("(hover: hover)").matches;
+
   return (
-    <header className="sticky top-0 z-30 border-b border-line bg-night/85 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-[1680px] items-center gap-3 px-4">
-        <Link href="/" aria-label={BRAND.brand}><Logo /></Link>
-        <span className="hidden text-line md:inline">/</span>
-        <span className="hidden text-[14px] text-haze md:inline">{BRAND.tagline.split(". ")[0]}.</span>
-        <div className="ml-auto flex items-center gap-2">
-          <a href={GTA_VI_URL} target="_blank" rel="noreferrer" className="p-1.5 opacity-90 hover:opacity-100" aria-label="GTA VI on Rockstar Games" title="GTA VI · Rockstar Games"><RockstarIcon /></a>
-          <a href={BRAND.x} target="_blank" rel="noreferrer" className="p-2 text-haze hover:text-ink" aria-label="X"><XIcon /></a>
-          {OFFICIAL_MINT && <a href={`https://pump.fun/coin/${OFFICIAL_MINT}`} target="_blank" rel="noreferrer" className="btn btn-ghost hidden sm:inline-flex">${BRAND.ticker}</a>}
-          <Link href="/launch" className="btn btn-hot max-sm:hidden">Launch<span className="hidden sm:inline"> a clip</span></Link>
-          {w.address ? (
-            <div className="flex items-center gap-1">
-              <Link href={`/creator/${w.address}`} className="btn btn-ghost">{short(w.address)}</Link>
-              <button onClick={w.disconnect} className="btn btn-ghost px-3" aria-label="Disconnect">×</button>
+    <nav id="nav" className={[glass && "glass", menu && "open", mobile && "mopen"].filter(Boolean).join(" ")}
+      onMouseLeave={() => (shut.current = setTimeout(() => setMenu(null), 180))}>
+      <div className="nwrap">
+        <div className="bar">
+          <Link href="/" aria-label={BRAND.brand} onMouseEnter={() => open(null)}><Logo /></Link>
+          <div className="nlinks">
+            <button type="button" className={menu === "clips" ? "on" : ""} onMouseEnter={() => hover() && open("clips")}
+              onClick={() => open(hover() || menu !== "clips" ? "clips" : null)} aria-expanded={menu === "clips"}>
+              {MENUS.clips.label}<Chev />
+            </button>
+            <Link href="/launch" className={path.startsWith("/launch") ? "on" : ""} onMouseEnter={() => open(null)}>Launch</Link>
+            <Link href="/how" className={path.startsWith("/how") ? "on" : ""} onMouseEnter={() => open(null)}>How it works</Link>
+          </div>
+          <div className="navr">
+            {OFFICIAL_MINT && <a href={`https://pump.fun/coin/${OFFICIAL_MINT}`} target="_blank" rel="noreferrer" className="btn btn-ghost hidden sm:inline-flex">${BRAND.ticker}</a>}
+            <a className="xb" href={GTA_VI_URL} target="_blank" rel="noreferrer" aria-label="GTA VI on Rockstar Games" title="GTA VI · Rockstar Games"><RockstarIcon /></a>
+            <a className="xb" href={BRAND.x} target="_blank" rel="noreferrer" aria-label="X"><XIcon /></a>
+            {w.address ? (
+              <span className="hidden items-center gap-1 md:inline-flex">
+                <Link href={`/creator/${w.address}`} className="btn btn-ghost">{short(w.address)}</Link>
+                <button onClick={w.disconnect} className="btn btn-ghost px-3" aria-label="Disconnect">×</button>
+              </span>
+            ) : (
+              <button onClick={w.connect} className="btn btn-ghost hidden md:inline-flex">{w.connecting ? "Connecting…" : "Connect"}</button>
+            )}
+            <Link href="/launch" className="btn btn-hot hidden sm:inline-flex">Launch a clip</Link>
+            <button className="mbtn" type="button" aria-label="Menu" aria-expanded={mobile} onClick={() => setMobile(!mobile)}><i /><i /></button>
+          </div>
+        </div>
+        <div className={`mega${menu === "clips" ? " show" : ""}`} inert={menu !== "clips"}>
+          <div className="mega-in">
+            <div className="mrows">
+              {MENUS.clips.rows.map(([i, t, d, h]) => (
+                <Link key={t} className="mrow" href={h}>
+                  <span className="mico"><Ico k={i} /></span>
+                  <span><b>{t}</b><small>{d}</small></span>
+                </Link>
+              ))}
             </div>
-          ) : (
-            <button onClick={w.connect} className="btn btn-ghost">{w.connecting ? "Connecting…" : "Connect"}</button>
-          )}
+            <div className="mcards">
+              {MENUS.clips.cards.map(([t, d, h, img]) => (
+                <Link key={t} className="mcard" href={h}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <span className="mimg"><img src={img} alt="" loading="lazy" /></span>
+                  <span className="mtxt"><b>{t}</b><small>{d}</small><i>↗</i></span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="mlist" inert={!mobile}>
+          <div>
+            {MENUS.clips.rows.map(([, t, , h]) => <Link key={t} href={h}>{t}<span>↗</span></Link>)}
+            <div className="pt-3 md:hidden">
+              {w.address
+                ? <button onClick={w.disconnect} className="btn btn-ghost w-full">{short(w.address)} · Disconnect</button>
+                : <button onClick={w.connect} className="btn btn-ghost w-full">{w.connecting ? "Connecting…" : "Connect"}</button>}
+            </div>
+          </div>
         </div>
       </div>
-    </header>
+    </nav>
   );
 }

@@ -35,7 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <a href="#content" className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-50 focus:bg-sun focus:px-3 focus:py-2 focus:text-night">Skip to the content</a>
         <WalletProvider>
           <Header />
-          <main id="content" className="flex-1 ">{children}</main>
+          <main id="content" className="flex-1 pt-[84px]">{children}</main>
           <Footer />
           <Toaster />
         </WalletProvider>

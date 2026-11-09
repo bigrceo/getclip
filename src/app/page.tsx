@@ -5,7 +5,6 @@ import { Ticker } from "@/components/Ticker";
 import { LiveTrades } from "@/components/LiveTrades";
 import { CoinGrid } from "@/components/CoinGrid";
 import { MapHero } from "@/components/MapHero";
-import { LocalsSection } from "@/components/LocalsSection";
 
 /** pump.fun mark: the tilted two-tone pill. */
 function PumpLogo() {
@@ -41,12 +40,6 @@ export default async function Home() {
         <LiveTrades initial={trades} />
       </section>
       <CoinGrid initial={hot} />
-
-      <section id="locals" className="mx-auto max-w-[1160px] px-6 pt-[90px] max-md:px-4 max-md:pt-16">
-        <H2 script="Meet the">Locals</H2>
-        <p className="mb-6 mt-2.5 max-w-[720px] leading-[1.55] text-haze">A sunburnt peninsula of neon nights, swamp kings and bad decisions. Every face of {BRAND.state} is in 3D here, and every clip of them can become a coin.</p>
-        <LocalsSection />
-      </section>
 
       <section id="how" className="mx-auto max-w-[1160px] px-6 pt-[90px] max-md:px-4 max-md:pt-16">
         <H2 script="How it">Works</H2>
