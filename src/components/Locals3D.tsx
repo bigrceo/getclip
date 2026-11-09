@@ -49,6 +49,11 @@ function skinMaterial(src: THREE.MeshStandardMaterial, dim: number) {
       float hairMask = 0.0;
       float clothMask = 0.0;
       float metalMask = 0.0;
+      float thinMask = 0.0;
+      vec3 transl(vec3 base, vec3 L, vec3 V, float thin) {
+        float back = pow(saturate(dot(V, -L)), 3.0);                 // light coming through toward the camera
+        return base * vec3(1.0, 0.42, 0.26) * back * thin * 1.6;      // blood-red glow, like ears against the sun
+      }
       uniform vec3 uKeyPos;`);
     sh.uniforms.uKeyPos = { value: SUN };
     sh.fragmentShader = sh.fragmentShader.replace("#include <lights_physical_pars_fragment>", `#include <lights_physical_pars_fragment>
@@ -75,6 +80,9 @@ function skinMaterial(src: THREE.MeshStandardMaterial, dim: number) {
         clothMask = (1.0 - smoothstep(0.10, 0.22, lum)) * (1.0 - smoothstep(0.04, 0.10, sat)) * low * (1.0 - hairMask);   // dark neutral = tank top
         metalMask = smoothstep(0.40, 0.60, lum) * (1.0 - smoothstep(0.04, 0.09, sat)) * low;                               // bright neutral = chain
         diffuseColor.rgb *= 1.0 - hairMask * 0.22 * smoothstep(0.1, 0.45, vWPos.y);   // roots a touch darker near the crown
+        // thin skin (ears, nostrils, eyelids) = where the surface curves fast relative to its size on screen
+        float curv = length(fwidth(normalize(vNormal))) / max(length(fwidth(vWPos)), 1e-5);
+        thinMask = smoothstep(18.0, 45.0, curv) * (1.0 - hairMask) * (1.0 - clothMask) * (1.0 - metalMask) * smoothstep(-0.05, 0.1, vWPos.y);
       }`);
     // bump (strand micro-relief) only on hair
     sh.fragmentShader = sh.fragmentShader.replace("dHdxy_fwd()", "dHdxy_fwd() * hairMask");
@@ -84,15 +92,17 @@ function skinMaterial(src: THREE.MeshStandardMaterial, dim: number) {
     // chain: metallic; tank top: no specular, strong fabric sheen; skin keeps its sheen
     sh.fragmentShader = sh.fragmentShader.replace("#include <metalnessmap_fragment>", "#include <metalnessmap_fragment>\n\tmetalnessFactor = mix( metalnessFactor, 0.9, metalMask );");
     sh.fragmentShader = sh.fragmentShader.replace("material.specularF90 = mix( specularIntensityFactor, 1.0, metalnessFactor );",
-      "material.specularF90 = mix( specularIntensityFactor, 1.0, metalnessFactor );\n\tmaterial.specularColor *= ( 1.0 - clothMask * 0.85 );");
+      "material.specularF90 = mix( specularIntensityFactor, 1.0, metalnessFactor );\n\tmaterial.specularColor *= ( 1.0 - clothMask * 0.92 );\n\tmaterial.specularColor = mix( material.specularColor, max( material.specularColor, vec3( 0.75 ) ), metalMask );");
     sh.fragmentShader = sh.fragmentShader.replace("material.sheenRoughness = clamp( sheenRoughness, 0.0001, 1.0 );",
       "material.sheenRoughness = clamp( sheenRoughness, 0.0001, 1.0 );\n\tmaterial.sheenColor = mix( material.sheenColor, vec3( 0.35 ), clothMask ) * ( 1.0 - metalMask ) * ( 1.0 - hairMask );\n\tmaterial.sheenRoughness = mix( material.sheenRoughness, 1.0, clothMask );");
     // wrap the diffuse term and add the bleed (RE_Direct_Physical is reached through lights_fragment_begin)
     sh.fragmentShader = sh.fragmentShader.replace(
       "float dotNL = saturate( dot( geometryNormal, directLight.direction ) );\n\tvec3 irradiance = dotNL * directLight.color;",
-      "float dotNLraw = dot( geometryNormal, directLight.direction );\n\tfloat dotNL = saturate( ( dotNLraw + 0.3 ) / 1.3 );\n\tvec3 irradiance = dotNL * directLight.color;\n\treflectedLight.directDiffuse += sssBleed( material.diffuseColor, dotNLraw ) * directLight.color * 0.6 * ( 1.0 - hairMask ) * ( 1.0 - clothMask ) * ( 1.0 - metalMask );");
+      "float dotNLraw = dot( geometryNormal, directLight.direction );\n\tfloat dotNL = saturate( ( dotNLraw + 0.3 ) / 1.3 );\n\tvec3 irradiance = dotNL * directLight.color;\n\treflectedLight.directDiffuse += sssBleed( material.diffuseColor, dotNLraw ) * directLight.color * 0.6 * ( 1.0 - hairMask ) * ( 1.0 - clothMask ) * ( 1.0 - metalMask );\n\treflectedLight.directDiffuse += transl( material.diffuseColor, directLight.direction, geometryViewDir, thinMask ) * directLight.color;");
     // anisotropic hair highlights from the key light, added at the end of lighting
     sh.fragmentShader = sh.fragmentShader.replace("#include <lights_fragment_end>", `#include <lights_fragment_end>
+      reflectedLight.indirectDiffuse *= 1.0 - clothMask * 0.55;     // black cotton drinks the ambient light
+      reflectedLight.indirectSpecular *= 1.0 + metalMask * 1.5;     // the chain mirrors the neon and the sun
       if (hairMask > 0.001) {
         vec3 nW = normalize(transpose(mat3(viewMatrix)) * normal);
         vec3 vW = normalize(cameraPosition - vWPos);
@@ -106,7 +116,7 @@ function skinMaterial(src: THREE.MeshStandardMaterial, dim: number) {
         reflectedLight.directSpecular += hairMask * (s1 * 0.05 + s2 * 0.05 * diffuseColor.rgb * 3.0) * tint;
       }`);
   };
-  m.customProgramCacheKey = () => "skin-hair-cloth-metal";
+  m.customProgramCacheKey = () => "skin-hair-cloth-metal-thin";
   return m;
 }
 
@@ -189,8 +199,24 @@ function Panorama({ src, sun, sunColor }: { src: string; sun: [number, number]; 
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.MirroredRepeatWrapping; t.repeat.x = 2; return t;
   }, [img]);
   useEffect(() => {
-    const p = new THREE.PMREMGenerator(gl); const e = tex.clone(); e.mapping = THREE.EquirectangularReflectionMapping; e.repeat.x = 1;
-    const env = p.fromEquirectangular(e).texture; scene.environment = env; scene.environmentIntensity = 1.1; p.dispose();
+    // The cylinder shows [photo | mirrored photo]; three's equirect lookup reads u = 0.75 − cylinder u, so build the
+    // environment as that strip flipped and shifted by a quarter turn: every direction lights the bust with the exact
+    // pixel the backdrop shows there (neon from the neon, sun from the sun, sea from the sea).
+    const W = img.width, H = img.height, EW = 2048, EH = 1024;
+    const strip = document.createElement("canvas"); strip.width = W * 2; strip.height = H; const sg = strip.getContext("2d")!;
+    sg.filter = "blur(4px) brightness(1.15) contrast(1.1)"; sg.drawImage(img, 0, 0); sg.save(); sg.translate(W * 2, 0); sg.scale(-1, 1); sg.drawImage(img, 0, 0); sg.restore();
+    const ec = document.createElement("canvas"); ec.width = EW; ec.height = EH; const eg = ec.getContext("2d")!;
+    // photo spans elevation +37° … −30° → v 0.29 … 0.67; stretch its first and last rows to the poles
+    const top = Math.round(EH * 0.29), bot = Math.round(EH * 0.67), bh = bot - top;
+    const drawFlipped = (sy: number, shh: number, dy: number, dh: number) => {
+      eg.save(); eg.translate(EW, 0); eg.scale(-1, 1);
+      eg.drawImage(strip, 0, sy, W * 2, shh, -EW * 0.25, dy, EW, dh); eg.drawImage(strip, 0, sy, W * 2, shh, EW * 0.75, dy, EW, dh);
+      eg.restore();
+    };
+    drawFlipped(0, 2, 0, top); drawFlipped(0, H, top, bh); drawFlipped(H - 2, 2, bot, EH - bot);
+    const e = new THREE.CanvasTexture(ec); e.colorSpace = THREE.SRGBColorSpace; e.mapping = THREE.EquirectangularReflectionMapping;
+    const p = new THREE.PMREMGenerator(gl);
+    const env = p.fromEquirectangular(e).texture; scene.environment = env; scene.environmentIntensity = 1.25; p.dispose(); e.dispose();
     return () => { env.dispose(); };
   }, [tex, gl, scene]);
   const g = useRef<THREE.Group>(null);

@@ -11,7 +11,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import type { Coin } from "@/lib/types";
 import { pct } from "@/lib/format";
-import { CityNeon, Clouds, DistrictLabels, MODES, Ocean, Sky, Sun, type Mode } from "./map/Atmosphere";
+import { CityNeon, Clouds, MODES, Ocean, Sky, Sun, type Mode } from "./map/Atmosphere";
 import { CityLight } from "./map/Buildings";
 import { TileLayer } from "./map/TileLayer";
 import { Island, LAND_Y } from "./map/Island";
@@ -356,7 +356,7 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
         <Sun mode={mode} />
         {MIAMI ? <><MiamiTiles onReady={onReady} onCredits={setCredits} /><Clouds mode={mode} count={5} /></>
           : <><Suspense fallback={null}><Ground onReady={onReady} mode={mode} /></Suspense>
-        {ready && <><DistrictLabels toWorld={toWorld} /><CityLight mode={mode} api={api} />{!small && <TileLayer mode={mode} planeW={PLANE_W} planeH={PLANE_H} api={api} />}</>}</>}
+        {ready && <><CityLight mode={mode} api={api} />{!small && <TileLayer mode={mode} planeW={PLANE_W} planeH={PLANE_H} api={api} />}</>}</>}
         {ready && entities.map((e) => <Beacon key={e.coin.mint} e={e} active={active === e.coin.mint || hovered === e.coin.mint} onHover={setHovered} onSelect={() => select(e.coin.mint)} />)}
         {ready && !MIAMI && entities.map((e) => { const [x, , z] = toWorld(e.plot.u, e.plot.v); return <group key={`b${e.coin.mint}`} position-y={LAND_Y}><ClipBoard coin={e.coin} x={x} z={z} main={e.main} active={active === e.coin.mint || hovered === e.coin.mint} onHover={setHovered} onSelect={() => select(e.coin.mint)} /></group>; })}
         {ready && PLOTS.filter((p) => !takenPlots.has(p.id)).map((p) => <Lot key={p.id} p={p} onSelect={() => router.push("/launch")} onHover={(x, y) => setLotTip(x == null ? null : { plot: p, x, y: y! })} />)}
