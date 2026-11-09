@@ -184,7 +184,7 @@ function skinMaterial(src: THREE.MeshStandardMaterial, dim: number, objScale = 1
   return m;
 }
 
-function Model({ url, height = 1.8, view = "full", lift = 0, dim = 1 }: { url: string; height?: number; view?: "full" | "bust"; lift?: number; dim?: number }) {
+function Model({ url, height = 1.8, view = "full", lift = 0, dim = 1, onReady }: { url: string; height?: number; view?: "full" | "bust"; lift?: number; dim?: number; onReady?: () => void }) {
   const gltf = useLoader(GLTFLoader, url, setupLoader);
   // useLoader caches by URL: two cards showing the same file each need their own copy of the scene graph
   const scene = useMemo(() => gltf.scene.clone(true), [gltf]);
@@ -214,7 +214,7 @@ function Model({ url, height = 1.8, view = "full", lift = 0, dim = 1 }: { url: s
         mesh.parent?.add(shellMesh);
       }
     }
-    setFit({ s, y: 0 });
+    setFit({ s, y: 0 }); onReady?.();
   }, [scene, height, dim, url]);
   useFrame((st, dt) => {
     const t = st.clock.elapsedTime; BREATH.value = t;
@@ -330,14 +330,16 @@ function Precompile() {
 
 function Viewer({ local, active }: { local: Local; active: boolean }) {
   const caRef = useRef<ChromaticAberrationEffect>(null), noiseRef = useRef<NoiseEffect>(null), vigRef = useRef<VignetteEffect>(null);
+  const [shown, setShown] = useState(false);
   return (
+    <div className="absolute inset-0 transition-opacity duration-700 ease-out" style={{ opacity: shown ? 1 : 0 }}>
     <Canvas dpr={[1, 1.5]} camera={{ position: [0, local.view === "bust" ? 0.02 : 0.1, local.cam ?? 4.5], fov: 30 }} frameloop={active ? "always" : "demand"}
       gl={{ antialias: true, alpha: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.2 }} shadows="soft" style={{ background: "transparent" }}>
       <Env />
       <Suspense fallback={null}><Panorama src={local.bg ?? "/locals/ocean-drive.jpg"} sun={local.sun ?? [0.05, 0.5]} sunColor={local.sunColor ?? "#ffc48a"} /></Suspense>
       {/* portrait lighting: warm key from the front-left, cool fill from the right, sunset rim from behind */}
       <ambientLight intensity={0.34} color="#d8d2e6" />
-      <Suspense fallback={null}><Precompile /><Model url={local.file} height={local.height} view={local.view} lift={local.lift} dim={local.dim} /></Suspense>
+      <Suspense fallback={null}><Precompile /><Model url={local.file} height={local.height} view={local.view} lift={local.lift} dim={local.dim} onReady={() => setTimeout(() => setShown(true), 120)} /></Suspense>
       {!local.fade && <mesh rotation-x={-Math.PI / 2} position-y={-0.9} receiveShadow><circleGeometry args={[1.1, 48]} /><shadowMaterial transparent opacity={0.35} /></mesh>}
       <SlowmoFX ca={caRef} noise={noiseRef} vig={vigRef} />
       <EffectComposer multisampling={4}>
@@ -347,6 +349,7 @@ function Viewer({ local, active }: { local: Local; active: boolean }) {
         <Vignette ref={vigRef} eskil={false} offset={0.3} darkness={0.4} />
       </EffectComposer>
     </Canvas>
+    </div>
   );
 }
 
@@ -358,8 +361,8 @@ function Card({ local, compact = false }: { local: Local; compact?: boolean }) {
   const [warm, setWarm] = useState(false);
   useEffect(() => {
     // warm up in the browser's idle time after the page has loaded, never on top of the map's first frames
-    let id = 0; const go = () => { id = (window.requestIdleCallback ?? ((f: () => void) => setTimeout(f, 300)))(() => setWarm(true), { timeout: 2500 }) as unknown as number; };
-    if (document.readyState === "complete") setTimeout(go, 900); else addEventListener("load", () => setTimeout(go, 900), { once: true });
+    let id = 0; const go = () => { id = (window.requestIdleCallback ?? ((f: () => void) => setTimeout(f, 300)))(() => setWarm(true), { timeout: 1200 }) as unknown as number; };
+    if (document.readyState === "complete") setTimeout(go, 250); else addEventListener("load", () => setTimeout(go, 250), { once: true });
     return () => { if ("cancelIdleCallback" in window) cancelIdleCallback(id); };
   }, []);
   useEffect(() => { fetch(local.file, { method: "HEAD", cache: "no-store" }).then((r) => setExists(r.ok)).catch(() => setExists(false)); }, [local.file]);
@@ -372,13 +375,10 @@ function Card({ local, compact = false }: { local: Local; compact?: boolean }) {
   return (
     <div ref={ref} className={compact ? "relative min-h-0 flex-1 overflow-hidden rounded-[14px] border border-white/10" : "glass overflow-hidden"}>
       <div className={compact ? "absolute inset-0 overflow-hidden" : "relative aspect-[4/5] overflow-hidden"}>
-        <PalmBackdrop />
-        {exists !== false && (compact ? warm : visible || warm) ? <Viewer local={local} active={visible} /> : (
-          <div className="absolute inset-0 grid place-items-center">
-            <div className="h-[62%] w-[34%] rounded-t-full bg-black/45" style={{ clipPath: "polygon(30% 0, 70% 0, 72% 18%, 95% 28%, 100% 100%, 0 100%, 5% 28%, 28% 18%)" }} />
-            {exists === false && <span className="absolute bottom-3 text-[11px] font-semibold uppercase tracking-[.1em] text-haze">3D model coming</span>}
-          </div>
-        )}
+        {local.bg
+          ? <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${local.bg.replace(/\.jpg$/, "-bokeh.jpg")})` }} aria-hidden="true" />
+          : <PalmBackdrop />}
+        {exists !== false && (compact ? warm : visible || warm) && <Viewer local={local} active={visible} />}
         {local.fade && <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[42%]" style={{ background: "linear-gradient(to bottom, transparent, rgba(13,7,32,.92) 70%, #0d0720)" }} aria-hidden="true" />}
       </div>
       {compact ? (

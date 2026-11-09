@@ -42,7 +42,7 @@ export function MapHero({ coins, volumeSol }: { coins: Coin[]; volumeSol: number
         </div>
   );
   const rail = (
-        <aside data-pin-obstacle className="glass-map z-20 flex w-[310px] flex-col p-3 md:absolute md:bottom-[70px] md:right-6 md:top-[96px] max-md:mx-4 max-md:mt-3 max-md:h-[560px] max-md:w-auto">
+        <aside id="locals" data-pin-obstacle className="glass-map z-20 flex w-[310px] flex-col p-3 md:absolute md:bottom-[70px] md:right-6 md:top-[96px] max-md:mx-4 max-md:mt-3 max-md:h-[560px] max-md:w-auto">
           <div className="px-1.5 pb-2">
             <p className="script !text-[22px] leading-none">Meet the</p>
             <b className="font-sign text-[30px] font-normal uppercase leading-none tracking-wide">Locals</b>
@@ -51,7 +51,7 @@ export function MapHero({ coins, volumeSol }: { coins: Coin[]; volumeSol: number
         </aside>
   );
   return (
-    <section className="relative md:-mt-[84px] md:h-[100svh] md:min-h-[680px] md:overflow-hidden max-md:flex max-md:flex-col max-md:pb-4">
+    <section id="map" className="relative scroll-mt-0 md:-mt-[84px] md:h-[100svh] md:min-h-[680px] md:overflow-hidden max-md:flex max-md:flex-col max-md:pb-4">
       <div className="md:absolute md:inset-0 max-md:relative max-md:h-[64svh] max-md:min-h-[420px]">
       <StateMap coins={coins} active={active} onActive={setActive}>
         <div className="hidden md:contents">{card}{rail}</div>

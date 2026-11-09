@@ -25,13 +25,13 @@ const MENUS: Record<"clips", { label: string; rows: Row[]; cards: Card[] }> = {
     label: "Clips",
     rows: [
       ["plus", "Launch a clip", "Paste a TikTok, X or YouTube link. The clip becomes a pump.fun coin.", "/launch"],
-      ["map", "The map", "Every clip coin takes a plot somewhere in Leonida.", "/#top"],
-      ["user", "Meet the Locals", "Lucia and Jason in 3D, on Ocean Drive and in the Keys.", "/#top"],
+      ["map", "The map", "Every clip coin takes a plot somewhere in Leonida.", "/#map"],
+      ["user", "Meet the Locals", "Lucia and Jason in 3D, on Ocean Drive and in the Keys.", "/#locals"],
       ["book", "How it works", "Three steps, free, no wallet needed.", "/how"],
     ],
     cards: [
-      ["Ocean Drive", "Where Lucia stands. Neon, art deco, a pink sunset.", "/#top", "/locals/ocean-drive.jpg"],
-      ["The Keys", "Jason's dock. Boats, a tiki bar, cash jobs.", "/#top", "/locals/keys-marina.jpg"],
+      ["Ocean Drive", "Where Lucia stands. Neon, art deco, a pink sunset.", "/#locals", "/locals/ocean-drive.jpg"],
+      ["The Keys", "Jason's dock. Boats, a tiki bar, cash jobs.", "/#locals", "/locals/keys-marina.jpg"],
     ],
   },
 };

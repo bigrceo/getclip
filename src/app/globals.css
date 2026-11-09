@@ -243,3 +243,9 @@ nav#nav.slim .nwrap { max-width: 640px; border-radius: 16px; }
 nav#nav.slim .bar { gap: 8px; }
 nav#nav.slim .xb, nav#nav.slim .navr > .btn-ghost, nav#nav.slim .navr > span { display: none; }
 nav#nav.slim .nlinks { background: transparent; box-shadow: none; }
+
+html { scroll-behavior: smooth; }
+#map, #locals { scroll-margin-top: 0; }
+.logo { transition: gap .45s var(--q), transform .3s var(--q); } a:hover > .logo { transform: scale(1.04); }
+a:hover > .logo .logo-tile { filter: drop-shadow(0 0 16px rgba(255,61,139,.85)) !important; }
+#nav .btn-ghost:hover { border-color: rgba(255,61,139,.5); }
