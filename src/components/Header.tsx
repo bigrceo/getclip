@@ -48,10 +48,20 @@ export function Header() {
   const [menu, setMenu] = useState<keyof typeof MENUS | null>(null);
   const [mobile, setMobile] = useState(false);
   const [glass, setGlass] = useState(false);
+  const [slim, setSlim] = useState(false);
   const shut = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
-    const on = () => setGlass(scrollY > 12);
+    // glass as soon as the page leaves the top; slim (short bar, C-only logo) going down, full again going up
+    let last = scrollY, raf = 0;
+    const on = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const y = scrollY; setGlass(y > 12);
+        if (y < 80) setSlim(false); else if (y > last + 4) setSlim(true); else if (y < last - 6) setSlim(false);
+        last = y;
+      });
+    };
     on();
     addEventListener("scroll", on, { passive: true });
     const esc = (e: KeyboardEvent) => e.key === "Escape" && setMenu(null);
@@ -64,11 +74,11 @@ export function Header() {
   const hover = () => matchMedia("(hover: hover)").matches;
 
   return (
-    <nav id="nav" className={[glass && "glass", menu && "open", mobile && "mopen"].filter(Boolean).join(" ")}
+    <nav id="nav" className={[glass && "glass", slim && !menu && !mobile && "slim", menu && "open", mobile && "mopen"].filter(Boolean).join(" ")}
       onMouseLeave={() => (shut.current = setTimeout(() => setMenu(null), 180))}>
       <div className="nwrap">
         <div className="bar">
-          <Link href="/" aria-label={BRAND.brand} onMouseEnter={() => open(null)}><Logo /></Link>
+          <Link href="/" aria-label={BRAND.brand} onMouseEnter={() => open(null)}><Logo slim={slim && !menu && !mobile} /></Link>
           <div className="nlinks">
             <button type="button" className={menu === "clips" ? "on" : ""} onMouseEnter={() => hover() && open("clips")}
               onClick={() => open(hover() || menu !== "clips" ? "clips" : null)} aria-expanded={menu === "clips"}>

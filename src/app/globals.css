@@ -217,3 +217,23 @@ nav#nav.mopen .mlist { grid-template-rows: 1fr; }
 nav#nav.mopen .mlist > div { padding: 6px 18px 18px; }
 .mlist a { display: flex; justify-content: space-between; padding: 12px 0; font-size: 20px; border-bottom: 1px solid rgba(255,255,255,.06); }
 .mlist a span { color: var(--color-haze); }
+
+/* Retractable navbar: shorter bar, the logo folds into a see-through C */
+nav#nav .bar { transition: height .45s var(--q), padding .45s var(--q); }
+nav#nav { transition: padding .45s var(--q); }
+nav#nav.slim { padding-top: 8px; }
+nav#nav.slim .bar { height: 48px; padding-left: 10px; }
+nav#nav.slim .btn { height: 34px; }
+nav#nav.slim .xb { width: 34px; height: 34px; }
+nav#nav.slim .nlinks a, nav#nav.slim .nlinks button { height: 30px; }
+.logo { gap: 10px; transition: gap .45s var(--q); }
+.logo .logo-tile { transition: opacity .35s var(--q), transform .45s var(--q); }
+.logo .logo-c { opacity: 0; transform: scale(.8); transition: opacity .35s var(--q), transform .45s var(--q);
+  background: linear-gradient(135deg, rgba(255,255,255,.95), rgba(255,195,138,.75));
+  -webkit-mask: url(/brand/logo-mask.png) center / 120% no-repeat; mask: url(/brand/logo-mask.png) center / 120% no-repeat;
+  filter: drop-shadow(0 0 8px rgba(255,61,139,.55)); }
+.logo .logo-word { display: inline-block; max-width: 120px; overflow: hidden; white-space: nowrap; transition: max-width .45s var(--q), opacity .3s var(--q); }
+.logo.slim { gap: 0; }
+.logo.slim .logo-tile { opacity: 0; transform: scale(.8); }
+.logo.slim .logo-c { opacity: 1; transform: scale(.82); }
+.logo.slim .logo-word { max-width: 0; opacity: 0; }

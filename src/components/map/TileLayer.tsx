@@ -46,6 +46,8 @@ export function TileLayer({ mode, planeW, planeH, api }: { mode: Mode; planeW: n
     fade.current += (want - fade.current) * Math.min(1, dt * 2.5);
     for (const m of mats.current.values()) { m.opacity = fade.current; m.color.lerp(tint, 0.1); }
     if (clock.elapsedTime - last.current.at < 0.2) return;
+    // the first second and a half belongs to the base map: no tile downloads competing with it unless you zoom in
+    if (clock.elapsedTime < 1.6 && camera.position.distanceTo(api.current?.target ?? target) > 6) return;
     last.current.at = clock.elapsedTime;
     if (api.current) target.copy(api.current.target);
     const dist = camera.position.distanceTo(target);

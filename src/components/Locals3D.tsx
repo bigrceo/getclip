@@ -251,41 +251,19 @@ function skyTexture() {
  *  (reflections and ambient come from the same photo) and it carries the sun: the key light sits where the sun is in the
  *  picture and turns with it, so the lit side of the face always matches the sky behind. */
 function Panorama({ src, sun, sunColor }: { src: string; sun: [number, number]; sunColor: string }) {
-  const photo = useLoader(THREE.TextureLoader, src);
-  const img = photo.image as HTMLImageElement;
+  // backdrop pre-blurred offline (lens blur + bokeh discs + haze in one file): nothing to compute on load
+  const tex = useLoader(THREE.TextureLoader, src.replace(/\.jpg$/, "-bokeh.jpg"));
+  const img = tex.image as HTMLImageElement;
   const gl = useThree((st) => st.gl);
   const scene = useThree((st) => st.scene);
-  const tex = useMemo(() => {
-    const W = img.width, H = img.height;
-    const c = document.createElement("canvas"); c.width = W; c.height = H; const g = c.getContext("2d")!;
-    // lens blur: a soft base (two passes so edges stay creamy, not smeared)…
-    g.filter = "blur(6px)"; g.drawImage(img, 0, 0); g.filter = "blur(10px)"; g.globalAlpha = 0.6; g.drawImage(c, 0, 0); g.globalAlpha = 1; g.filter = "none";
-    // …then bokeh: every bright point of the photo becomes a disc of light, like an f/1.8 portrait lens
-    const sw = 256, sh = Math.round(256 * H / W), sm = document.createElement("canvas"); sm.width = sw; sm.height = sh;
-    const sg = sm.getContext("2d", { willReadFrequently: true })!; sg.drawImage(img, 0, 0, sw, sh); const px = sg.getImageData(0, 0, sw, sh).data;
-    g.globalCompositeOperation = "lighter";
-    for (let y = 0; y < sh; y += 2) for (let x = 0; x < sw; x += 2) {
-      const i = (y * sw + x) * 4, r = px[i], gg = px[i + 1], b = px[i + 2], l = 0.299 * r + 0.587 * gg + 0.114 * b;
-      if (l < 185) continue;
-      const k = (l - 185) / 70, rad = (W / sw) * (2.2 + k * 2.4);
-      const cx = x * W / sw, cy = y * H / sh;
-      const d = g.createRadialGradient(cx, cy, rad * 0.55, cx, cy, rad);
-      d.addColorStop(0, `rgba(${r},${gg},${b},${0.10 + k * 0.12})`); d.addColorStop(0.85, `rgba(${r},${gg},${b},${0.13 + k * 0.14})`); d.addColorStop(1, `rgba(${r},${gg},${b},0)`);   // brighter rim, like real lens bokeh
-      g.fillStyle = d; g.beginPath(); g.arc(cx, cy, rad, 0, Math.PI * 2); g.fill();
-    }
-    g.globalCompositeOperation = "source-over";
-    g.filter = "blur(1.5px) saturate(0.9) brightness(0.88)"; g.drawImage(c, 0, 0); g.filter = "none";
-    const haze = g.createLinearGradient(0, 0, 0, H); haze.addColorStop(0, "rgba(40,10,60,0.18)"); haze.addColorStop(1, "rgba(15,5,30,0.4)");
-    g.fillStyle = haze; g.fillRect(0, 0, W, H);   // atmospheric depth
-    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.MirroredRepeatWrapping; t.repeat.x = 2; return t;
-  }, [img]);
+  useMemo(() => { tex.colorSpace = THREE.SRGBColorSpace; tex.wrapS = THREE.MirroredRepeatWrapping; tex.repeat.x = 2; tex.needsUpdate = true; }, [tex]);
   useEffect(() => {
     // The cylinder shows [photo | mirrored photo]; three's equirect lookup reads u = 0.75 − cylinder u, so build the
     // environment as that strip flipped and shifted by a quarter turn: every direction lights the bust with the exact
     // pixel the backdrop shows there (neon from the neon, sun from the sun, sea from the sea).
     const W = img.width, H = img.height, EW = 2048, EH = 1024;
     const strip = document.createElement("canvas"); strip.width = W * 2; strip.height = H; const sg = strip.getContext("2d")!;
-    sg.filter = "blur(4px) brightness(1.15) contrast(1.1)"; sg.drawImage(img, 0, 0); sg.save(); sg.translate(W * 2, 0); sg.scale(-1, 1); sg.drawImage(img, 0, 0); sg.restore();
+    sg.filter = "brightness(1.25) contrast(1.1)"; sg.drawImage(img, 0, 0); sg.save(); sg.translate(W * 2, 0); sg.scale(-1, 1); sg.drawImage(img, 0, 0); sg.restore();
     const ec = document.createElement("canvas"); ec.width = EW; ec.height = EH; const eg = ec.getContext("2d")!;
     // photo spans elevation +37° … −30° → v 0.29 … 0.67; stretch its first and last rows to the poles
     const top = Math.round(EH * 0.29), bot = Math.round(EH * 0.67), bh = bot - top;
@@ -342,6 +320,14 @@ function SlowmoFX({ ca, noise, vig }: { ca: React.RefObject<ChromaticAberrationE
   return null;
 }
 
+/** Compiles every shader of the scene off the main thread where the browser allows it (KHR_parallel_shader_compile),
+ *  so the first visible frame does not stall. */
+function Precompile() {
+  const gl = useThree((st) => st.gl), scene = useThree((st) => st.scene), camera = useThree((st) => st.camera), invalidate = useThree((st) => st.invalidate);
+  useEffect(() => { const r = gl as THREE.WebGLRenderer & { compileAsync?: (s: THREE.Object3D, c: THREE.Camera) => Promise<unknown> }; r.compileAsync?.(scene, camera).then(() => invalidate()).catch(() => null); }, [gl, scene, camera, invalidate]);
+  return null;
+}
+
 function Viewer({ local, active }: { local: Local; active: boolean }) {
   const caRef = useRef<ChromaticAberrationEffect>(null), noiseRef = useRef<NoiseEffect>(null), vigRef = useRef<VignetteEffect>(null);
   return (
@@ -351,7 +337,7 @@ function Viewer({ local, active }: { local: Local; active: boolean }) {
       <Suspense fallback={null}><Panorama src={local.bg ?? "/locals/ocean-drive.jpg"} sun={local.sun ?? [0.05, 0.5]} sunColor={local.sunColor ?? "#ffc48a"} /></Suspense>
       {/* portrait lighting: warm key from the front-left, cool fill from the right, sunset rim from behind */}
       <ambientLight intensity={0.34} color="#d8d2e6" />
-      <Suspense fallback={null}><Model url={local.file} height={local.height} view={local.view} lift={local.lift} dim={local.dim} /></Suspense>
+      <Suspense fallback={null}><Precompile /><Model url={local.file} height={local.height} view={local.view} lift={local.lift} dim={local.dim} /></Suspense>
       {!local.fade && <mesh rotation-x={-Math.PI / 2} position-y={-0.9} receiveShadow><circleGeometry args={[1.1, 48]} /><shadowMaterial transparent opacity={0.35} /></mesh>}
       <SlowmoFX ca={caRef} noise={noiseRef} vig={vigRef} />
       <EffectComposer multisampling={4}>
@@ -370,7 +356,12 @@ function Card({ local, compact = false }: { local: Local; compact?: boolean }) {
   const [exists, setExists] = useState<boolean | null>(null);
   // the map comes first: the 3D portraits warm up once it is on screen (or as soon as the section nears the viewport)
   const [warm, setWarm] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setWarm(true), 3500); return () => clearTimeout(t); }, []);
+  useEffect(() => {
+    // warm up in the browser's idle time after the page has loaded, never on top of the map's first frames
+    let id = 0; const go = () => { id = (window.requestIdleCallback ?? ((f: () => void) => setTimeout(f, 300)))(() => setWarm(true), { timeout: 2500 }) as unknown as number; };
+    if (document.readyState === "complete") setTimeout(go, 900); else addEventListener("load", () => setTimeout(go, 900), { once: true });
+    return () => { if ("cancelIdleCallback" in window) cancelIdleCallback(id); };
+  }, []);
   useEffect(() => { fetch(local.file, { method: "HEAD", cache: "no-store" }).then((r) => setExists(r.ok)).catch(() => setExists(false)); }, [local.file]);
   useEffect(() => {
     const el = ref.current; if (!el) return;
