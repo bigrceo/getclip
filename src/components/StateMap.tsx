@@ -340,7 +340,7 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
   MIAMI = real && CAN_REAL;
   const [mode, setMode] = useState<Mode>("day");
   const [lotTip, setLotTip] = useState<{ plot: Plot; x: number; y: number } | null>(null);
-  const onReady = useMemo(() => () => setReady(true), []);
+  const onReady = useMemo(() => () => { setReady(true); (window as unknown as { __mapReady?: boolean }).__mapReady = true; requestAnimationFrame(() => requestAnimationFrame(() => dispatchEvent(new Event("clip:map-ready")))); }, []);
   // The intro card never blocks the map: it lifts as soon as the ground is ready, or after 1.4 s at the latest.
   const [lift, setLift] = useState(false);
   useEffect(() => { const t = setTimeout(() => setLift(true), 1400); return () => clearTimeout(t); }, [real]);

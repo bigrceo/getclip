@@ -58,6 +58,8 @@ export function MapHero({ coins, volumeSol }: { coins: Coin[]; volumeSol: number
         {active && coins.some((c) => c.mint === active) && <CoinDrawer coin={coins.find((c) => c.mint === active)!} district={plotFor(coins.find((c) => c.mint === active)!, coins.findIndex((c) => c.mint === active)).district} onClose={() => setActive(null)} />}
       </StateMap>
       </div>
+      {/* the sea melts into the page: no hard edge between the map and the rest of the site */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[200px] max-md:hidden" style={{ background: "linear-gradient(to bottom, rgba(10,6,24,0) 0%, rgba(14,10,40,.55) 45%, rgba(10,6,24,.92) 80%, #0a0618 100%)" }} />
       <div className="md:hidden">{card}{rail}</div>
     </section>
   );

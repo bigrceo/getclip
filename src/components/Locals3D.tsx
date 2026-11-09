@@ -15,8 +15,8 @@ import { BlendFunction, type ChromaticAberrationEffect, type NoiseEffect, type V
 
 export type Local = { id: string; name: string; ticker: string; role: string; bio: string; file: string; credit: string; creditUrl: string; height?: number; view?: "full" | "bust"; fade?: boolean; cam?: number; lift?: number; dim?: number; bg?: string; sun?: [number, number]; sunColor?: string };
 export const LOCALS: Local[] = [
-  { id: "lucia", name: "Lucia", ticker: "LUCIA", role: "Out on parole", bio: "Did her time, kept her fists taped. Fresh out and done waiting for anyone to hand her a way up.", file: "/models/lucia-bust.glb", bg: "/locals/ocean-drive.jpg", sun: [0.03, 0.59], sunColor: "#ffe6cf", credit: "getclip.fun", creditUrl: "https://getclip.fun", view: "full", height: 1.0, fade: true, cam: 2.3 },
-  { id: "jason", name: "Jason", ticker: "JASON", role: "Keys runner", bio: "Ex-army, now moving boats through the Keys for people who pay cash. Wants out of the small jobs.", file: "/models/jason-bust.glb", bg: "/locals/keys-marina.jpg", sun: [0.078, 0.38], sunColor: "#ffecd8", credit: "getclip.fun", creditUrl: "https://getclip.fun", view: "full", height: 1.0, fade: true, cam: 2.3 },
+  { id: "lucia", name: "Lucia", ticker: "LUCIA", role: "Out on parole", bio: "Did her time, kept her fists taped. Fresh out and done waiting for anyone to hand her a way up.", file: "/models/lucia-v2.glb", bg: "/locals/ocean-drive.jpg", sun: [0.03, 0.59], sunColor: "#ffe6cf", credit: "getclip.fun", creditUrl: "https://getclip.fun", view: "full", height: 1.0, fade: true, cam: 2.3 },
+  { id: "jason", name: "Jason", ticker: "JASON", role: "Keys runner", bio: "Ex-army, now moving boats through the Keys for people who pay cash. Wants out of the small jobs.", file: "/models/jason-v2.glb", bg: "/locals/keys-marina.jpg", sun: [0.078, 0.38], sunColor: "#ffecd8", credit: "getclip.fun", creditUrl: "https://getclip.fun", view: "full", height: 1.0, fade: true, cam: 2.3 },
 ];
 
 
@@ -61,7 +61,7 @@ const BREATH = { value: 0 };
 const SUN = new THREE.Vector3(-2.2, 1.1, 2.8);
 
 function setupLoader(l: GLTFLoader) {
-  const draco = new DRACOLoader(); draco.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.5.7/");
+  const draco = new DRACOLoader(); draco.setDecoderPath("/draco/"); draco.setDecoderConfig({ type: "wasm" }); draco.preload();
   l.setDRACOLoader(draco); l.setMeshoptDecoder(MeshoptDecoder);
 }
 
@@ -360,10 +360,12 @@ function Card({ local, compact = false }: { local: Local; compact?: boolean }) {
   // the map comes first: the 3D portraits warm up once it is on screen (or as soon as the section nears the viewport)
   const [warm, setWarm] = useState(false);
   useEffect(() => {
-    // warm up in the browser's idle time after the page has loaded, never on top of the map's first frames
-    let id = 0; const go = () => { id = (window.requestIdleCallback ?? ((f: () => void) => setTimeout(f, 300)))(() => setWarm(true), { timeout: 1200 }) as unknown as number; };
-    if (document.readyState === "complete") setTimeout(go, 250); else addEventListener("load", () => setTimeout(go, 250), { once: true });
-    return () => { if ("cancelIdleCallback" in window) cancelIdleCallback(id); };
+    // start the portraits two frames after the map has painted (never on top of its first frames); 1.5 s safety
+    let done = false; const go = () => { if (!done) { done = true; setWarm(true); } };
+    if ((window as unknown as { __mapReady?: boolean }).__mapReady || !document.querySelector("#map")) setTimeout(go, 60);
+    addEventListener("clip:map-ready", go, { once: true });
+    const t = setTimeout(go, 1500);
+    return () => { removeEventListener("clip:map-ready", go); clearTimeout(t); };
   }, []);
   useEffect(() => { fetch(local.file, { method: "HEAD", cache: "no-store" }).then((r) => setExists(r.ok)).catch(() => setExists(false)); }, [local.file]);
   useEffect(() => {

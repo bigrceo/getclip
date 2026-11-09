@@ -180,18 +180,30 @@ export function DistrictLabels({ toWorld }: { toWorld: (u: number, v: number) =>
   const camera = useThree((s) => s.camera), size = useThree((s) => s.size);
   const v = useMemo(() => new THREE.Vector3(), []);
   const home = useRef(0);
+  const rects = useRef<{ at: number; list: { l: number; r: number; t: number; b: number }[] }>({ at: 0, list: [] });
+  const gl = useThree((s) => s.gl);
+  const right = useMemo(() => new THREE.Vector3(), []), up = useMemo(() => new THREE.Vector3(), []), fwd = useMemo(() => new THREE.Vector3(), []);
   useFrame((_, dt) => {
     const g = group.current; if (!g) return;
     // zoom, relative to the opening framing: sharp at the overview, blurred and gone once you are ~40 % closer
     if (!home.current) home.current = camera.position.length();
     const z = THREE.MathUtils.smoothstep(camera.position.length() / home.current, 0.55, 0.85);
-    const wide = size.width >= 1200;
-    const leftEdge = wide ? 560 : 0, rightEdge = wide ? size.width - 400 : size.width;
+    // panels over the map (hero card, Locals rail): a title is either entirely clear of them or not shown at all
+    const now = performance.now();
+    if (now - rects.current.at > 400) {
+      const host = gl.domElement.getBoundingClientRect();
+      rects.current = { at: now, list: [...document.querySelectorAll("[data-pin-obstacle]")].map((e) => { const r = e.getBoundingClientRect(); return { l: r.left - host.left - 16, r: r.right - host.left + 16, t: r.top - host.top - 16, b: r.bottom - host.top + 16 }; }).filter((r) => r.r - r.l > 40) };
+    }
+    camera.matrixWorld.extractBasis(right, up, fwd);
     g.children.forEach((c, i) => {
       const m = mats[i]; if (!m) return;
-      v.copy(c.position).project(camera);
-      const sx = (v.x + 1) / 2 * size.width;
-      const edge = Math.min(THREE.MathUtils.smoothstep(sx - leftEdge, -40, 160), THREE.MathUtils.smoothstep(rightEdge - sx, -40, 160));
+      const half = (c as THREE.Sprite).scale.x / 2 * 0.86, halfH = (c as THREE.Sprite).scale.y / 2 * 0.7;
+      const px = (p: THREE.Vector3) => { p.project(camera); return [(p.x + 1) / 2 * size.width, (1 - p.y) / 2 * size.height]; };
+      const [lx, ty] = px(v.copy(c.position).addScaledVector(right, -half).addScaledVector(up, halfH));
+      const [rx, by] = px(v.copy(c.position).addScaledVector(right, half).addScaledVector(up, -halfH));
+      const onScreen = lx > 8 && rx < size.width - 8 && ty > 70 && by < size.height - 8;
+      const hidden = !onScreen || rects.current.list.some((r) => lx < r.r && rx > r.l && ty < r.b && by > r.t);
+      const edge = hidden ? 0 : 1;
       const target = z * edge;
       m.opacity += (target - m.opacity) * Math.min(1, dt * 10);
       const b = m.userData.blur as { value: number };

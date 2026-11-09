@@ -25,13 +25,13 @@ const MENUS: Record<"clips", { label: string; rows: Row[]; cards: Card[] }> = {
     label: "Clips",
     rows: [
       ["plus", "Launch a clip", "Paste a TikTok, X or YouTube link. The clip becomes a pump.fun coin.", "/launch"],
-      ["map", "The map", "Every clip coin takes a plot somewhere in Leonida.", "/#map"],
-      ["user", "Meet the Locals", "Lucia and Jason in 3D, on Ocean Drive and in the Keys.", "/#locals"],
+      ["map", "The map", "Every clip coin takes a plot somewhere in Leonida.", "/map"],
+      ["user", "Meet the Locals", "Lucia and Jason in 3D, on Ocean Drive and in the Keys.", "/locals"],
       ["book", "How it works", "Three steps, free, no wallet needed.", "/how"],
     ],
     cards: [
-      ["Ocean Drive", "Where Lucia stands. Neon, art deco, a pink sunset.", "/#locals", "/locals/ocean-drive.jpg"],
-      ["The Keys", "Jason's dock. Boats, a tiki bar, cash jobs.", "/#locals", "/locals/keys-marina.jpg"],
+      ["Ocean Drive", "Where Lucia stands. Neon, art deco, a pink sunset.", "/locals", "/locals/ocean-drive.jpg"],
+      ["The Keys", "Jason's dock. Boats, a tiki bar, cash jobs.", "/locals", "/locals/keys-marina.jpg"],
     ],
   },
 };
@@ -84,6 +84,8 @@ export function Header() {
               onClick={() => open(hover() || menu !== "clips" ? "clips" : null)} aria-expanded={menu === "clips"}>
               {MENUS.clips.label}<Chev />
             </button>
+            <Link href="/map" className={path.startsWith("/map") ? "on" : ""} onMouseEnter={() => open(null)}>Map</Link>
+            <Link href="/locals" className={path.startsWith("/locals") ? "on" : ""} onMouseEnter={() => open(null)}>Locals</Link>
             <Link href="/launch" className={path.startsWith("/launch") ? "on" : ""} onMouseEnter={() => open(null)}>Launch</Link>
             <Link href="/how" className={path.startsWith("/how") ? "on" : ""} onMouseEnter={() => open(null)}>How it works</Link>
           </div>
