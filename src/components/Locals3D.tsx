@@ -4,7 +4,7 @@
  * card. Each model only loads when its card scrolls into view; a card whose file is missing shows a silhouette.
  */
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { Canvas, useFrame, useLoader } from "@react-three/fiber";
+import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
@@ -59,6 +59,45 @@ function Env() {
   return null;
 }
 
+/** Lucia bust, composed: the full-body model is clipped just above the collarbones and the detailed head sits on the neck,
+ *  its bandana covering the seam. Body coordinates: feet at 0, height 1.8. */
+const BODY_H = 1.8, CLIP_Y = 1.5, HEAD_H = 0.40, HEAD_Y = 1.39, FOCUS_Y = 1.58;
+function LuciaBust({ dim = 0.82 }: { dim?: number }) {
+  const body = useLoader(GLTFLoader, "/models/lucia.glb", setupLoader), head = useLoader(GLTFLoader, "/models/lucia2.glb", setupLoader);
+  const gl = useThree((s) => s.gl);
+  const bodyScene = useMemo(() => body.scene.clone(true), [body]); const headScene = useMemo(() => head.scene.clone(true), [head]);
+  const g = useRef<THREE.Group>(null);
+  const [fit, setFit] = useState<{ bs: number; hs: number; hx: number; hz: number } | null>(null);
+  useEffect(() => {
+    gl.localClippingEnabled = true;
+    const plane = new THREE.Plane(new THREE.Vector3(0, -1, 0), CLIP_Y);
+    const prep = (scene: THREE.Object3D, height: number, clip: boolean, tone: number) => {
+      scene.position.set(0, 0, 0); scene.scale.setScalar(1);
+      const box = new THREE.Box3().setFromObject(scene); const size = new THREE.Vector3(); box.getSize(size); const c = new THREE.Vector3(); box.getCenter(c);
+      scene.position.set(-c.x, -box.min.y, -c.z);
+      scene.traverse((o) => {
+        const mesh = o as THREE.Mesh; if (!mesh.isMesh) return; mesh.castShadow = true;
+        for (const m of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
+          const std = m as THREE.MeshStandardMaterial;
+          if (std.isMeshStandardMaterial) { std.metalness = Math.min(std.metalness, 0.05); std.roughness = Math.max(std.roughness, 0.72); std.envMapIntensity = 0.35 * tone; std.color.setScalar(tone); if (clip) { std.clippingPlanes = [plane]; std.clipShadows = true; } std.needsUpdate = true; }
+        }
+      });
+      return height / Math.max(size.y, 1e-3);
+    };
+    const bs = prep(bodyScene, BODY_H, true, 0.9);
+    const hs = prep(headScene, HEAD_H, false, dim);
+    setFit({ bs, hs, hx: 0, hz: 0.01 });
+  }, [bodyScene, headScene, gl, dim]);
+  useFrame(({ clock }) => { if (g.current) g.current.rotation.y = Math.sin(clock.elapsedTime * 0.5) * 0.25 + 0.15; });
+  if (!fit) return null;
+  return (
+    <group ref={g} position-y={-FOCUS_Y}>
+      <group scale={fit.bs}><primitive object={bodyScene} /></group>
+      <group position={[fit.hx, HEAD_Y, fit.hz]} scale={fit.hs}><primitive object={headScene} /></group>
+    </group>
+  );
+}
+
 function Viewer({ local, active }: { local: Local; active: boolean }) {
   return (
     <Canvas dpr={[1, 1.5]} camera={{ position: [0, local.view === "bust" ? 0.02 : 0.1, local.cam ?? 4.5], fov: 30 }} frameloop={active ? "always" : "never"} gl={{ antialias: true, alpha: true }} shadows style={{ background: "transparent" }}>
@@ -66,7 +105,7 @@ function Viewer({ local, active }: { local: Local; active: boolean }) {
       <ambientLight intensity={0.5} />
       <directionalLight position={[2.5, 4, 3]} intensity={2.2} castShadow shadow-mapSize={[1024, 1024]} />
       <directionalLight position={[-3, 2, -2]} intensity={0.8} color="#ff5fa8" />
-      <Suspense fallback={null}><Model url={local.file} height={local.height} view={local.view} lift={local.lift} dim={local.dim} /></Suspense>
+      <Suspense fallback={null}>{local.id === "lucia" ? <LuciaBust dim={local.dim} /> : <Model url={local.file} height={local.height} view={local.view} lift={local.lift} dim={local.dim} />}</Suspense>
       {!local.fade && <mesh rotation-x={-Math.PI / 2} position-y={-0.9} receiveShadow><circleGeometry args={[1.1, 48]} /><shadowMaterial transparent opacity={0.35} /></mesh>}
     </Canvas>
   );
