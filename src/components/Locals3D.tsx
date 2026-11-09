@@ -31,7 +31,7 @@ function setupLoader(l: GLTFLoader) {
  *  clearcoat on the highlights and a soft sheen. Applied to the whole bust (one material per generated model). */
 function skinMaterial(src: THREE.MeshStandardMaterial, dim: number) {
   if (!src.isMeshStandardMaterial) return src;
-  const m = new THREE.MeshPhysicalMaterial({ map: src.map, bumpMap: src.map, bumpScale: 0.0035, color: new THREE.Color("#ffffff"), roughness: 0.74, metalness: 0, envMapIntensity: 0.3,
+  const m = new THREE.MeshPhysicalMaterial({ map: src.map, bumpMap: src.map, bumpScale: 0.0035, color: new THREE.Color("#ffffff"), roughness: 0.74, metalness: 0, envMapIntensity: 0.35,
     sheen: 0.18, sheenRoughness: 0.85, sheenColor: new THREE.Color("#ffb79e"), clearcoat: 0.06, clearcoatRoughness: 0.6, specularIntensity: 0.45, side: THREE.DoubleSide }); // double-sided: thin hair shells no longer open onto the backdrop
   void dim;
   m.onBeforeCompile = (sh) => {
@@ -44,7 +44,7 @@ function skinMaterial(src: THREE.MeshStandardMaterial, dim: number) {
       float clothMask = 0.0;
       float metalMask = 0.0;
       uniform vec3 uKeyPos;`);
-    sh.uniforms.uKeyPos = { value: new THREE.Vector3(-1.6, 2.2, 2.6) };
+    sh.uniforms.uKeyPos = { value: new THREE.Vector3(-2.2, 1.1, 2.8) };
     sh.fragmentShader = sh.fragmentShader.replace("#include <lights_physical_pars_fragment>", `#include <lights_physical_pars_fragment>
       vec3 sssBleed(vec3 base, float dotNLraw) {
         float t = pow(saturate(1.0 - abs(dotNLraw)), 2.5);          // strongest where light grazes the skin
@@ -96,8 +96,8 @@ function skinMaterial(src: THREE.MeshStandardMaterial, dim: number) {
         vec3 H = normalize(lW + vW);
         float s1 = hairSpec(T, H, -0.08, 110.0);
         float s2 = hairSpec(T, H,  0.12, 40.0);
-        vec3 tint = mix(vec3(1.0, 0.92, 0.82), diffuseColor.rgb * 2.2, 0.6);
-        reflectedLight.directSpecular += hairMask * (s1 * 0.10 + s2 * 0.06 * diffuseColor.rgb * 3.0) * tint;
+        vec3 tint = mix(vec3(1.0, 0.70, 0.40), diffuseColor.rgb * 2.2, 0.5);
+        reflectedLight.directSpecular += hairMask * (s1 * 0.05 + s2 * 0.05 * diffuseColor.rgb * 3.0) * tint;
       }`);
   };
   m.customProgramCacheKey = () => "skin-hair-cloth-metal";
@@ -135,10 +135,10 @@ function studioHDR() {
   const sky = g.createLinearGradient(0, 0, 0, h); sky.addColorStop(0, "#3a2a5c"); sky.addColorStop(0.5, "#2a1836"); sky.addColorStop(0.62, "#4a1f3c"); sky.addColorStop(1, "#0a0710");
   g.fillStyle = sky; g.fillRect(0, 0, w, h);
   const box = (x: number, y: number, bw: number, bh: number, col: string, blur: number) => { g.save(); g.filter = `blur(${blur}px)`; g.fillStyle = col; g.fillRect(x, y, bw, bh); g.restore(); };
-  box(w * 0.18, h * 0.22, w * 0.16, h * 0.3, "rgba(255,238,215,0.95)", 18);   // key softbox, front-left
-  box(w * 0.62, h * 0.3, w * 0.12, h * 0.22, "rgba(150,175,255,0.55)", 22);   // cool fill, right
-  box(w * 0.92, h * 0.26, w * 0.1, h * 0.26, "rgba(255,120,90,0.7)", 20);     // sunset rim, behind
-  box(0, h * 0.26, w * 0.04, h * 0.26, "rgba(255,120,90,0.7)", 20);
+  const sun = g.createRadialGradient(w * 0.2, h * 0.5, 0, w * 0.2, h * 0.5, w * 0.16);   // one low sun, front-left, golden
+  sun.addColorStop(0, "rgba(255,196,120,0.9)"); sun.addColorStop(0.35, "rgba(255,150,80,0.45)"); sun.addColorStop(1, "rgba(255,120,80,0)");
+  g.fillStyle = sun; g.fillRect(0, 0, w, h);
+  box(0, h * 0.5, w, h * 0.2, "rgba(255,110,90,0.25)", 40);   // horizon glow all around
   const t = new THREE.CanvasTexture(c); t.mapping = THREE.EquirectangularReflectionMapping; t.colorSpace = THREE.SRGBColorSpace; return t;
 }
 /** The palm sunset backdrop, drawn into a texture used as the scene background so the post stack (DoF, grain, vignette)
@@ -175,10 +175,10 @@ function Viewer({ local, active }: { local: Local; active: boolean }) {
       gl={{ antialias: true, alpha: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.3 }} shadows="soft" style={{ background: "transparent" }}>
       <Env />
       {/* portrait lighting: warm key from the front-left, cool fill from the right, sunset rim from behind */}
-      <ambientLight intensity={0.22} color="#c9b8ff" />
-      <spotLight position={[-1.6, 2.2, 2.6]} angle={0.6} penumbra={0.9} intensity={20} color="#fff1dc" castShadow shadow-mapSize={[2048, 2048]} shadow-bias={-0.0002} shadow-normalBias={0.01} />
-      <spotLight position={[2.4, 1.2, 2.0]} angle={0.7} penumbra={1} intensity={7} color="#9fb8ff" />
-      <spotLight position={[0.8, 1.8, -2.4]} angle={0.7} penumbra={1} intensity={6} color="#ff7a5c" />
+      <ambientLight intensity={0.3} color="#8a5ab0" />
+      <spotLight position={[-2.2, 1.1, 2.8]} angle={0.7} penumbra={1} intensity={17} color="#ffb366" castShadow shadow-mapSize={[2048, 2048]} shadow-bias={-0.0002} shadow-normalBias={0.01} />
+      <spotLight position={[2.4, 1.2, 2.0]} angle={0.7} penumbra={1} intensity={3} color="#b07ad8" />
+      <spotLight position={[0.8, 1.0, -2.4]} angle={0.7} penumbra={1} intensity={2.5} color="#ff6e4a" />
       <Suspense fallback={null}><Model url={local.file} height={local.height} view={local.view} lift={local.lift} dim={local.dim} /></Suspense>
       {!local.fade && <mesh rotation-x={-Math.PI / 2} position-y={-0.9} receiveShadow><circleGeometry args={[1.1, 48]} /><shadowMaterial transparent opacity={0.35} /></mesh>}
       <EffectComposer multisampling={4}>
