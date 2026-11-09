@@ -3,7 +3,7 @@
  * Leonida: the Yanis V17 community map (gtadb.org, CC BY 4.0) on a flat, unlit plane so it stays as crisp and bright as the
  * source. The 4K version paints first (preloaded by the layout), the 8K swaps in silently once decoded.
  */
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { MODES, type Mode } from "./Atmosphere";
@@ -29,6 +29,8 @@ export function Island({ mode, planeW, planeH, onReady }: { mode: Mode; planeW: 
   const map4k = useLoader(THREE.TextureLoader, small ? "/map/yanis-2k.jpg" : "/map/yanis-4k.jpg"); // phones: 2K first paint, no 8K swap
   const gl = useThree((s) => s.gl);
   const mat = useRef<THREE.MeshBasicMaterial>(null);
+  const hi = useRef<THREE.MeshBasicMaterial>(null);
+  const [map8k, setMap8k] = useState<THREE.Texture | null>(null);
   const mask = useMemo(() => edgeMask(), []);
   const prep = (t: THREE.Texture) => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = gl.capabilities.getMaxAnisotropy(); t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter; return t; };
   useMemo(() => prep(map4k), [map4k]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -36,14 +38,19 @@ export function Island({ mode, planeW, planeH, onReady }: { mode: Mode; planeW: 
   useEffect(() => {
     if (small) return;
     let alive = true;
-    new THREE.TextureLoader().load("/map/yanis-8k.jpg", (t) => { if (!alive || !mat.current) return; mat.current.map = prep(t); mat.current.needsUpdate = true; });
+    new THREE.TextureLoader().load("/map/yanis-8k.jpg", (t) => { if (!alive) return; setMap8k(prep(t)); });
     return () => { alive = false; };
   }, [small]); // eslint-disable-line react-hooks/exhaustive-deps
-  useFrame(() => { mat.current?.color.lerp(new THREE.Color(MODES[mode].tint), 0.05); });
+  useFrame((_, dt) => {
+    const tint = new THREE.Color(MODES[mode].tint);
+    mat.current?.color.lerp(tint, 0.05);
+    if (hi.current) { hi.current.color.lerp(tint, 0.05); hi.current.opacity = Math.min(1, hi.current.opacity + dt * 1.2); }   // 8K fades in over ~0.8 s, no visible sharpening step
+  });
   return (
     <mesh rotation-x={-Math.PI / 2} renderOrder={0}>
       <planeGeometry args={[planeW, planeH]} />
       <meshBasicMaterial ref={mat} map={map4k} alphaMap={mask} transparent depthWrite={false} toneMapped={false} />
+      {map8k && <mesh renderOrder={0} position-z={0.0005}><planeGeometry args={[planeW, planeH]} /><meshBasicMaterial ref={hi} map={map8k} alphaMap={mask} transparent opacity={0} depthWrite={false} toneMapped={false} /></mesh>}
     </mesh>
   );
 }

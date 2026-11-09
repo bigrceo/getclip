@@ -10,7 +10,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { PalmBackdrop } from "./PalmBackdrop";
-import { EffectComposer, N8AO, DepthOfField, Noise, Vignette } from "@react-three/postprocessing";
+import { EffectComposer, N8AO, Noise, Vignette } from "@react-three/postprocessing";
 import { BlendFunction } from "postprocessing";
 
 export type Local = { id: string; name: string; ticker: string; role: string; bio: string; file: string; credit: string; creditUrl: string; height?: number; view?: "full" | "bust"; fade?: boolean; cam?: number; lift?: number; dim?: number };
@@ -21,6 +21,10 @@ export const LOCALS: Local[] = [
 
 
 
+
+if (typeof window !== "undefined") {
+  for (const l of LOCALS) useLoader.preload(GLTFLoader, l.file, setupLoader);
+}
 
 function setupLoader(l: GLTFLoader) {
   const draco = new DRACOLoader(); draco.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.5.7/");
@@ -171,7 +175,7 @@ function Env() {
 
 function Viewer({ local, active }: { local: Local; active: boolean }) {
   return (
-    <Canvas dpr={[1, 2]} camera={{ position: [0, local.view === "bust" ? 0.02 : 0.1, local.cam ?? 4.5], fov: 30 }} frameloop={active ? "always" : "never"}
+    <Canvas dpr={[1, 1.5]} camera={{ position: [0, local.view === "bust" ? 0.02 : 0.1, local.cam ?? 4.5], fov: 30 }} frameloop={active ? "always" : "demand"}
       gl={{ antialias: true, alpha: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.3 }} shadows="soft" style={{ background: "transparent" }}>
       <Env />
       {/* portrait lighting: warm key from the front-left, cool fill from the right, sunset rim from behind */}
@@ -183,7 +187,6 @@ function Viewer({ local, active }: { local: Local; active: boolean }) {
       {!local.fade && <mesh rotation-x={-Math.PI / 2} position-y={-0.9} receiveShadow><circleGeometry args={[1.1, 48]} /><shadowMaterial transparent opacity={0.35} /></mesh>}
       <EffectComposer multisampling={4}>
         <N8AO aoRadius={0.3} intensity={0.9} distanceFalloff={0.6} quality="performance" />
-        <DepthOfField focusDistance={0.02} focalLength={0.08} bokehScale={1.6} />
         <Noise premultiply blendFunction={BlendFunction.SOFT_LIGHT} opacity={0.2} />
         <Vignette eskil={false} offset={0.3} darkness={0.4} />
       </EffectComposer>
@@ -206,7 +209,7 @@ function Card({ local }: { local: Local }) {
     <div ref={ref} className="glass overflow-hidden">
       <div className="relative aspect-[4/5] overflow-hidden">
         <PalmBackdrop />
-        {exists && visible ? <Viewer local={local} active={visible} /> : (
+        {exists !== false ? <Viewer local={local} active={visible} /> : (
           <div className="absolute inset-0 grid place-items-center">
             <div className="h-[62%] w-[34%] rounded-t-full bg-black/45" style={{ clipPath: "polygon(30% 0, 70% 0, 72% 18%, 95% 28%, 100% 100%, 0 100%, 5% 28%, 28% 18%)" }} />
             {exists === false && <span className="absolute bottom-3 text-[11px] font-semibold uppercase tracking-[.1em] text-haze">3D model coming</span>}

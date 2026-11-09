@@ -27,7 +27,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${pricedown.variable} ${anton.variable} ${yellowtail.variable}`}>
-      <head><link rel="preload" as="image" href="/map/yanis-4k.jpg" media="(min-width: 900px)" /><link rel="preload" as="image" href="/map/yanis-2k.jpg" media="(max-width: 899px)" /></head>
+      <head>
+        <link rel="preload" as="image" href="/map/yanis-4k.jpg" media="(min-width: 900px)" crossOrigin="anonymous" />
+        <link rel="preload" as="image" href="/map/yanis-2k.jpg" media="(max-width: 899px)" crossOrigin="anonymous" />
+        <link rel="preload" as="fetch" href="/models/lucia-bust.glb" crossOrigin="anonymous" />
+        <link rel="preload" as="fetch" href="/models/jason-bust.glb" crossOrigin="anonymous" />
+      </head>
       <body className="min-h-dvh flex flex-col">
         <a href="#content" className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-50 focus:bg-sun focus:px-3 focus:py-2 focus:text-night">Skip to the content</a>
         <WalletProvider>
