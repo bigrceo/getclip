@@ -64,7 +64,7 @@ export default async function Home() {
         </ul>
         <div className="flex flex-wrap items-center gap-3">
           <Link href="/launch" className="btn btn-hot">Launch a clip</Link>
-          {OFFICIAL_MINT ? <CopyCA mint={OFFICIAL_MINT} /> : <span className="text-sm text-sun">${BRAND.short} CA: soon, only from this page and our X.</span>}
+          {OFFICIAL_MINT ? <CopyCA mint={OFFICIAL_MINT} /> : <span className="text-sm text-sun">${BRAND.ticker} CA: soon, only from this page and our X.</span>}
         </div>
       </section>
 

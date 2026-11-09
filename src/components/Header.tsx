@@ -18,7 +18,7 @@ export function Header() {
         <div className="ml-auto flex items-center gap-2">
           <a href={GTA_VI_URL} target="_blank" rel="noreferrer" className="p-1.5 opacity-90 hover:opacity-100" aria-label="GTA VI on Rockstar Games" title="GTA VI · Rockstar Games"><RockstarIcon /></a>
           <a href={BRAND.x} target="_blank" rel="noreferrer" className="p-2 text-haze hover:text-ink" aria-label="X"><XIcon /></a>
-          {OFFICIAL_MINT && <a href={`https://pump.fun/coin/${OFFICIAL_MINT}`} target="_blank" rel="noreferrer" className="btn btn-ghost hidden sm:inline-flex">${BRAND.short}</a>}
+          {OFFICIAL_MINT && <a href={`https://pump.fun/coin/${OFFICIAL_MINT}`} target="_blank" rel="noreferrer" className="btn btn-ghost hidden sm:inline-flex">${BRAND.ticker}</a>}
           <Link href="/launch" className="btn btn-hot max-sm:hidden">Launch<span className="hidden sm:inline"> a clip</span></Link>
           {w.address ? (
             <div className="flex items-center gap-1">

@@ -31,8 +31,8 @@ export function MapHero({ coins, volumeSol }: { coins: Coin[]; volumeSol: number
           <HeroLaunch compact />
           <div className="mt-2.5 flex gap-2.5">
             {OFFICIAL_MINT
-              ? <a href={`https://pump.fun/coin/${OFFICIAL_MINT}`} target="_blank" rel="noreferrer" className="btn btn-hot flex-1">Buy ${BRAND.short}</a>
-              : <span className="btn btn-ghost flex-1 cursor-default opacity-70">${BRAND.short} · soon</span>}
+              ? <a href={`https://pump.fun/coin/${OFFICIAL_MINT}`} target="_blank" rel="noreferrer" className="btn btn-hot flex-1">Buy ${BRAND.ticker}</a>
+              : <span className="btn btn-ghost flex-1 cursor-default opacity-70">${BRAND.ticker} · soon</span>}
             <Link href="/how" className="btn btn-ghost flex-1">How it works</Link>
           </div>
           <div className="mt-3.5">

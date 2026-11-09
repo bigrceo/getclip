@@ -5,6 +5,7 @@ export const BRAND = {
   name: "getclip.fun",
   brand: "CLIP",
   short: "CLIP",
+  ticker: "CLIPS",
   tagline: "Every GTA 6 clip becomes a coin. Free, no wallet.",
   state: "Leonida",
   releaseAt: "2026-11-19T05:00:00Z",
