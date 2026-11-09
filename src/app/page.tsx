@@ -22,7 +22,7 @@ function PumpLogo() {
 import { Countdown } from "@/components/Countdown";
 import { CopyCA } from "@/components/CopyCA";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 10;   // served from the edge cache, rebuilt in the background every 10 s
 
 const H2 = ({ script, children }: { script: string; children: React.ReactNode }) => (
   <><p className="script">{script}</p><h2 className="sec-title sunset-text mb-3.5">{children}</h2></>
