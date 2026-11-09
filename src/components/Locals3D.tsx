@@ -13,10 +13,10 @@ import { PalmBackdrop } from "./PalmBackdrop";
 import { EffectComposer, N8AO, Noise, Vignette } from "@react-three/postprocessing";
 import { BlendFunction } from "postprocessing";
 
-export type Local = { id: string; name: string; ticker: string; role: string; bio: string; file: string; credit: string; creditUrl: string; height?: number; view?: "full" | "bust"; fade?: boolean; cam?: number; lift?: number; dim?: number };
+export type Local = { id: string; name: string; ticker: string; role: string; bio: string; file: string; credit: string; creditUrl: string; height?: number; view?: "full" | "bust"; fade?: boolean; cam?: number; lift?: number; dim?: number; bg?: string };
 export const LOCALS: Local[] = [
-  { id: "lucia", name: "Lucia", ticker: "LUCIA", role: "Out on parole", bio: "Did her time, kept her fists taped. Fresh out and done waiting for anyone to hand her a way up.", file: "/models/lucia-bust.glb", credit: "getclip.fun", creditUrl: "https://getclip.fun", view: "full", height: 1.0, fade: true, cam: 2.3 },
-  { id: "jason", name: "Jason", ticker: "JASON", role: "Keys runner", bio: "Ex-army, now moving boats through the Keys for people who pay cash. Wants out of the small jobs.", file: "/models/jason-bust.glb", credit: "getclip.fun", creditUrl: "https://getclip.fun", view: "full", height: 1.0, fade: true, cam: 2.3 },
+  { id: "lucia", name: "Lucia", ticker: "LUCIA", role: "Out on parole", bio: "Did her time, kept her fists taped. Fresh out and done waiting for anyone to hand her a way up.", file: "/models/lucia-bust.glb", bg: "/locals/ocean-drive.jpg", credit: "getclip.fun", creditUrl: "https://getclip.fun", view: "full", height: 1.0, fade: true, cam: 2.3 },
+  { id: "jason", name: "Jason", ticker: "JASON", role: "Keys runner", bio: "Ex-army, now moving boats through the Keys for people who pay cash. Wants out of the small jobs.", file: "/models/jason-bust.glb", bg: "/locals/keys-marina.jpg", credit: "getclip.fun", creditUrl: "https://getclip.fun", view: "full", height: 1.0, fade: true, cam: 2.3 },
 ];
 
 
@@ -152,61 +152,16 @@ function skyTexture() {
   g.fillStyle = sky; g.fillRect(0, 0, w, h);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
 }
-function rng(seed: number) { let x = seed; return () => { x = (x * 1664525 + 1013904223) % 4294967296; return x / 4294967296; }; }
-/** Far ring: the sun, the ocean and an art-deco skyline with neon. 4096 px wrap around the subject. */
-function farRingTexture() {
-  const w = 4096, h = 1024, c = document.createElement("canvas"); c.width = w; c.height = h; const g = c.getContext("2d")!;
-  const hz = h * 0.56, r = rng(7);
-  // sun
-  const sx = w * 0.3; const sun = g.createRadialGradient(sx, hz - 40, 0, sx, hz - 40, 420);
-  sun.addColorStop(0, "rgba(255,236,170,1)"); sun.addColorStop(0.18, "rgba(255,190,110,0.9)"); sun.addColorStop(0.45, "rgba(255,140,80,0.35)"); sun.addColorStop(1, "rgba(255,140,80,0)");
-  g.fillStyle = sun; g.fillRect(0, 0, w, h);
-  // ocean
-  const sea = g.createLinearGradient(0, hz, 0, h); sea.addColorStop(0, "#ff9a5a"); sea.addColorStop(0.08, "#c2407e"); sea.addColorStop(0.35, "#3a1660"); sea.addColorStop(1, "#140a26");
-  g.fillStyle = sea; g.fillRect(0, hz, w, h - hz);
-  for (let i = 0; i < 260; i++) { const y = hz + 4 + Math.pow(r(), 1.6) * (h - hz) * 0.7; const len = 20 + r() * 160; const x = sx - 500 + r() * 1000 + (y - hz) * (r() - 0.5) * 2; g.fillStyle = `rgba(255,${180 + r() * 60 | 0},${120 + r() * 60 | 0},${0.08 + r() * 0.25})`; g.fillRect(x, y, len, 1.5); }
-  g.fillStyle = "rgba(255,255,255,.35)"; g.fillRect(0, hz, w, 1.2);
-  // skyline (art deco: stepped towers, spires, lit windows), leaving the sun side open
-  const towers: { x: number; bw: number; th: number }[] = []; let x = w * 0.5;
-  while (x < w * 1.0) { const bw = 40 + r() * 110, th = 40 + r() * 170; towers.push({ x, bw, th }); x += bw + r() * 40; }
-  x = 0; while (x < w * 0.12) { const bw = 40 + r() * 90, th = 40 + r() * 120; towers.push({ x, bw, th }); x += bw + r() * 60; }
-  for (const t of towers) {
-    g.fillStyle = "#1b0c33"; let y = hz - t.th; g.fillRect(t.x, y, t.bw, t.th + 4);
-    let bw = t.bw, bx = t.x; for (let k = 0; k < 3 && r() > 0.3; k++) { bw *= 0.7; bx += (t.bw - bw) / 2 * (k === 0 ? 1 : 0.5); y -= 18 + r() * 40; g.fillRect(bx, y, bw, 60); }
-    if (r() > 0.5) g.fillRect(t.x + t.bw / 2 - 2, y - 40 - r() * 60, 4, 100);
-    for (let wy = hz - t.th + 10; wy < hz - 8; wy += 9) for (let wx = t.x + 6; wx < t.x + t.bw - 6; wx += 8) if (r() > 0.7) { g.fillStyle = r() > 0.8 ? "rgba(255,120,170,.9)" : "rgba(255,200,140,.75)"; g.fillRect(wx, wy, 3, 4); }
-    if (r() > 0.45) { const col = r() > 0.5 ? "#ff3fa4" : "#39e6ff"; g.save(); g.shadowColor = col; g.shadowBlur = 18; g.fillStyle = col; const ny = hz - t.th + 20 + r() * 40; if (r() > 0.5) g.fillRect(t.x + 4, ny, t.bw - 8, 3); else g.fillRect(t.x + t.bw * 0.5 - 2, ny, 3, 40 + r() * 60); g.restore(); }
-    g.save(); g.globalAlpha = 0.35; g.scale(1, -1); g.translate(0, -2 * hz); g.fillStyle = "#1b0c33"; g.fillRect(t.x, hz - t.th * 0.45, t.bw, t.th * 0.45); g.restore();   // reflection
-  }
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping; t.anisotropy = 8; return t;
-}
-/** Near ring: palm silhouettes and the dark shore, transparent elsewhere. */
-function nearRingTexture() {
-  const w = 4096, h = 1024, c = document.createElement("canvas"); c.width = w; c.height = h; const g = c.getContext("2d")!;
-  const r = rng(23);
-  const shore = g.createLinearGradient(0, h * 0.78, 0, h); shore.addColorStop(0, "rgba(22,10,46,0)"); shore.addColorStop(0.3, "rgba(22,10,46,0.9)"); shore.addColorStop(1, "#0e0620");
-  g.fillStyle = shore; g.fillRect(0, 0, w, h);
-  const palm = (x: number, y: number, sc: number, flip: boolean, lean: number) => {
-    g.save(); g.translate(x, y); g.scale(flip ? -sc : sc, sc); g.rotate(lean * Math.PI / 180); g.fillStyle = "#160a2e";
-    g.fill(new Path2D("M-9 0 C -14 -120, 4 -240, 2 -360 L 14 -360 C 22 -240, 8 -120, 11 0 Z"));
-    g.translate(8, -360);
-    for (let i = 0; i < 9; i++) { g.save(); g.rotate((i / 9) * Math.PI * 2 + 0.3); g.fill(new Path2D("M0 0 C 30 -22, 80 -30, 125 -8 C 80 -10, 45 -3, 0 10 Z")); g.restore(); }
-    g.restore();
-  };
-  for (let i = 0; i < 14; i++) { const x = (i / 14) * w + (r() - 0.5) * 220; const sc = 0.5 + r() * 0.5; palm(x, h * 0.9 + r() * 50, sc, r() > 0.5, (r() - 0.5) * 24); }
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping; t.anisotropy = 8; return t;
-}
-/** Two rings around the bust that turn with it, so orbiting the character feels like orbiting the place. */
-function Panorama() {
-  const far = useMemo(() => farRingTexture(), []);
-  const near = useMemo(() => nearRingTexture(), []);
-  const a = useRef<THREE.Mesh>(null), b = useRef<THREE.Mesh>(null);
-  useFrame((_, dt) => { if (a.current) a.current.rotation.y += dt * 0.45; if (b.current) b.current.rotation.y += dt * 0.52; });
+/** A real photo panorama of the shore wrapped around the bust, turning with it so orbiting the character orbits the place.
+ *  The photo is mirrored once around the cylinder so the loop has no seam. */
+function Panorama({ src }: { src: string }) {
+  const tex = useLoader(THREE.TextureLoader, src);
+  useMemo(() => { tex.colorSpace = THREE.SRGBColorSpace; tex.wrapS = THREE.MirroredRepeatWrapping; tex.repeat.x = 2; tex.anisotropy = 8; tex.needsUpdate = true; }, [tex]);
+  const a = useRef<THREE.Mesh>(null);
+  useFrame((_, dt) => { if (a.current) a.current.rotation.y += dt * 0.45; });
+  // circumference 2π·7 ≈ 44 → two 21:9 copies of 22 each → height 22·9/21 ≈ 9.4
   return (
-    <>
-      <mesh ref={a} position-y={0.1} renderOrder={-2}><cylinderGeometry args={[7, 7, 7.5, 96, 1, true]} /><meshBasicMaterial map={far} side={THREE.BackSide} transparent depthWrite={false} toneMapped={false} /></mesh>
-      <mesh ref={b} position-y={0.1} renderOrder={-1}><cylinderGeometry args={[5, 5, 6, 96, 1, true]} /><meshBasicMaterial map={near} side={THREE.BackSide} transparent depthWrite={false} toneMapped={false} /></mesh>
-    </>
+    <mesh ref={a} position-y={0.6} renderOrder={-2}><cylinderGeometry args={[7, 7, 9.4, 128, 1, true]} /><meshBasicMaterial map={tex} side={THREE.BackSide} depthWrite={false} toneMapped={false} /></mesh>
   );
 }
 
@@ -223,7 +178,7 @@ function Viewer({ local, active }: { local: Local; active: boolean }) {
     <Canvas dpr={[1, 1.5]} camera={{ position: [0, local.view === "bust" ? 0.02 : 0.1, local.cam ?? 4.5], fov: 30 }} frameloop={active ? "always" : "demand"}
       gl={{ antialias: true, alpha: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.3 }} shadows="soft" style={{ background: "transparent" }}>
       <Env />
-      <Panorama />
+      <Suspense fallback={null}><Panorama src={local.bg ?? "/locals/ocean-drive.jpg"} /></Suspense>
       {/* portrait lighting: warm key from the front-left, cool fill from the right, sunset rim from behind */}
       <ambientLight intensity={0.34} color="#8c78b8" />
       <spotLight position={[-2.2, 1.1, 2.8]} angle={0.7} penumbra={1} intensity={15} color="#ffd6a8" castShadow shadow-mapSize={[2048, 2048]} shadow-bias={-0.0002} shadow-normalBias={0.01} />
