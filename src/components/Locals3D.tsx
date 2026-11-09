@@ -140,7 +140,7 @@ function Card({ local }: { local: Local }) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   const [exists, setExists] = useState<boolean | null>(null);
-  useEffect(() => { fetch(local.file, { method: "HEAD" }).then((r) => setExists(r.ok)).catch(() => setExists(false)); }, [local.file]);
+  useEffect(() => { fetch(local.file, { method: "HEAD", cache: "no-store" }).then((r) => setExists(r.ok)).catch(() => setExists(false)); }, [local.file]);
   useEffect(() => {
     const el = ref.current; if (!el) return;
     const io = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { rootMargin: "200px" });
