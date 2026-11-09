@@ -1,0 +1,10 @@
+import { chromium } from "/Users/rayane/hush/node_modules/playwright-core/index.mjs";
+import fs from "fs"; import path from "path";
+const dir = path.dirname(new URL(import.meta.url).pathname);
+const cards = JSON.parse(fs.readFileSync(dir + "/cards.json"));
+const only = process.argv.slice(2);
+const b = await chromium.launch({ executablePath: "/Users/rayane/Library/Caches/ms-playwright/chromium-1248/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing", args:["--allow-file-access-from-files"] });
+const p = await b.newPage({ viewport: { width: 1600, height: 900 } });
+await p.goto("file://" + dir + "/posts.html"); await p.waitForLoadState("networkidle"); await p.evaluate(() => document.fonts.ready); await p.waitForTimeout(800);
+for (const id of Object.keys(cards)) if (!only.length || only.includes(id)) await p.locator("#" + id).screenshot({ path: dir + "/img/" + id + ".png" });
+await b.close();
