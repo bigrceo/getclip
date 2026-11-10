@@ -46,20 +46,6 @@ export default async function LocalPage({ params }: { params: Promise<{ id: stri
         </div>
       </div>
 
-      {/* on location: a short loop of them in their place */}
-      {l.video && (
-        <section className="mt-16 grid items-center gap-8 md:grid-cols-[1fr_420px]">
-          <div className="max-md:order-2">
-            <p className="script">On location</p>
-            <h2 className="sec-title sunset-text">{l.place?.includes("Keys") ? "The Keys" : "Ocean Drive"}</h2>
-            <p className="mt-3 max-w-[520px] leading-[1.6] text-haze">{l.name} on {l.name === "Lucia" ? "her" : "his"} home turf, {l.place}. Clip this, and it is a coin.</p>
-          </div>
-          <div className="relative overflow-hidden rounded-[22px] border border-white/10 shadow-[0_30px_70px_-30px_rgba(255,61,139,.55)]">
-            <video src={l.video} poster={l.mugshot} autoPlay muted loop playsInline preload="metadata" className="block aspect-[3/4] w-full object-cover" />
-          </div>
-        </section>
-      )}
-
       {/* file photo */}
       {l.mugshot && (
         <section className="mt-16 grid items-center gap-8 md:grid-cols-[380px_1fr]">
