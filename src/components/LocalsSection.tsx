@@ -2,12 +2,21 @@
 /** Lucia and Jason as short looping videos in their place (Ocean Drive, the Keys). The first frame shows at once as the
  *  poster, the loop starts as soon as it can play; no 3D engine on these pages. */
 import Link from "next/link";
+import { useRef, useState } from "react";
 import { LOCALS, type Local } from "@/lib/locals";
 
 function Clip({ l, className = "" }: { l: Local; className?: string }) {
+  // the animation plays once; on its last frame a loop that starts on that exact frame takes over, so they just keep
+  // looking at you (no restart)
+  const stare = useRef<HTMLVideoElement>(null);
+  const [held, setHeld] = useState(false);
+  const cls = `absolute inset-0 h-full w-full object-cover ${className}`;
   return (
-    <video src={l.video} poster={l.poster} autoPlay muted loop playsInline preload="auto" aria-label={`${l.name} on ${l.place}`}
-      className={`absolute inset-0 h-full w-full object-cover ${className}`} />
+    <>
+      {l.stare && <video ref={stare} src={l.stare} muted loop playsInline preload="auto" aria-hidden className={cls} style={{ opacity: held ? 1 : 0 }} />}
+      <video src={l.video} poster={l.poster} autoPlay muted playsInline preload="auto" aria-label={`${l.name} on ${l.place}`}
+        onEnded={() => { stare.current?.play().catch(() => null); setHeld(true); }} className={cls} style={{ opacity: held ? 0 : 1 }} />
+    </>
   );
 }
 
