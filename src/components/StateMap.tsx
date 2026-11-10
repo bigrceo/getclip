@@ -143,6 +143,25 @@ function Controls({ entities, selected, api, onWorld }: { entities: Entity[]; se
     c.target.copy(off); camera.position.add(off);
     return c;
   }, [camera, dom]);
+  // menu cards on a page that already shows the map: fly there instead of reloading
+  useEffect(() => {
+    const fly = (e: Event) => {
+      const at = PLACES[(e as CustomEvent<string>).detail]; if (!at || MIAMI) return;
+      const [ax, , az] = toWorld(at.u, at.v);
+      const t0 = controls.target.clone(), p0 = camera.position.clone();
+      const t1 = new THREE.Vector3(ax, LAND_Y, az), p1 = new THREE.Vector3(ax, LAND_Y + at.h, az + at.h * 0.62);
+      const start = performance.now(); let raf = 0;
+      const step = (now: number) => {
+        const k = Math.min(1, (now - start) / 1400), e2 = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+        controls.target.lerpVectors(t0, t1, e2); camera.position.lerpVectors(p0, p1, e2); controls.update();
+        if (k < 1) raf = requestAnimationFrame(step);
+      };
+      raf = requestAnimationFrame(step);
+      return () => cancelAnimationFrame(raf);
+    };
+    addEventListener("clip:fly", fly);
+    return () => removeEventListener("clip:fly", fly);
+  }, [controls, camera]);
   const goal = useRef<THREE.Vector3 | null>(null);
   // Intro flyover: start high and far, ease into the default framing.
   const intro = useRef<{ from: THREE.Vector3; to: THREE.Vector3; t: number } | null>(null);

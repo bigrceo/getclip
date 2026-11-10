@@ -121,9 +121,16 @@ export function Header() {
             </div>
             <div className="mcards">
               {MENUS.clips.cards.map(([t, d, h, img]) => (
-                <a key={t} className="mcard" href={h}>
+                <a key={t} className="mcard" href={h} onClick={(e) => {
+                  // already on a page with the map: fly there in place
+                  if ((path === "/" || path === "/map") && document.querySelector(".map-canvas")) {
+                    e.preventDefault(); setMenu(null); scrollTo({ top: 0, behavior: "smooth" });
+                    history.replaceState(null, "", `${path}?at=${h.split("at=")[1]}`);
+                    dispatchEvent(new CustomEvent("clip:fly", { detail: h.split("at=")[1] }));
+                  }
+                }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <span className="mimg"><img src={img} alt="" loading="lazy" /><em className="mbadge">Open on the map</em></span>
+                  <span className="mimg"><img src={img} alt="" loading="lazy" /></span>
                   <span className="mtxt"><b>{t}</b><small>{d}</small><i>↗</i></span>
                 </a>
               ))}

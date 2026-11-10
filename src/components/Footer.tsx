@@ -13,11 +13,10 @@ const COLS: [string, [string, string][]][] = [
 /** Footer as a postcard from Leonida: Ocean Drive at dusk behind, the see-through C, the state's name across the bottom. */
 export function Footer() {
   return (
-    <footer className="relative mt-24 overflow-hidden">
+    <footer className="relative mt-10 overflow-hidden">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/locals/ocean-drive-bokeh.jpg" alt="" aria-hidden loading="lazy" className="absolute inset-0 size-full object-cover opacity-55" />
-      <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(to bottom, #0a0618 0%, rgba(10,6,24,.55) 30%, rgba(40,10,50,.45) 70%, rgba(10,6,24,.9) 100%)" }} />
-      <div aria-hidden className="absolute inset-x-0 top-0 h-px" style={{ background: "linear-gradient(90deg, transparent, #ff3e8c, #ffb35c, transparent)" }} />
+      <img src="/locals/ocean-drive-bokeh.jpg" alt="" aria-hidden loading="lazy" className="absolute inset-0 size-full object-cover opacity-55" style={{ maskImage: "linear-gradient(to bottom, transparent, #000 45%)", WebkitMaskImage: "linear-gradient(to bottom, transparent, #000 45%)" }} />
+      <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(to bottom, #0a0618 0%, rgba(10,6,24,.75) 25%, rgba(10,6,24,.5) 45%, rgba(40,10,50,.45) 70%, rgba(10,6,24,.9) 100%)" }} />
 
       <div className="relative mx-auto max-w-[1680px] px-6 pt-20 max-md:px-4 max-md:pt-14">
         <div className="flex flex-wrap items-start justify-between gap-10">
