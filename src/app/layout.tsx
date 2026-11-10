@@ -29,6 +29,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${inter.variable} ${pricedown.variable} ${anton.variable} ${yellowtail.variable}`}>
       <head>
                 <link rel="preload" as="image" href="/map/yanis-2k.jpg" crossOrigin="anonymous" fetchPriority="high" />
+        <link rel="preload" as="image" href="/map/poster-desktop.webp" media="(min-width: 768px)" fetchPriority="high" />
+        <link rel="preload" as="image" href="/map/poster-mobile.webp" media="(max-width: 767px)" fetchPriority="high" />
         <link rel="preload" as="image" href="/locals/lucia-poster.jpg" />
         <link rel="preload" as="image" href="/locals/jason-poster.jpg" />
       </head>

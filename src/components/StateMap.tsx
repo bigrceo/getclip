@@ -4,6 +4,7 @@
  * the 4K core blended on top with its mask, one beacon (halo, pulsing ring, beam, sphere) per coin, HTML pins
  * projected from the scene that dodge the hero card and the rail, OrbitControls kept inside the island.
  */
+import { MapPoster } from "./MapPoster";
 import { PLOTS, plotFor, type Plot } from "./plots";
 import { useRouter } from "next/navigation";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
@@ -293,10 +294,6 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
   const [mode, setMode] = useState<Mode>("day");
   const [lotTip, setLotTip] = useState<{ plot: Plot; x: number; y: number } | null>(null);
   const onReady = useMemo(() => () => { setReady(true); (window as unknown as { __mapReady?: boolean }).__mapReady = true; requestAnimationFrame(() => requestAnimationFrame(() => dispatchEvent(new Event("clip:map-ready")))); }, []);
-  // The intro card never blocks the map: it lifts as soon as the ground is ready, or after 1.4 s at the latest.
-  const [lift, setLift] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setLift(true), 1400); return () => clearTimeout(t); }, [real]);
-  const shown = ready || lift;
   const select = (m: string) => onActive(m);
   return (
     <div className="map-canvas absolute inset-0">
@@ -314,11 +311,9 @@ export function StateMap({ coins, active, onActive, children }: { coins: Coin[];
         <Controls entities={entities} selected={active} api={api} onWorld={setReal} />
         <PinLayout entities={entities} slots={slots} hovered={hovered} selected={active} />
       </Canvas>
+      <MapPoster hidden={ready} />
       <Pins entities={entities} slots={slots} hovered={hovered} selected={active} onHover={setHovered} onSelect={select} />
       <div className="map-vignette" aria-hidden="true" />
-      <div aria-hidden={shown} className={`pointer-events-none absolute inset-0 z-10 grid place-items-center transition-opacity duration-500 ${shown ? "opacity-0" : "opacity-100"}`} style={{ background: "radial-gradient(circle, #23104a, #0a0618)" }}>
-        <div className="text-center"><span aria-hidden className="logo-c mx-auto mb-4 block size-[96px]" style={{ background: "linear-gradient(135deg, rgba(255,255,255,.95), rgba(255,195,138,.75))", WebkitMask: "url(/brand/logo-mask.png) center / 120% no-repeat", mask: "url(/brand/logo-mask.png) center / 120% no-repeat", filter: "drop-shadow(0 0 18px rgba(255,61,139,.7))" }} /><p className="script">Flying into</p><p className="sec-title sunset-text">Leonida</p><p className="mt-3 text-[12px] font-semibold uppercase tracking-[.1em] text-haze">getclip.fun</p></div>
-      </div>
       {MIAMI && <MiamiCredits credits={credits} />}
       {lotTip && <div className="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-[calc(100%+14px)] rounded-[10px] bg-white px-2.5 py-1.5 text-center text-[12px] font-bold text-[#1a0b26] shadow-lg" style={{ left: lotTip.x, top: lotTip.y }}>Open plot · {lotTip.plot.district}<br /><span className="font-semibold opacity-80">Launch a clip to claim it</span></div>}
       <div className="absolute bottom-[18px] left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 max-md:bottom-3 max-md:left-auto max-md:right-3 max-md:translate-x-0">

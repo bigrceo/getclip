@@ -1,11 +1,12 @@
 "use client";
+import { MapPoster } from "./MapPoster";
 import Link from "next/link";
 import { useState } from "react";
 import { BRAND, OFFICIAL_MINT } from "@/lib/brand";
 import type { Coin } from "@/lib/types";
 import dynamic from "next/dynamic";
 import { plotFor, PLOTS } from "./plots";
-const StateMap = dynamic(() => import("./StateMap").then((m) => m.StateMap), { ssr: false, loading: () => <div className="absolute inset-0 grid place-items-center font-sign text-[28px] tracking-wide" style={{ background: "radial-gradient(circle, #23104a, #0a0618)" }}>Loading Leonida…</div> });
+const StateMap = dynamic(() => import("./StateMap").then((m) => m.StateMap), { ssr: false, loading: () => <MapPoster /> });
 import { HeroLaunch } from "./HeroLaunch";
 import { Countdown } from "./Countdown";
 import { CoinDrawer } from "./CoinDrawer";
