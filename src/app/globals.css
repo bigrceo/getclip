@@ -259,6 +259,6 @@ a:hover > .logo .logo-tile { filter: drop-shadow(0 0 16px rgba(255,61,139,.85)) 
   nav#nav.frost .nwrap, nav#nav.open .nwrap, nav#nav.mopen .nwrap { backdrop-filter: blur(18px) saturate(1.3); }
   .nlinks { backdrop-filter: blur(14px); }
 }
-.glass-map { position: relative; isolation: isolate; }
+.glass-map { isolation: isolate; }
 .glass-map::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: -1;
   background: radial-gradient(120% 80% at 50% 0%, rgba(255,255,255,.06), transparent 60%), radial-gradient(140% 120% at 50% 110%, rgba(0,0,0,.35), transparent 60%); }
