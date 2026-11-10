@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { BRAND, OFFICIAL_MINT } from "@/lib/brand";
 import { Logo } from "./Logo";
-import { RockstarIcon, XIcon } from "./icons";
+import { GitHubIcon, RockstarIcon, XIcon } from "./icons";
 import { short, useWallet } from "./wallet";
 import { PLOTS } from "./plots";
 
@@ -95,6 +95,7 @@ export function Header() {
           <div className="navr">
             {OFFICIAL_MINT && <a href={`https://pump.fun/coin/${OFFICIAL_MINT}`} target="_blank" rel="noreferrer" className="btn btn-ghost hidden sm:inline-flex">${BRAND.ticker}</a>}
             <a className="xb" href={GTA_VI_URL} target="_blank" rel="noreferrer" aria-label="GTA VI on Rockstar Games" title="GTA VI · Rockstar Games"><RockstarIcon /></a>
+            <a className="xb" href="https://github.com/bigrceo/getclip" target="_blank" rel="noreferrer" aria-label="GitHub"><GitHubIcon /></a>
             <a className="xb" href={BRAND.x} target="_blank" rel="noreferrer" aria-label="X"><XIcon /></a>
             {w.address ? (
               <span className="hidden items-center gap-1 md:inline-flex">
