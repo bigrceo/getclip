@@ -69,7 +69,7 @@ you land straight on the launch.
 ```
 51 open plots on leonida right now.
 first clips get the best spots.
-$CLIPS soon.
+
 ```
 
 ## HORS TIMELINE — soir du lancement

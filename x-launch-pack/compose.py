@@ -145,3 +145,21 @@ if __name__ == "__main__":
     post("T7-plots", "first come", "Empty map.", "Not for long.", "Vice City, Vice Beach, the Keys, the Everglades. Best plots go to the first clips.",
          side=map_card(560, 560, 0.62, 0.62, 0.28, []))
     live(); dexpaid()
+
+    # Countdown cards, one per day to release (C9 … C1), each on a different district.
+    spots = [("Vice City", .676, .552), ("Vice Beach", .853, .487), ("Port Gellhorn", .297, .364), ("Key Lento", .57, .838),
+             ("Ambrosia", .554, .349), ("Lummox County", .479, .184), ("Waning Sands", .726, .339), ("Hamlet", .559, .704), ("Leaf Links", .763, .425)]
+    LM = Image.open(os.path.join(REPO, "public/map/landmask.png")).convert("L")
+    def land(u, v):
+        """Nearest land point to (u, v) on the land mask."""
+        w, h = LM.size
+        for r in range(0, 60, 2):
+            for du in range(-r, r + 1, 2):
+                for dv in (-r, r) if abs(du) != r else range(-r, r + 1, 2):
+                    x, y = int(u * w) + du, int(v * h) + dv
+                    if 0 <= x < w and 0 <= y < h and LM.getpixel((x, y)) > 128: return x / w, y / h
+        return u, v
+    for n, (name, u, v) in zip(range(9, 0, -1), spots):
+        pins = [land(u, v), land(u + .015, v - .02), land(u - .02, v + .015)]
+        post(f"C{n}", name, f"{n} day{'s' if n > 1 else ''}", "to Leonida.", "Clips are already landing on the map.",
+             side=map_card(560, 560, u, v, 0.12, pins), bg=(u, v))
