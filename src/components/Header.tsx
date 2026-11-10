@@ -8,6 +8,9 @@ import { BRAND, OFFICIAL_MINT } from "@/lib/brand";
 import { Logo } from "./Logo";
 import { RockstarIcon, XIcon } from "./icons";
 import { short, useWallet } from "./wallet";
+import { PLOTS } from "./plots";
+
+const plotsIn = (d: string) => PLOTS.filter((p) => p.district === d).length;
 
 export const GTA_VI_URL = "https://www.rockstargames.com/VI";
 
@@ -30,8 +33,8 @@ const MENUS: Record<"clips", { label: string; rows: Row[]; cards: Card[] }> = {
       ["book", "How it works", "Three steps, free, no wallet needed.", "/how"],
     ],
     cards: [
-      ["Ocean Drive", "Where Lucia stands. Neon, art deco, a pink sunset.", "/locals", "/locals/ocean-drive.jpg"],
-      ["The Keys", "Jason's dock. Boats, a tiki bar, cash jobs.", "/locals", "/locals/keys-marina.jpg"],
+      ["Ocean Drive", `Fly to Vice Beach on the map. ${plotsIn("Vice Beach")} plots, Lucia's turf.`, "/map?at=ocean-drive", "/locals/ocean-drive.jpg"],
+      ["The Keys", `Fly to the Keys on the map. ${plotsIn("Key Lento")} plots, Jason's dock.`, "/map?at=the-keys", "/locals/keys-marina.jpg"],
     ],
   },
 };
@@ -117,11 +120,11 @@ export function Header() {
             </div>
             <div className="mcards">
               {MENUS.clips.cards.map(([t, d, h, img]) => (
-                <Link key={t} className="mcard" href={h}>
+                <a key={t} className="mcard" href={h}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <span className="mimg"><img src={img} alt="" loading="lazy" /></span>
+                  <span className="mimg"><img src={img} alt="" loading="lazy" /><em className="mbadge">Open on the map</em></span>
                   <span className="mtxt"><b>{t}</b><small>{d}</small><i>↗</i></span>
-                </Link>
+                </a>
               ))}
             </div>
           </div>

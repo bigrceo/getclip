@@ -280,3 +280,6 @@ a:hover > .logo .logo-tile { filter: drop-shadow(0 0 16px rgba(255,61,139,.85)) 
 @keyframes local-breathe { 0%, 100% { transform: scale(1) translateY(0); } 50% { transform: scale(1.012) translateY(-0.35%); } }
 .local-breathe { animation: local-breathe 4.6s ease-in-out infinite; transform-origin: 50% 70%; will-change: transform; }
 @media (prefers-reduced-motion: reduce) { .local-breathe { animation: none; } }
+
+.mimg .mbadge { position: absolute; left: 10px; bottom: 10px; inset-inline-end: auto; width: auto; height: auto; font-style: normal; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #fff4ec; padding: 6px 10px; border-radius: 999px; background: rgba(10,6,24,.6); backdrop-filter: blur(8px); transform: translateY(4px); opacity: .0; transition: opacity .3s var(--q), transform .3s var(--q); }
+.mcard:hover .mimg .mbadge { opacity: 1; transform: none; }

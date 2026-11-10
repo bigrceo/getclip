@@ -33,6 +33,10 @@ let MIAMI = false;
 const CAN_REAL = false; // photoreal Miami kept in code, off in the UI
 void GOOGLE_KEY;
 /** Where to land when switching worlds (set by the dive logic). */
+export const PLACES: Record<string, { u: number; v: number; h: number }> = {
+  "ocean-drive": { u: 0.845, v: 0.485, h: 2.6 },
+  "the-keys": { u: 0.56, v: 0.836, h: 3.2 },
+};
 const pendingFocus: { world: [number, number, number] | null; dist: number } = { world: null, dist: 2.5 };
 const toWorld = (u: number, v: number): [number, number, number] => MIAMI ? uvToWorldMiami(u, v) : [(u - 0.5) * PLANE_W, LAND_Y, (v - 0.5) * PLANE_H];
 const DISTRICT_COLOR: Record<string, string> = { "Vice City": "#ff5fa8", "Vice Beach": "#ffc38a", "Port Gellhorn": "#48d6ff", "Key Lento": "#2affc6", Ambrosia: "#ffe17a", "Lummox County": "#d9b8ff" };
@@ -125,6 +129,13 @@ function Controls({ entities, selected, api, onWorld }: { entities: Entity[]; se
     c.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_ROTATE };
     c.panSpeed = 1.2; c.enableZoom = true; c.zoomToCursor = false;
     c.minDistance = MIAMI ? 0.2 : 0.9; c.maxDistance = MIAMI ? 320 : (window.innerWidth < 700 ? 11 : 13); c.minPolarAngle = 0.15; c.maxPolarAngle = 1.05; c.minAzimuthAngle = -0.6; c.maxAzimuthAngle = 0.6; c.zoomSpeed = 0.8;
+    // ?at=<place> (menu cards): open already zoomed on that district
+    const at = PLACES[new URLSearchParams(location.search).get("at") ?? ""];
+    if (at && !MIAMI) {
+      const [ax, , az] = toWorld(at.u, at.v);
+      c.target.set(ax, LAND_Y, az); camera.position.set(ax, LAND_Y + at.h, az + at.h * 0.62);
+      return c;
+    }
     const [hx, , hz] = MIAMI ? (pendingFocus.world ?? [0, 0, 0]) : (pendingFocus.world ?? toWorld(0.7, 0.53));
     const off = new THREE.Vector3(hx + (window.innerWidth < 700 ? 0.8 : 1.2), MIAMI ? 0 : LAND_Y, hz + 0.6);
     c.target.copy(off); camera.position.add(off);
