@@ -205,7 +205,7 @@ export function DistrictLabels({ toWorld }: { toWorld: (u: number, v: number) =>
       const px = (p: THREE.Vector3) => { p.project(camera); return [(p.x + 1) / 2 * size.width, (1 - p.y) / 2 * size.height]; };
       const [lx, ty] = px(v.copy(c.position).addScaledVector(right, -half).addScaledVector(up, halfH));
       const [rx, by] = px(v.copy(c.position).addScaledVector(right, half).addScaledVector(up, -halfH));
-      const onScreen = lx > 8 && rx < size.width - 8 && ty > 70 && by < size.height - 8;
+      const onScreen = lx > 8 && rx < size.width - 8 && ty > 70 && by < size.height - (size.width >= 768 ? 210 : 8);   // keep clear of the navbar and of the fade into the page
       const hidden = !onScreen || rects.current.list.some((r) => lx < r.r && rx > r.l && ty < r.b && by > r.t);
       const edge = hidden ? 0 : 1;
       const target = z * edge;
