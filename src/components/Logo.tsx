@@ -9,7 +9,6 @@ export function Logo({ size = 28, slim = false }: { size?: number; slim?: boolea
         <img src="/brand/pfp-512.png" alt="" width={s} height={s} className="logo-tile absolute inset-0 rounded-[10px]" style={{ filter: "drop-shadow(0 0 10px rgba(255,61,139,.6))" }} />
         <span aria-hidden className="logo-c absolute inset-0" />
       </span>
-      <span className="logo-word font-sign uppercase tracking-wide leading-none" style={{ fontSize: size * 0.9 }}>{BRAND.brand}</span>
     </span>
   );
 }
