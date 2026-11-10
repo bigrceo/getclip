@@ -77,11 +77,11 @@ export function Header() {
   const hover = () => matchMedia("(hover: hover)").matches;
 
   return (
-    <nav id="nav" className={[glass && "frost", slim && !menu && !mobile && "slim", menu && "open", mobile && "mopen"].filter(Boolean).join(" ")}
+    <nav id="nav" className={[glass && "frost", slim && !mobile && "slim", menu && "open", mobile && "mopen"].filter(Boolean).join(" ")}
       onMouseLeave={() => (shut.current = setTimeout(() => setMenu(null), 180))}>
       <div className="nwrap">
         <div className="bar">
-          <Link href="/" aria-label={BRAND.brand} onMouseEnter={() => open(null)}><Logo slim={slim && !menu && !mobile} /></Link>
+          <Link href="/" aria-label={BRAND.brand} onMouseEnter={() => open(null)}><Logo slim={slim && !mobile} /></Link>
           <div className="nlinks">
             <button type="button" className={menu === "clips" ? "on" : ""} onMouseEnter={() => hover() && open("clips")}
               onClick={() => open(hover() || menu !== "clips" ? "clips" : null)} aria-expanded={menu === "clips"}>

@@ -292,3 +292,6 @@ a:hover > .logo .logo-tile { filter: drop-shadow(0 0 16px rgba(255,61,139,.85)) 
 
 /* one blur only: the bar's own backdrop blur inside the frosted nav renders washed out in Chrome */
 nav#nav.frost .nlinks, nav#nav.open .nlinks, nav#nav.mopen .nlinks { backdrop-filter: none; -webkit-backdrop-filter: none; }
+/* the slim bar keeps its width when the menu opens (no layout jump under the cursor): rows only */
+nav#nav.slim .mega-in { grid-template-columns: 1fr; }
+nav#nav.slim .mcards { display: none; }
