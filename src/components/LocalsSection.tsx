@@ -18,7 +18,7 @@ function Clip({ l, className = "" }: { l: Local; className?: string }) {
   return (
     <div className={`absolute inset-0 ${held ? "local-breathe" : ""}`}>
       <video src={l.video} poster={l.poster} autoPlay muted playsInline preload="auto" aria-label={`${l.name} on ${l.place}`}
-        onEnded={() => setHeld(true)} className={`absolute inset-0 h-full w-full object-cover ${className}`} />
+        onEnded={() => setHeld(true)} className={`absolute inset-0 h-full w-full object-cover object-[50%_18%] ${className}`} />
     </div>
   );
 }
@@ -72,6 +72,22 @@ export function LocalsSection({ compact = false, only }: { compact?: boolean; on
     const l = LOCALS.find((x) => x.id === only);
     return l ? <div className="relative h-full overflow-hidden rounded-[22px] border border-white/10"><Clip l={l} /></div> : null;
   }
-  if (compact) return <div className="flex h-full flex-col gap-2.5">{LOCALS.map((l) => <Card key={l.id} l={l} compact />)}</div>;
+  if (compact) {
+    // the hero rail has room for two faces; the others are one tap away on /locals
+    const more = LOCALS.slice(2);
+    return (
+      <div className="flex h-full flex-col gap-2.5">
+        {LOCALS.slice(0, 2).map((l) => <Card key={l.id} l={l} compact />)}
+        {more.length > 0 && (
+          <Link href="/locals" className="group flex items-center gap-3 rounded-[14px] border border-white/10 bg-white/5 p-2 transition-colors hover:border-pink/50">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            {more.map((m) => <img key={m.id} src={m.poster} alt="" className="size-10 rounded-full object-cover object-top" />)}
+            <span className="min-w-0 flex-1 text-[13px]"><b className="block">Meet {more.map((m) => m.name).join(", ")}</b><i className="not-italic text-haze">and the rest of Leonida</i></span>
+            <span className="text-haze transition-transform group-hover:translate-x-0.5">→</span>
+          </Link>
+        )}
+      </div>
+    );
+  }
   return <div className="mx-auto grid max-w-[760px] gap-[18px] md:grid-cols-2">{LOCALS.map((l) => <Card key={l.id} l={l} />)}</div>;
 }
