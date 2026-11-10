@@ -172,7 +172,7 @@ body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
 /* Navbar (Kerb pattern): fixed, floating, transparent at the top, frosted once you scroll, mega menu */
 :root { --q: cubic-bezier(.2,.8,.2,1); }
 nav#nav { position: fixed; inset: 0 0 auto 0; z-index: 60; padding: 12px 12px 0; pointer-events: none; }
-nav#nav .nwrap { pointer-events: auto; max-width: 1680px; margin: 0 auto; border-radius: 18px; transition: max-width .6s var(--q), background .5s var(--q), box-shadow .5s var(--q), backdrop-filter .5s var(--q); }
+nav#nav .nwrap { pointer-events: auto; max-width: 1680px; margin: 0 auto; border-radius: 18px; transition: max-width .6s var(--q), background .5s var(--q), box-shadow .5s var(--q); }
 nav#nav.frost .nwrap { backdrop-filter: blur(18px) saturate(1.3); -webkit-backdrop-filter: blur(18px) saturate(1.3); background: linear-gradient(rgba(255,255,255,.08), rgba(255,255,255,.03)); box-shadow: inset 0 0 0 1px rgba(255,61,139,.2), inset 0 1px 0 rgba(255,255,255,.18), 0 18px 40px -24px rgba(0,0,0,.7); }
 nav#nav.open .nwrap, nav#nav.mopen .nwrap { backdrop-filter: blur(18px) saturate(1.3); -webkit-backdrop-filter: blur(18px) saturate(1.3); background: linear-gradient(rgba(30,14,58,.94), rgba(12,6,28,.96)); box-shadow: inset 0 0 0 1px rgba(255,61,139,.22), inset 0 1px 0 rgba(255,255,255,.18), 0 30px 60px -24px rgba(0,0,0,.8); }
 nav#nav .bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 60px; padding: 0 10px 0 16px; }
@@ -289,3 +289,6 @@ a:hover > .logo .logo-tile { filter: drop-shadow(0 0 16px rgba(255,61,139,.85)) 
 .logo .logo-tile { display: none; }
 .logo .logo-c, .logo.slim .logo-c { opacity: 1; transform: none; }
 .logo.slim { gap: 0; }
+
+/* one blur only: the bar's own backdrop blur inside the frosted nav renders washed out in Chrome */
+nav#nav.frost .nlinks, nav#nav.open .nlinks, nav#nav.mopen .nlinks { backdrop-filter: none; -webkit-backdrop-filter: none; }
