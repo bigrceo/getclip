@@ -274,4 +274,4 @@ a:hover > .logo .logo-tile { filter: drop-shadow(0 0 16px rgba(255,61,139,.85)) 
 .mug::before { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
   background: repeating-linear-gradient(to bottom, rgba(0,0,0,.35) 0 1px, transparent 1px 20px), repeating-linear-gradient(to bottom, rgba(0,0,0,.5) 0 2px, transparent 2px 100px); mix-blend-mode: multiply; opacity: .55; }
 .mug img { position: relative; z-index: 0; display: block; width: 100%; height: auto; filter: contrast(1.05) saturate(.9); }
-.mug .plate { position: absolute; z-index: 2; left: 50%; bottom: 14px; transform: translateX(-50%); background: #0f0d14; color: #f3efe6; border-radius: 6px; padding: 8px 16px; text-align: center; box-shadow: 0 10px 24px rgba(0,0,0,.45); }
+.mug .plate { position: absolute; z-index: 2; left: 50%; bottom: 14px; transform: translateX(-50%); white-space: nowrap; background: #0f0d14; color: #f3efe6; border-radius: 6px; padding: 8px 16px; text-align: center; box-shadow: 0 10px 24px rgba(0,0,0,.45); }
