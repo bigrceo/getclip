@@ -9,12 +9,12 @@ import { MapHero } from "@/components/MapHero";
 /** pump.fun mark: the tilted two-tone pill. */
 function PumpLogo() {
   return (
-    <svg width="26" height="26" viewBox="0 0 32 32" aria-label="pump.fun" role="img">
+    <svg width="28" height="28" viewBox="0 0 32 32" aria-label="pump.fun" role="img" style={{ overflow: "visible", flex: "none" }}>
       <g transform="rotate(-45 16 16)">
-        <rect x="4.5" y="10" width="23" height="12" rx="6" fill="#ffffff" stroke="#14281d" strokeWidth="1.6" />
-        <path d="M16 10.8h5.5a5.2 5.2 0 0 1 0 10.4H16z" fill="#5fd38d" />
-        <line x1="16" y1="10.4" x2="16" y2="21.6" stroke="#14281d" strokeWidth="1.6" />
-        <rect x="4.5" y="10" width="23" height="12" rx="6" fill="none" stroke="#14281d" strokeWidth="1.6" />
+        <rect x="5.5" y="10.5" width="21" height="11" rx="5.5" fill="#ffffff" />
+        <path d="M16 10.5h5a5.5 5.5 0 0 1 0 11h-5z" fill="#5fd38d" />
+        <path d="M16 10.5v11" stroke="#14281d" strokeWidth="1.5" />
+        <rect x="5.5" y="10.5" width="21" height="11" rx="5.5" fill="none" stroke="#14281d" strokeWidth="1.5" />
       </g>
     </svg>
   );

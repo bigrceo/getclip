@@ -168,14 +168,18 @@ function blurSprite(map: THREE.Texture) {
 
 export function DistrictLabels({ toWorld }: { toWorld: (u: number, v: number) => [number, number, number] }) {
   const [family, setFamily] = useState<string | null>(null);
+  const [ver, setVer] = useState(0);
   useEffect(() => {
-    const f = pricedownFamily(); let done = false;
-    const go = () => { if (!done) { done = true; setFamily(f); } };
-    document.fonts.load(`400 80px ${f.split(",")[0]}`).then(go, go);
-    const t = setTimeout(go, 1500);
-    return () => clearTimeout(t);
+    // draw only with the real GTA face; if it is late, show the titles anyway and redraw them the moment it lands
+    const f = pricedownFamily(); const first = f.split(",")[0].trim();
+    let alive = true;
+    const t = setTimeout(() => alive && setFamily(f), 1500);
+    document.fonts.load(`400 80px ${first}`).then(() => document.fonts.ready).then(() => {
+      if (!alive) return; clearTimeout(t); setFamily(f); setVer((v) => v + 1);
+    }, () => alive && setFamily(f));
+    return () => { alive = false; clearTimeout(t); };
   }, []);
-  const mats = useMemo(() => family ? TITLES.map((d) => blurSprite(labelTexture(d.name.toUpperCase(), family))) : [], [family]);
+  const mats = useMemo(() => family ? TITLES.map((d) => blurSprite(labelTexture(d.name.toUpperCase(), family))) : [], [family, ver]);  // eslint-disable-line react-hooks/exhaustive-deps
   const group = useRef<THREE.Group>(null);
   const camera = useThree((s) => s.camera), size = useThree((s) => s.size);
   const v = useMemo(() => new THREE.Vector3(), []);
@@ -214,7 +218,7 @@ export function DistrictLabels({ toWorld }: { toWorld: (u: number, v: number) =>
   return (
     <group ref={group}>
       {TITLES.map((d, i) => { const [x, , z] = toWorld(d.u, d.v); const k = d.s ?? 1; return (
-        <sprite key={d.name} position={[x, 0.55, z]} scale={[4.2 * k, 1.05 * k, 1]} material={mats[i]} />
+        <sprite key={d.name} renderOrder={1000} position={[x, 0.55, z]} scale={[4.2 * k, 1.05 * k, 1]} material={mats[i]} />
       ); })}
     </group>
   );
