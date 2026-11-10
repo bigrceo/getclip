@@ -9,7 +9,7 @@ const config: NextConfig = {
     return [
       { source: "/models/:path*", headers: forever },
       { source: "/draco/:path*", headers: forever },
-      { source: "/locals/:path*", headers: day },
+      { source: "/locals/:file(.+\\.(?:jpg|jpeg|png|webp|mp4))", headers: day },
       { source: "/map/:path*", headers: day },
       { source: "/brand/:path*", headers: day },
     ];
