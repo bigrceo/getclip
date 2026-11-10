@@ -100,7 +100,7 @@ export function LaunchFlow({ initialUrl, initialRef }: { initialUrl?: string; in
           </li>
         ))}
       </ol>
-      <div key={step} className="enter relative mt-4 overflow-hidden border-2 border-line bg-deck p-4 sm:p-6">
+      <div key={step} className="enter glass-map relative mt-4 overflow-hidden p-4 sm:p-6">
         {step === "source" && (
           <div className="space-y-4">
             <form onSubmit={(e) => { e.preventDefault(); if (url.trim()) resolve(url.trim()); }} className="flex flex-col gap-2 sm:flex-row">
