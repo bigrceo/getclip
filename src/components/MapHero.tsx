@@ -55,9 +55,9 @@ export function MapHero({ coins, volumeSol }: { coins: Coin[]; volumeSol: number
     <section id="map" className="relative scroll-mt-0 md:-mt-[84px] md:h-[100svh] md:min-h-[680px] md:overflow-hidden max-md:flex max-md:flex-col max-md:pb-4">
       <div className="md:absolute md:inset-0 max-md:relative max-md:h-[64svh] max-md:min-h-[420px]">
       <StateMap coins={coins} active={active} onActive={setActive}>
-        <div className="hidden md:contents">{card}{rail}</div>
         {active && coins.some((c) => c.mint === active) && <CoinDrawer coin={coins.find((c) => c.mint === active)!} district={plotFor(coins.find((c) => c.mint === active)!, coins.findIndex((c) => c.mint === active)).district} onClose={() => setActive(null)} />}
       </StateMap>
+      <div className="hidden md:contents">{card}{rail}</div>
       </div>
       {/* the sea melts into the page: no hard edge between the map and the rest of the site */}
       <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[200px] max-md:hidden" style={{ background: "linear-gradient(to bottom, rgba(10,6,24,0) 0%, rgba(14,10,40,.55) 45%, rgba(10,6,24,.92) 80%, #0a0618 100%)" }} />
