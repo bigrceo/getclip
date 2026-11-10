@@ -3,6 +3,7 @@
  * Meet the Locals, in 3D: fan-made GTA VI character models (glTF, CC BY, see LOCALS[].credit) spinning in their own
  * card. Each model only loads when its card scrolls into view; a card whose file is missing shows a silhouette.
  */
+import Link from "next/link";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
@@ -13,11 +14,9 @@ import { PalmBackdrop } from "./PalmBackdrop";
 import { ChromaticAberration, EffectComposer, N8AO, Noise, Vignette } from "@react-three/postprocessing";
 import { BlendFunction, type ChromaticAberrationEffect, type NoiseEffect, type VignetteEffect } from "postprocessing";
 
-export type Local = { id: string; name: string; ticker: string; role: string; bio: string; file: string; credit: string; creditUrl: string; height?: number; view?: "full" | "bust"; fade?: boolean; cam?: number; lift?: number; dim?: number; bg?: string; sun?: [number, number]; sunColor?: string };
-export const LOCALS: Local[] = [
-  { id: "lucia", name: "Lucia", ticker: "LUCIA", role: "Out on parole", bio: "Did her time, kept her fists taped. Fresh out and done waiting for anyone to hand her a way up.", file: "/models/lucia-v2.glb", bg: "/locals/ocean-drive.jpg", sun: [0.03, 0.59], sunColor: "#ffe6cf", credit: "getclip.fun", creditUrl: "https://getclip.fun", view: "full", height: 1.0, fade: true, cam: 2.3 },
-  { id: "jason", name: "Jason", ticker: "JASON", role: "Keys runner", bio: "Ex-army, now moving boats through the Keys for people who pay cash. Wants out of the small jobs.", file: "/models/jason-v2.glb", bg: "/locals/keys-marina.jpg", sun: [0.078, 0.38], sunColor: "#ffecd8", credit: "getclip.fun", creditUrl: "https://getclip.fun", view: "full", height: 1.0, fade: true, cam: 2.3 },
-];
+import { LOCALS, type Local } from "@/lib/locals";
+export { LOCALS, type Local };
+
 
 
 
@@ -353,7 +352,7 @@ function Viewer({ local, active }: { local: Local; active: boolean }) {
   );
 }
 
-function Card({ local, compact = false }: { local: Local; compact?: boolean }) {
+function Card({ local, compact = false, hero = false }: { local: Local; compact?: boolean; hero?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   const [exists, setExists] = useState<boolean | null>(null);
@@ -375,15 +374,15 @@ function Card({ local, compact = false }: { local: Local; compact?: boolean }) {
     io.observe(el); return () => { io.disconnect(); clearTimeout(t); };
   }, []);
   return (
-    <div ref={ref} className={compact ? "relative min-h-0 flex-1 overflow-hidden rounded-[14px] border border-white/10" : "glass overflow-hidden"}>
-      <div className={compact ? "absolute inset-0 overflow-hidden" : "relative aspect-[4/5] overflow-hidden"}>
+    <div ref={ref} className={compact ? "relative min-h-0 flex-1 overflow-hidden rounded-[14px] border border-white/10" : hero ? "relative h-full overflow-hidden rounded-[22px] border border-white/10" : "glass overflow-hidden"}>
+      <div className={compact || hero ? "absolute inset-0 overflow-hidden" : "relative aspect-[4/5] overflow-hidden"}>
         {local.bg
           ? <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${local.bg.replace(/\.jpg$/, "-bokeh.jpg")})` }} aria-hidden="true" />
           : <PalmBackdrop />}
         {exists !== false && (compact ? warm : visible || warm) && <Viewer local={local} active={visible} />}
         {local.fade && <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[42%]" style={{ background: "linear-gradient(to bottom, transparent, rgba(13,7,32,.92) 70%, #0d0720)" }} aria-hidden="true" />}
       </div>
-      {compact ? (
+      {hero ? null : compact ? (
         <div className="pointer-events-none absolute inset-x-0 bottom-0 p-3">
           <p className="label !text-[10px] text-sun">${local.ticker} · {local.role}</p>
           <h3 className="font-sign text-[30px] uppercase leading-none">{local.name}</h3>
@@ -400,15 +399,16 @@ function Card({ local, compact = false }: { local: Local; compact?: boolean }) {
   );
 }
 
-export function Locals3D({ compact = false }: { compact?: boolean }) {
+export function Locals3D({ compact = false, only }: { compact?: boolean; only?: string }) {
+  if (only) { const l = LOCALS.find((x) => x.id === only); return l ? <Card local={l} hero /> : null; }
   if (compact) return (
     <div className="flex h-full flex-col gap-2.5">
-      {LOCALS.map((l) => <Card key={l.id} local={l} compact />)}
+      {LOCALS.map((l) => <Link key={l.id} href={`/locals/${l.id}`} className="local-link relative flex min-h-0 flex-1" aria-label={`${l.name}: profile`}><Card local={l} compact /></Link>)}
     </div>
   );
   return (
     <div className="mx-auto grid max-w-[760px] gap-[18px] md:grid-cols-2">
-      {LOCALS.map((l) => <Card key={l.id} local={l} />)}
+      {LOCALS.map((l) => <Link key={l.id} href={`/locals/${l.id}`} className="local-link block" aria-label={`${l.name}: profile`}><Card local={l} /></Link>)}
     </div>
   );
 }

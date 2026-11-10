@@ -262,3 +262,16 @@ a:hover > .logo .logo-tile { filter: drop-shadow(0 0 16px rgba(255,61,139,.85)) 
 .glass-map { isolation: isolate; }
 .glass-map::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: -1;
   background: radial-gradient(120% 80% at 50% 0%, rgba(255,255,255,.06), transparent 60%), radial-gradient(140% 120% at 50% 110%, rgba(0,0,0,.35), transparent 60%); }
+
+/* Locals cards are links to their profile */
+.local-link > div { transition: transform .5s var(--q), box-shadow .5s var(--q), border-color .5s var(--q); }
+.local-link:hover > div { transform: translateY(-3px); border-color: rgba(255,61,139,.55); box-shadow: 0 18px 44px -18px rgba(255,61,139,.6); }
+.local-link::after { content: "View profile ↗"; position: absolute; top: 10px; right: 10px; z-index: 5; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #fff4ec; padding: 6px 10px; border-radius: 999px; background: rgba(10,6,24,.55); backdrop-filter: blur(8px); opacity: 0; transform: translateY(-4px); transition: opacity .3s var(--q), transform .3s var(--q); }
+.local-link:hover::after { opacity: 1; transform: none; }
+.local-link.block { position: relative; }
+/* mugshot board */
+.mug { position: relative; overflow: hidden; border-radius: 18px; border: 1px solid var(--color-line); background: #6c6c70; }
+.mug::before { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: repeating-linear-gradient(to bottom, rgba(0,0,0,.35) 0 1px, transparent 1px 20px), repeating-linear-gradient(to bottom, rgba(0,0,0,.5) 0 2px, transparent 2px 100px); mix-blend-mode: multiply; opacity: .55; }
+.mug img { position: relative; z-index: 0; display: block; width: 100%; height: auto; filter: contrast(1.05) saturate(.9); }
+.mug .plate { position: absolute; z-index: 2; left: 50%; bottom: 14px; transform: translateX(-50%); background: #0f0d14; color: #f3efe6; border-radius: 6px; padding: 8px 16px; text-align: center; box-shadow: 0 10px 24px rgba(0,0,0,.45); }
