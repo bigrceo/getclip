@@ -54,7 +54,7 @@ export function LocalsRoster() {
             <p className="text-[14px] text-haze">{l.place}</p>
             <p className="max-w-[560px] text-[17px] leading-[1.6] text-ink/90">{l.story?.[0] ?? l.bio}</p>
             <div className="flex flex-wrap gap-2">
-              {(l.facts ?? []).slice(0, 3).map(([k, v]) => <span key={k} className="rounded-xl border border-line bg-white/5 px-3 py-2 text-[13px]"><i className="mr-1.5 not-italic text-haze">{k}</i><b>{v}</b></span>)}
+              {(l.facts ?? []).slice(0, 3).map(([k, v]) => <span key={k} className="stat !py-2 !pr-5"><i className="!text-[10px]">{k}</i><b className="!text-[14px]">{v}</b></span>)}
             </div>
             <div className="mt-1 flex flex-wrap gap-3">
               <Link href={`/locals/${l.id}`} className="btn btn-hot h-11 px-5">See {l.name}</Link>
