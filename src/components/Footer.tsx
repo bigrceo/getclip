@@ -2,6 +2,8 @@ import Link from "next/link";
 import { BRAND, OFFICIAL_MINT } from "@/lib/brand";
 import { GitHubIcon, InstagramIcon, TikTokIcon, XIcon } from "./icons";
 
+const SHOTS: [string, string][] = [["/locals/lucia-poster.jpg", "50% 25%"], ["/footer/f0.webp", "50% 30%"], ["/footer/f5.webp", "60% 50%"], ["/footer/f2.webp", "40% 50%"], ["/footer/f3.webp", "50% 50%"], ["/footer/f1.webp", "45% 40%"], ["/locals/jason-poster.jpg", "50% 25%"]];
+
 const COLS: [string, [string, string][]][] = [
   ["Clips", [["Launch a clip", "/launch"], ["How it works", "/how"]]],
   ["Leonida", [["The map", "/map"], ["Ocean Drive", "/map?at=ocean-drive"], ["The Keys", "/map?at=the-keys"]]],
@@ -49,7 +51,17 @@ export function Footer() {
         <p className="mt-6 max-w-[1100px] text-[12px] leading-[1.6] text-haze/80">Fan-made. Not affiliated with Rockstar Games or Take-Two Interactive. Map: Yanis V16 GTA VI Community Map via <a href="https://map.gtadb.org" className="underline" target="_blank" rel="noreferrer">gtadb.org</a> and contributors, <a href="https://creativecommons.org/licenses/by/4.0/" className="underline" target="_blank" rel="noreferrer">CC BY 4.0</a>, approximate and unofficial. Satellite imagery: Esri World Imagery (Esri, Maxar, Earthstar Geographics, and the GIS User Community), warped onto the fan map. Landmark heights: <a href="https://github.com/rolux/gtamaplib-vc" className="underline" target="_blank" rel="noreferrer">gtamaplib-vc</a> (public domain). Memecoins with no intrinsic value or utility. Not investment advice.</p>
       </div>
 
-      <p aria-hidden className="sunset-text relative mt-6 select-none text-center font-sign uppercase leading-[.78]" style={{ fontSize: "clamp(96px, 22vw, 380px)", opacity: .9 }}>Leonida</p>
+      {/* collage of Leonida, the way the GTA VI covers tile their scenes: slanted frames edge to edge */}
+      <div aria-hidden className="relative mt-12 flex h-[clamp(180px,26vw,420px)] gap-2 max-md:gap-1" style={{ marginInline: "-3vw" }}>
+        {SHOTS.map(([src, pos], i) => (
+          <div key={src} className="group relative flex-1 overflow-hidden" style={{ transform: "skewX(-8deg)" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={src} alt="" loading="lazy" className="absolute inset-0 h-full w-[130%] max-w-none object-cover transition-transform duration-700 group-hover:scale-105" style={{ left: "-15%", objectPosition: pos, transform: "skewX(8deg)" }} />
+            <div className="absolute inset-0" style={{ background: i % 2 ? "linear-gradient(to top, rgba(255,62,140,.35), transparent 60%)" : "linear-gradient(to top, rgba(255,140,60,.3), transparent 60%)" }} />
+          </div>
+        ))}
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-24" style={{ background: "linear-gradient(to bottom, rgba(10,6,24,.9), transparent)" }} />
+      </div>
     </footer>
   );
 }
