@@ -41,7 +41,7 @@ export default async function LocalPage({ params }: { params: Promise<{ id: stri
 
           <div className="mt-6 flex flex-wrap gap-3">
             <Link href="/launch" className="btn btn-hot h-12 px-6">Launch a clip of {l.name}</Link>
-            <Link href="/map" className="btn btn-ghost h-12 px-6">Find {l.name === "Lucia" ? "her" : "him"} on the map</Link>
+            <a href={l.mapAt ? `/map?at=${l.mapAt}` : "/map"} className="btn btn-ghost h-12 px-6">Find {l.name === "Lucia" ? "her" : "him"} on the map</a>
           </div>
         </div>
       </div>

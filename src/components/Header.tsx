@@ -29,7 +29,7 @@ const MENUS: Record<"clips", { label: string; rows: Row[]; cards: Card[] }> = {
     rows: [
       ["plus", "Launch a clip", "Paste a TikTok, X or YouTube link. The clip becomes a pump.fun coin.", "/launch"],
       ["map", "The map", "Every clip coin takes a plot somewhere in Leonida.", "/map"],
-      ["user", "Meet the Locals", "Lucia and Jason in 3D, on Ocean Drive and in the Keys.", "/locals"],
+      ["user", "Meet the Locals", "Lucia, Jason and Hollis, from Ocean Drive to the swamp.", "/locals"],
       ["book", "How it works", "Three steps, free, no wallet needed.", "/how"],
     ],
     cards: [

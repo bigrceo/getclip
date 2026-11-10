@@ -36,6 +36,7 @@ void GOOGLE_KEY;
 export const PLACES: Record<string, { u: number; v: number; h: number }> = {
   "ocean-drive": { u: 0.845, v: 0.485, h: 2.6 },
   "the-keys": { u: 0.56, v: 0.836, h: 3.2 },
+  "grassrivers": { u: 0.483, v: 0.75, h: 3.4 },
 };
 const pendingFocus: { world: [number, number, number] | null; dist: number } = { world: null, dist: 2.5 };
 const toWorld = (u: number, v: number): [number, number, number] => MIAMI ? uvToWorldMiami(u, v) : [(u - 0.5) * PLANE_W, LAND_Y, (v - 0.5) * PLANE_H];

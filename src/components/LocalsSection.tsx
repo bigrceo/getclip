@@ -9,6 +9,12 @@ function Clip({ l, className = "" }: { l: Local; className?: string }) {
   // the animation plays once, then the video rests on its last frame (they look at you) and only breathes: a slow,
   // barely visible rise of the frame. No loop, so the face never changes again.
   const [held, setHeld] = useState(false);
+  if (!l.video) return (   // portrait only (no clip yet): it just breathes
+    <div className="absolute inset-0 local-breathe">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={l.poster} alt={`${l.name} in ${l.place}`} className={`absolute inset-0 h-full w-full object-cover ${className}`} />
+    </div>
+  );
   return (
     <div className={`absolute inset-0 ${held ? "local-breathe" : ""}`}>
       <video src={l.video} poster={l.poster} autoPlay muted playsInline preload="auto" aria-label={`${l.name} on ${l.place}`}
@@ -30,6 +36,34 @@ function Card({ l, compact }: { l: Local; compact?: boolean }) {
         </div>
       </div>
     </Link>
+  );
+}
+
+/** Cast roster for /locals: one wide row per local, media and story side by side, alternating. */
+export function LocalsRoster() {
+  return (
+    <div className="flex flex-col gap-6">
+      {LOCALS.map((l, i) => (
+        <article key={l.id} className={`glass-map grid items-stretch overflow-hidden md:grid-cols-[minmax(0,420px)_1fr] ${i % 2 ? "md:[&>*:first-child]:order-2 md:grid-cols-[1fr_minmax(0,420px)]" : ""}`}>
+          <Link href={`/locals/${l.id}`} className="group relative block aspect-[4/5] overflow-hidden md:aspect-auto md:min-h-[460px]" aria-label={`${l.name}: profile`}>
+            <Clip l={l} className="transition-transform duration-700 group-hover:scale-[1.04]" />
+          </Link>
+          <div className="flex flex-col justify-center gap-4 p-7 max-md:p-5">
+            <p className="label text-sun">${l.ticker} · {l.role}</p>
+            <h2 className="font-sign text-[84px] uppercase leading-[.85] max-md:text-[64px]"><span className="sunset-text">{l.name}</span></h2>
+            <p className="text-[14px] text-haze">{l.place}</p>
+            <p className="max-w-[560px] text-[17px] leading-[1.6] text-ink/90">{l.story?.[0] ?? l.bio}</p>
+            <div className="flex flex-wrap gap-2">
+              {(l.facts ?? []).slice(0, 3).map(([k, v]) => <span key={k} className="rounded-xl border border-line bg-white/5 px-3 py-2 text-[13px]"><i className="mr-1.5 not-italic text-haze">{k}</i><b>{v}</b></span>)}
+            </div>
+            <div className="mt-1 flex flex-wrap gap-3">
+              <Link href={`/locals/${l.id}`} className="btn btn-hot h-11 px-5">See {l.name}</Link>
+              <a href={l.mapAt ? `/map?at=${l.mapAt}` : "/map"} className="btn btn-ghost h-11 px-5">On the map</a>
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
   );
 }
 
