@@ -1,5 +1,5 @@
 /** Placeholder brand: change it here only. */
-export const OFFICIAL_MINT = "";
+export const OFFICIAL_MINT = "GGNzPrEsq5T78zMeyMGqM98RrYAraEFt325Vow7Jpump";
 
 export const BRAND = {
   name: "getclip.fun",
