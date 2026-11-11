@@ -107,7 +107,7 @@ export function LaunchFlow({ initialUrl, initialRef }: { initialUrl?: string; in
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
       <h1 className="font-sign text-3xl sm:text-4xl">Launch a clip</h1>
-      <p className="mt-2 text-haze">{sponsored === false ? "Your wallet pays the launch, about 0.006 SOL. Your coin goes live on pump.fun in one transaction." : `Free: ${BRAND.name} pays the launch. Your coin goes live on pump.fun in one transaction.`}</p>
+      <p className="mt-2 text-haze">{sponsored ? `Free: ${BRAND.name} pays the launch. Your coin goes live on pump.fun in one transaction.` : "Your wallet pays the launch, about 0.006 SOL. Your coin goes live on pump.fun in one transaction."}</p>
       <ol className="mt-6 grid grid-cols-5 gap-2" aria-label="Steps">
         {STEPS.map((s, i) => (
           <li key={s} aria-current={step === s ? "step" : undefined} className={`label transition-colors ${i === at ? "!text-coral" : i < at ? "!text-ink" : ""}`}>
