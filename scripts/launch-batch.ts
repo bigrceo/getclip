@@ -116,7 +116,7 @@ async function main() {
         writeFileSync(FILE, JSON.stringify(clips, null, 2) + "\n");
       }
       projected -= paid; spent += paid; done++;
-      const line = `${go ? "LAUNCHED" : "ok (sim)"} $${c.ticker.padEnd(9)} ${c.name.padEnd(24)} ${paid} lamports, ${cost.cu} CU  ${go ? `${r.mint}  https://solscan.io/tx/${r.sig}` : `mint would be …${r.mint.slice(-4)}`}`;
+      const line = `${go ? "LAUNCHED" : "ok (sim)"} $${c.ticker.padEnd(9)} ${c.name.padEnd(24)} ${paid} lamports, ${cost.cu} CU  ${go ? `${r.mint}  https://solscan.io/tx/${r.sig}` : `mint would be …${(r.mint ?? "").slice(-4)}`}`;
       console.log(line); rows.push(line);
     } catch (e: any) { fails++; console.log(`FAIL $${c.ticker}: ${e.message}`); if (go) break; }
   }

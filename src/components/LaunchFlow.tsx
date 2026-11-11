@@ -16,6 +16,8 @@ export function LaunchFlow({ initialUrl, initialRef }: { initialUrl?: string; in
   const [url, setUrl] = useState(initialUrl ?? "");
   const [draft, setDraft] = useState<Draft | null>(initialRef ? { ref: initialRef } : null);
   const [busy, setBusy] = useState(""); const [err, setErr] = useState(""); const [note, setNote] = useState("");
+  const [sponsored, setSponsored] = useState<boolean | null>(null);
+  useEffect(() => { fetch("/api/launch/prepare").then((r) => r.json()).then((d) => setSponsored(d.sponsored !== false)).catch(() => {}); }, []);
   const [crop, setCrop] = useState({ x: 0, y: 0, size: 1, start: 0, length: 4 });
   const [render, setRender] = useState<{ stillRef: string; loopRef: string } | null>(null);
   const [form, setForm] = useState({ name: "", ticker: "", description: "", recipient: "", feeMode: "creator", firstBuySol: "" });
@@ -69,8 +71,22 @@ export function LaunchFlow({ initialUrl, initialRef }: { initialUrl?: string; in
       // The create alone (sponsored) fits in one tx; create+buy is over Solana's 1232-byte limit, so the first buy follows as its own tx.
       const body = { name: form.name, ticker: form.ticker, description: form.description, recipient: form.recipient, feeMode: form.feeMode,
         stillRef: render.stillRef, loopRef: render.loopRef, sourceUrl: url || undefined, mapU: mapPos?.u, mapV: mapPos?.v };
-      const r = await fetch("/api/launch/prepare", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }).then((r) => r.json());
+      const prep = (payer?: string) => fetch("/api/launch/prepare", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...body, payer }) }).then((r) => r.json());
+      let r = await prep(sponsored === false ? (w.address ?? undefined) : undefined);
+      if (r.needsWallet) {
+        // the platform can't sponsor right now: the creator's wallet pays the create (well under a cent of SOL)
+        const payer = w.address ?? (await w.connect()) ?? undefined;
+        if (!payer) throw new Error("Connect a wallet to pay the launch (about 0.006 SOL).");
+        setBusy("Preparing your launch…"); r = await prep(payer);
+      }
       if (r.error) throw new Error(r.error);
+      if (r.tx && r.id) {
+        setBusy("Approve the launch in your wallet…");
+        const signed = await w.sign(r.tx);
+        setBusy("Creating your coin on pump.fun…");
+        r = await fetch("/api/launch/submit", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: r.id, tx: signed }) }).then((x) => x.json());
+        if (r.error) throw new Error(r.error);
+      }
       setDone(r);
       if (buy > 0 && buyer) {
         try {
@@ -91,7 +107,7 @@ export function LaunchFlow({ initialUrl, initialRef }: { initialUrl?: string; in
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
       <h1 className="font-sign text-3xl sm:text-4xl">Launch a clip</h1>
-      <p className="mt-2 text-haze">Free: {BRAND.name} pays the launch. Your coin goes live on pump.fun in one transaction.</p>
+      <p className="mt-2 text-haze">{sponsored === false ? "Your wallet pays the launch, about 0.006 SOL. Your coin goes live on pump.fun in one transaction." : `Free: ${BRAND.name} pays the launch. Your coin goes live on pump.fun in one transaction.`}</p>
       <ol className="mt-6 grid grid-cols-5 gap-2" aria-label="Steps">
         {STEPS.map((s, i) => (
           <li key={s} aria-current={step === s ? "step" : undefined} className={`label transition-colors ${i === at ? "!text-coral" : i < at ? "!text-ink" : ""}`}>

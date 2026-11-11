@@ -20,6 +20,7 @@ export type LaunchInput = {
   feeMode?: "creator" | "holders";
   buyer?: string;               // connected wallet, only when it makes the first buy
   firstBuySol?: number;
+  payer?: string;               // connected wallet that pays the create when the platform wallet is empty
   twitter?: string; website?: string;
   mapU?: number; mapV?: number;     // where the clip happens in Leonida (0..1 of the map image)
 };
@@ -36,6 +37,7 @@ export function validate(i: LaunchInput) {
   if (!/^[A-Z0-9]{1,10}$/.test(ticker)) throw new Error("Ticker must be 1 to 10 letters or numbers.");
   if (!isSolAddress(i.recipient)) throw new Error("Paste a valid Solana address for the creator fees, or connect a wallet.");
   if (i.buyer && !isSolAddress(i.buyer)) throw new Error("Invalid wallet.");
+  if (i.payer && !isSolAddress(i.payer)) throw new Error("Invalid wallet.");
   const buy = Number(i.firstBuySol ?? 0);
   if (buy < 0 || buy > MAX_BUY) throw new Error(`First buy must be between 0 and ${MAX_BUY} SOL.`);
   if (buy > 0 && !i.buyer) throw new Error("Connect a wallet to make the first buy.");
@@ -71,6 +73,13 @@ async function rateLimit(ip?: string) {
   if (n >= PER_DAY) throw new Error(`You've launched ${PER_DAY} coins today. Come back tomorrow.`);
 }
 
+/** Below this the platform can't sponsor a create (rent + fee ≈ 0.006 SOL, with margin): the creator's wallet pays instead. */
+const SPONSOR_MIN_LAMPORTS = Number(process.env.SPONSOR_MIN_LAMPORTS ?? 15_000_000);
+export async function platformCanSponsor(): Promise<boolean> {
+  if (dryRun()) return true;
+  try { return (await connection().getBalance(platformKeypair().publicKey)) >= SPONSOR_MIN_LAMPORTS; } catch { return false; }
+}
+
 /**
  * Builds the ONE launch transaction: create_v2 (platform pays rent + fee, creator = fee recipient)
  * plus, optionally, the connected wallet's first buy. Platform and mint sign here; the wallet signs only if it buys.
@@ -79,6 +88,9 @@ export async function prepareLaunch(raw: LaunchInput, ip?: string) {
   const i = validate(raw);
   await rateLimit(ip);
   const platform = platformKeypair();
+  const sponsored = await platformCanSponsor();
+  if (!sponsored && !i.payer) return { needsWallet: true as const };
+  const payer = sponsored ? platform.publicKey : new PublicKey(i.payer!);
   const mint = await reserveMint();
 
   const still = await getFile(i.stillRef);
@@ -96,7 +108,7 @@ export async function prepareLaunch(raw: LaunchInput, ip?: string) {
     // create_v2 alone uses ~100-110k CU (measured on mainnet, scripts/measure-create.mts). A tight limit keeps the priority fee tiny.
     ComputeBudgetProgram.setComputeUnitLimit({ units: i.firstBuySol ? 450_000 : 140_000 }),
     ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i.firstBuySol ? 200_000 : CU_PRICE }),
-    await PUMP_SDK.createV2Instruction({ mint: mint.publicKey, name: i.name, symbol: i.ticker, uri, creator, user: platform.publicKey, mayhemMode: false, holderReward }),
+    await PUMP_SDK.createV2Instruction({ mint: mint.publicKey, name: i.name, symbol: i.ticker, uri, creator, user: payer, mayhemMode: false, holderReward }),
   ];
   if (i.firstBuySol && i.buyer) {
     const solAmount = new BN(Math.round(i.firstBuySol * 1e9));
@@ -109,11 +121,11 @@ export async function prepareLaunch(raw: LaunchInput, ip?: string) {
   }
   const conn = connection();
   const { blockhash, lastValidBlockHeight } = await conn.getLatestBlockhash("confirmed");
-  const tx = new Transaction({ feePayer: platform.publicKey, blockhash, lastValidBlockHeight }).add(...ixs);
-  tx.partialSign(platform, mint);
+  const tx = new Transaction({ feePayer: payer, blockhash, lastValidBlockHeight }).add(...ixs);
+  if (sponsored) tx.partialSign(platform, mint); else tx.partialSign(mint);
 
   const record = { ...i, mint: mint.publicKey.toBase58(), uri, ip };
-  if (!i.buyer || !i.firstBuySol) {
+  if (sponsored && (!i.buyer || !i.firstBuySol)) {
     // No wallet signature needed: send now.
     const sig = await send(tx);
     await recordCoin(record, sig);
