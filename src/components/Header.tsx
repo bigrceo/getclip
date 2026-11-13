@@ -33,8 +33,8 @@ const MENUS: Record<"clips", { label: string; rows: Row[]; cards: Card[] }> = {
       ["book", "How it works", "Three steps, free, no wallet needed.", "/how"],
     ],
     cards: [
-      ["Ocean Drive", `Fly to Vice Beach on the map. ${plotsIn("Vice Beach")} plots, Lucia's turf.`, "/map?at=ocean-drive", "/locals/ocean-drive.jpg"],
-      ["The Keys", `Fly to the Keys on the map. ${plotsIn("Key Lento")} plots, Jason's dock.`, "/map?at=the-keys", "/locals/keys-marina.jpg"],
+      ["Ocean Drive", `Fly to Vice Beach on the map. ${plotsIn("Vice Beach")} plots, Lucia's turf.`, "/map?at=ocean-drive", "/locals/ocean-drive-card.webp"],
+      ["The Keys", `Fly to the Keys on the map. ${plotsIn("Key Lento")} plots, Jason's dock.`, "/map?at=the-keys", "/locals/keys-marina-card.webp"],
     ],
   },
 };
