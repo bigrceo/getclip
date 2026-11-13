@@ -2,13 +2,22 @@
 /** Lucia and Jason as short looping videos in their place (Ocean Drive, the Keys). The first frame shows at once as the
  *  poster, the loop starts as soon as it can play; no 3D engine on these pages. */
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LOCALS, type Local } from "@/lib/locals";
 
 function Clip({ l, className = "" }: { l: Local; className?: string }) {
   // the animation plays once, then the video rests on its last frame (they look at you) and only breathes: a slow,
   // barely visible rise of the frame. No loop, so the face never changes again.
   const [held, setHeld] = useState(false);
+  // load the video only where it is actually shown (the hero renders a phone copy of the rail that stays hidden on desktop)
+  const ref = useRef<HTMLVideoElement>(null);
+  const [src, setSrc] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    const v = ref.current; if (!v || !l.video) return;
+    if (v.getClientRects().length) { setSrc(l.video); return; }
+    const io = new IntersectionObserver((e) => { if (e.some((x) => x.isIntersecting)) { setSrc(l.video); io.disconnect(); } });
+    io.observe(v); return () => io.disconnect();
+  }, [l.video]);
   if (!l.video) return (   // portrait only (no clip yet): it just breathes
     <div className="absolute inset-0 local-breathe">
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -17,7 +26,7 @@ function Clip({ l, className = "" }: { l: Local; className?: string }) {
   );
   return (
     <div className={`absolute inset-0 ${held ? "local-breathe" : ""}`}>
-      <video src={l.video} poster={l.poster} autoPlay muted playsInline preload="auto" aria-label={`${l.name} on ${l.place}`}
+      <video ref={ref} src={src} poster={l.poster} autoPlay muted playsInline preload="auto" aria-label={`${l.name} on ${l.place}`}
         onEnded={() => setHeld(true)} className={`absolute inset-0 h-full w-full object-cover object-[50%_18%] ${className}`} />
     </div>
   );

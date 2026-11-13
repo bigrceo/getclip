@@ -36,13 +36,21 @@ export function Island({ mode, planeW, planeH, onReady }: { mode: Mode; planeW: 
   useMemo(() => prep(map4k), [map4k]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { onReady(); }, [onReady]);
   useEffect(() => {
-    let alive = true;
-    // 4K next (desktop and phones), then 8K on desktop; each one replaces the overlay once decoded
-    new THREE.TextureLoader().load("/map/yanis-4k.jpg", (t4) => {
-      if (!alive) return; setMap8k(prep(t4));
-      if (!small) new THREE.TextureLoader().load("/map/yanis-8k.jpg", (t8) => { if (alive) setMap8k(prep(t8)); });
-    });
-    return () => { alive = false; };
+    let alive = true, got8k = false;
+    // Arrival first: the Locals' videos and the page get the bandwidth and the main thread. The 4K comes in once
+    // things have settled; the 8K (≈4.5 MB, a long decode) only when someone starts exploring the map, where it shows.
+    const load8k = () => {
+      if (got8k || small || !alive) return; got8k = true; off();
+      new THREE.TextureLoader().load("/map/yanis-8k.jpg", (t8) => { if (alive) setMap8k(prep(t8)); });
+    };
+    const el = gl.domElement;
+    const off = () => { el.removeEventListener("wheel", load8k); el.removeEventListener("pointerdown", load8k); el.removeEventListener("touchstart", load8k); };
+    const t = setTimeout(() => {
+      new THREE.TextureLoader().load("/map/yanis-4k.jpg", (t4) => { if (alive && !got8k) setMap8k(prep(t4)); });
+      el.addEventListener("wheel", load8k, { passive: true }); el.addEventListener("pointerdown", load8k); el.addEventListener("touchstart", load8k, { passive: true });
+    }, 3500);
+    const zoom = () => load8k(); addEventListener("clip:fly", zoom);
+    return () => { alive = false; clearTimeout(t); off(); removeEventListener("clip:fly", zoom); };
   }, [small]); // eslint-disable-line react-hooks/exhaustive-deps
   useFrame((_, dt) => {
     const tint = new THREE.Color(MODES[mode].tint);
