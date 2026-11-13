@@ -42,13 +42,13 @@ export function MapHero({ coins, volumeSol }: { coins: Coin[]; volumeSol: number
           </div>
         </div>
   );
-  const rail = (
+  const rail = (media: string) => (
         <aside id="locals" data-pin-obstacle className="glass-map z-20 flex w-[310px] flex-col p-3 md:absolute md:bottom-[70px] md:right-6 md:top-[96px] max-md:mx-4 max-md:mt-3 max-md:h-[560px] max-md:w-auto">
           <div className="px-1.5 pb-2">
             <p className="script !text-[22px] leading-none">Meet the</p>
             <b className="font-sign text-[30px] font-normal uppercase leading-none tracking-wide">Locals</b>
           </div>
-          <div className="min-h-0 flex-1"><LocalsSection compact /></div>
+          <div className="min-h-0 flex-1"><LocalsSection compact media={media} /></div>
         </aside>
   );
   return (
@@ -57,11 +57,11 @@ export function MapHero({ coins, volumeSol }: { coins: Coin[]; volumeSol: number
       <StateMap coins={coins} active={active} onActive={setActive}>
         {active && coins.some((c) => c.mint === active) && <CoinDrawer coin={coins.find((c) => c.mint === active)!} district={plotFor(coins.find((c) => c.mint === active)!, coins.findIndex((c) => c.mint === active)).district} onClose={() => setActive(null)} />}
       </StateMap>
-      <div className="hidden md:contents">{card}{rail}</div>
+      <div className="hidden md:contents">{card}{rail("(min-width: 768px)")}</div>
       </div>
       {/* the sea melts into the page: no hard edge between the map and the rest of the site */}
       <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[200px] max-md:hidden" style={{ background: "linear-gradient(to bottom, rgba(10,6,24,0) 0%, rgba(14,10,40,.55) 45%, rgba(10,6,24,.92) 80%, #0a0618 100%)" }} />
-      <div className="md:hidden">{card}{rail}</div>
+      <div className="md:hidden">{card}{rail("(max-width: 767px)")}</div>
     </section>
   );
 }
