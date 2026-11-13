@@ -10,7 +10,7 @@ export const BRAND = {
   state: "Leonida",
   releaseAt: "2026-11-19T05:00:00Z",
   sub: "Paste a TikTok, X or YouTube link from Leonida, or drop your capture. Live on pump.fun in seconds, address ending in gta6.",
-  x: "https://x.com/getclipfun",
+  x: "https://x.com/clipleonida",
   instagram: "https://instagram.com/getclipfun",
   tiktok: "https://tiktok.com/@getclipfun",
   vanitySuffix: "gta6",
